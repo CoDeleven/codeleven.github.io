@@ -13,15 +13,15 @@
 <meta property="og:site_name" content="CoDeleven的个人博客">
 <meta property="og:description" content="1.1 AQS简介AQS主要提供了一个用于构建同步器的框架，这个框架主要由FIFO等待队列构成，通过一个stats域 来表示同步情况，用Node.waitStatus域 控制队列走向。 1.2 AQS要点AQS的结构和CLH(Craig, Landin, anHagersten)自旋锁队列 很像，但AQS是阻塞的队列而CLH是自旋的队列。 12345678910111213141516171819">
 <meta property="og:locale" content="zh">
-<meta property="og:image" content="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/abstractQueuedSynchronizer/afterEnq.png">
-<meta property="og:image" content="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/abstractQueuedSynchronizer/afterShouldParkAfterFailedAcquire.png">
-<meta property="og:image" content="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/abstractQueuedSynchronizer/cancelAcquire1.png">
-<meta property="og:image" content="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/abstractQueuedSynchronizer/cancelAcquire2.png">
-<meta property="og:updated_time" content="2018-04-05T12:29:07.468Z">
+<meta property="og:image" content="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterEnq.png">
+<meta property="og:image" content="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterShouldParkAfterFailedAcquire.png">
+<meta property="og:image" content="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/cancelAcquire1.png">
+<meta property="og:image" content="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/cancelAcquire2.png">
+<meta property="og:updated_time" content="2018-04-05T13:52:22.649Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="了解AQS之排斥锁篇">
 <meta name="twitter:description" content="1.1 AQS简介AQS主要提供了一个用于构建同步器的框架，这个框架主要由FIFO等待队列构成，通过一个stats域 来表示同步情况，用Node.waitStatus域 控制队列走向。 1.2 AQS要点AQS的结构和CLH(Craig, Landin, anHagersten)自旋锁队列 很像，但AQS是阻塞的队列而CLH是自旋的队列。 12345678910111213141516171819">
-<meta name="twitter:image" content="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/abstractQueuedSynchronizer/afterEnq.png">
+<meta name="twitter:image" content="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterEnq.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -59,9 +59,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="Flux RSS"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Rechercher"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
@@ -116,7 +116,7 @@
 <li>因为B、C、D线程均会进入<strong>未初始化</strong>的等待队列，所以<strong>至少有一个结点</strong>会进入<em>enq()</em> 方法。<em>enq()</em> 方法很简单，就是创建一个空结点作为头结点来初始化等待队列（有人可能会问那A线程呢？不用封装成结点吗？别急，往下看），其余<strong>CAS 竞争失败的结点插入尾结点后</strong>。</li>
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Node <span class="title">enq</span><span class="params">(<span class="keyword">final</span> Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        Node t = tail;</span><br><span class="line">        <span class="keyword">if</span> (t == <span class="keyword">null</span>) &#123; </span><br><span class="line">            <span class="comment">// Must initialize</span></span><br><span class="line">            <span class="comment">/* 为什么要在这里初始化，而不是一开始就初始化队列？</span></span><br><span class="line"><span class="comment">             * 因为如果没有发生竞争，就永远不会产生等待队列</span></span><br><span class="line"><span class="comment">             * 所以将初始化放到产生竞争的时候</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            <span class="keyword">if</span> (compareAndSetHead(<span class="keyword">new</span> Node()))</span><br><span class="line">                tail = head;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 要入队的结点插入尾结点</span></span><br><span class="line">            node.prev = t;</span><br><span class="line">            <span class="keyword">if</span> (compareAndSetTail(t, node)) &#123;</span><br><span class="line">                t.next = node;</span><br><span class="line">                <span class="keyword">return</span> t;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>在addWaiter结束后：<br><img src="./abstractQueuedSynchronizer/afterEnq.png" alt="addwaiter结束"></p>
+<p>在addWaiter结束后：<br><img src="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterEnq.png" alt="addwaiter结束"></p>
 <ol>
 <li>在<em>addWaiter()</em> 方法结束后，准备通过<em>acquireQueued()</em> 开始尝试获取锁。B结点获取新建的空结点（即上文新建的头结点），然后B线程<em>tryAcquire()</em> ，众所周知，A线程正持有锁，所以B线程<em>tryAcquire()</em> 失败，然后进入<em>shouldParkAfterFailedAcquire()</em> </li>
 </ol>
@@ -125,7 +125,7 @@
 <li>该方法主要根据前驱结点判断当前结点是否需要阻塞，因为当前所有结点的状态都是初始化状态（ws为0）。每个结点在第一次失败后，都会进入<em>else块</em>（除非执行<em>acquireQueued()里的tryAcquire()</em> 成功）。<em>else块</em> 里会将前驱结点设置为<em>SIGNAL</em> 状态，暗示<strong>下一次你要是还是获取失败，你就乖乖阻塞吧</strong></li>
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">shouldParkAfterFailedAcquire</span><span class="params">(Node pred, Node node)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ws = pred.waitStatus;</span><br><span class="line">    <span class="comment">// 前驱结点pred是SIGNAL状态，所以需要让当前结点node阻塞</span></span><br><span class="line">    <span class="keyword">if</span> (ws == Node.SIGNAL)</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    <span class="comment">// 前驱结点pred是CANCELLED状态</span></span><br><span class="line">    <span class="keyword">if</span> (ws &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Predecessor was cancelled. Skip over predecessors and</span></span><br><span class="line"><span class="comment">         * indicate retry.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            node.prev = pred = pred.prev;</span><br><span class="line">        &#125; <span class="keyword">while</span> (pred.waitStatus &gt; <span class="number">0</span>);</span><br><span class="line">        pred.next = node;</span><br><span class="line">    <span class="comment">// 前驱结点pred状态是0或者PROPAGATE</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 更新前驱结点pred的状态为SIGNAL，在下一次尝试获取锁的时候对该结点进行阻塞</span></span><br><span class="line">        compareAndSetWaitStatus(pred, ws, Node.SIGNAL);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="./abstractQueuedSynchronizer/afterShouldParkAfterFailedAcquire.png" alt="shouldParkAfterFailedAcquire后"></p>
+<p><img src="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterShouldParkAfterFailedAcquire.png" alt="shouldParkAfterFailedAcquire后"></p>
 <p>7.此时除了尾结点外，其他结点的<em>waitStatus域</em> 均为SIGNAL。但除了头结点（Empty结点）外的所有结点包含的线程都处于阻塞状态，并等待它们各自的前驱结点来唤醒自己</p>
 <h3 id="1-3-2-释放锁"><a href="#1-3-2-释放锁" class="headerlink" title="1.3.2 释放锁"></a>1.3.2 释放锁</h3><p>本节内容将会连接着1.3.1节的内容，前面讲到除了那个空的头结点外，其他结点包含的线程都发生了阻塞。那么A线程不在队列内该如何唤醒B呢？</p>
 <ol>
@@ -144,7 +144,7 @@
 <li>在A线程释放了锁后。如果没有新的线程要竞争，那么锁不出意外就是B线程的；否则，在非公平锁的实现里，鹿死谁手还不知道（公平锁里不出意外也一定是B线程的）</li>
 </ol>
 <h3 id="1-3-3-取消-中断"><a href="#1-3-3-取消-中断" class="headerlink" title="1.3.3 取消/中断"></a>1.3.3 取消/中断</h3><p>本节介绍方法<em>cancelAcquire()</em>，该方法都出现在最后的<em>finally块</em>中，而且需要<em>failed域</em> 为true（获取锁失败），才会进入<em>cancelAcquire()</em> ，所以最终需要取消的结点，要么是<strong>定时器到时间</strong>了，要么是<strong>线程被中断</strong>了。废话不多说，看初始图。</p>
-<p><img src="./abstractQueuedSynchronizer/cancelAcquire1.png" alt="设置取消状态"><br>图表解释：</p>
+<p><img src="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/cancelAcquire1.png" alt="设置取消状态"><br>图表解释：</p>
 <ul>
 <li>A结点：采用lock()方法，并且获取锁成功</li>
 <li>B结点：采用tryLock()方法，并设置好10秒的期限，一到10秒就取消获取锁，当前处于阻塞状态</li>
@@ -152,7 +152,7 @@
 <li>D结点：采用lock()方法，获取锁失败，处于阻塞状态</li>
 </ul>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 10s过后，假设A线程仍持有锁，而B线程的tryLock()到期，那么B线程因为</span></span><br><span class="line"><span class="comment"> * throw new InterruptedException()而跳出for循环进入finally块，准备执行</span></span><br><span class="line"><span class="comment"> * cancelAcquire()</span></span><br><span class="line"><span class="comment"> * PS:此情况下C尚未到期，因为方便写:)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">cancelAcquire</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (node == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    node.thread = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// 获取当前结点的前驱结点</span></span><br><span class="line">    Node pred = node.prev;</span><br><span class="line">    <span class="comment">/* 判断前驱结点是否为取消状态；</span></span><br><span class="line"><span class="comment">     * 如果是取消状态的话，就一直向前查找，直到找到非CANCELLED状态的结点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="comment">// 本示例里pred是A结点</span></span><br><span class="line">    <span class="keyword">while</span> (pred.waitStatus &gt; <span class="number">0</span>)</span><br><span class="line">        node.prev = pred = pred.prev;</span><br><span class="line">    </span><br><span class="line">    Node predNext = pred.next;</span><br><span class="line">    <span class="comment">/* 不管三七二十一，来了这个方法，这个结点就注定要设置成CANCELLED</span></span><br><span class="line"><span class="comment">     * 那会不会有其他线程同时对这个结点的状态进行操作？</span></span><br><span class="line"><span class="comment">     * 有也没关系，它的顺序无论在其他CAS写操作之前还是之后最终都会设置为</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     CANCELLED(注意是“CAS”写操作)</span><br><span class="line">    <span class="comment">// ①到这一步，本示例里B结点的ws转为CANCELLED </span></span><br><span class="line">    node.waitStatus = Node.CANCELLED;</span><br><span class="line">    <span class="comment">// 如果当前结点是尾结点，那么就将predNext（从后到前第一个非CANCELLED状态的结点）设置为尾结点</span></span><br><span class="line">    <span class="comment">// 本示例里B结点不是尾结点，跳过if进入else</span></span><br><span class="line">    <span class="keyword">if</span> (node == tail &amp;&amp; compareAndSetTail(node, pred)) &#123;</span><br><span class="line">        compareAndSetNext(pred, predNext, <span class="keyword">null</span>); </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">int</span> ws;</span><br><span class="line">        <span class="comment">// 如果pred不是头结点，就设置状态为SIGNAL</span></span><br><span class="line">        <span class="keyword">if</span> (pred != head &amp;&amp;</span><br><span class="line">            ((ws = pred.waitStatus) == Node.SIGNAL ||</span><br><span class="line">             (ws &lt;= <span class="number">0</span> &amp;&amp; compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &amp;&amp;pred.thread != <span class="keyword">null</span>) &#123;  </span><br><span class="line">            Node next = node.next;</span><br><span class="line">            <span class="comment">/* 当前结点是否有后继结点</span></span><br><span class="line"><span class="comment">             * 若有后继结点且不是CANCELLED状态，则将后继结点和pred相连</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            <span class="keyword">if</span> (next != <span class="keyword">null</span> &amp;&amp; next.waitStatus &lt;= <span class="number">0</span>)</span><br><span class="line">                compareAndSetNext(pred, predNext, next);</span><br><span class="line">        <span class="comment">/* </span></span><br><span class="line"><span class="comment">         * 如果pred是头结点就唤醒后继的非CANCELLED结点</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// ② 唤醒后面的非CANCELLED状态的结点</span></span><br><span class="line">            unparkSuccessor(node);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* 很骚的操作，一般都是设置null来help gc，这里采用循环引用当新一波的  </span></span><br><span class="line"><span class="comment">         * tryAcquire()之后，会将CANCELLED的引用清理掉，所以最后就变成不可达的</span></span><br><span class="line"><span class="comment">         * 引用，自然就被gc了</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        node.next = node; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>流程图大致是这样的:<br><img src="./abstractQueuedSynchronizer/cancelAcquire2.png" alt=""></p>
+<p>流程图大致是这样的:<br><img src="http://blog-1252749790.file.myqcloud.com/JavaConcurrent/cancelAcquire2.png" alt="最后的状态"></p>
 <p>到这里，整个<em>cancelAcquire()</em> 的流程结束了，最后的<em>unparkSuccessor()</em> 方法最终也不是为了唤醒C，具体的可以参考前面的<em>release()</em>一节</p>
 <h2 id="1-4-lock的其他方式"><a href="#1-4-lock的其他方式" class="headerlink" title="1.4 lock的其他方式"></a>1.4 lock的其他方式</h2><p><em>ReentrantLock</em> 除了<em>lock()</em> 之外还有<em>tryLock()</em>和<em>lockInterruptibly()</em>。</p>
 <ul>
@@ -178,7 +178,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/" data-id="cjfmk9a5a0001mwv9b3bo8h0v" class="article-share-link">Partager</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之排斥锁篇/" data-id="cjfmkznu90001kcv9ttttm3d3" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -191,7 +191,7 @@
   
   
     <a href="/codeleven.github.io/2018/04/05/深入Unsafe/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Ancien</strong>
+      <strong class="article-nav-caption">Older</strong>
       <div class="article-nav-title">深入Unsafe</div>
     </a>
   
@@ -209,7 +209,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Mot-clés</h3>
+    <h3 class="widget-title">Tags</h3>
     <div class="widget">
       <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
     </div>
@@ -219,7 +219,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Nuage de mot-clés</h3>
+    <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
       <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 10px;">Java集合</a>
     </div>
@@ -238,7 +238,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Articles récents</h3>
+    <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
         
@@ -275,7 +275,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       &copy; 2018 CoDeleven<br>
-      Propulsé by <a href="http://hexo.io/" target="_blank">Hexo</a>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
 </footer>

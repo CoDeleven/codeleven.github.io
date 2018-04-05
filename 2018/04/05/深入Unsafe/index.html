@@ -13,7 +13,7 @@
 <meta property="og:site_name" content="CoDeleven的个人博客">
 <meta property="og:description" content="在JUC（并发包）里经常会使用到Unsafe这个类，那么了解这个类，就成为了下面学习的重中之重 12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2018-04-05T12:27:44.772Z">
+<meta property="og:updated_time" content="2018-04-05T13:50:39.940Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="深入Unsafe">
 <meta name="twitter:description" content="在JUC（并发包）里经常会使用到Unsafe这个类，那么了解这个类，就成为了下面学习的重中之重 12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758596061626364656667686970717273747576777879808">
@@ -54,9 +54,9 @@
       </nav>
       <nav id="sub-nav">
         
-          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="Flux RSS"></a>
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
         
-        <a id="nav-search-btn" class="nav-icon" title="Rechercher"></a>
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
       </nav>
       <div id="search-form-wrap">
         <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
@@ -108,11 +108,11 @@
 <p>For people who like to think of these operations in terms of<br>machine-level barriers on common multiprocessors, lazySet<br>provides a preceeding store-store barrier (which is either<br>a no-op or very cheap on current platforms), but no<br>store-load barrier (which is usually the expensive part<br>of a volatile-write).”</p>
 </blockquote>
 <p>对于那些在通用多处理器下需要考虑底层机器屏障的人来说，“lazySet”提供了预Store-Store屏障（对于现在的平台来说，要么无操作，要么代价不大），但是没有Store-Load屏障（通常需要付出较高的代价）</p>
-<p>PS：因为“lazySet”其实就是“volatile”的削弱版，所以叫“week volatile”也挺符合的。</p>
+<p>PS：因为“lazySet”其实就是“volatile”的削弱版，所以叫“weak volatile”也挺符合的。</p>
 <hr>
-<h3 id="“week-volatile”的场景："><a href="#“week-volatile”的场景：" class="headerlink" title="“week volatile”的场景："></a>“week volatile”的场景：</h3><p>“week volatile”适用于对实时性要求不高的场景，该方法可以较大的节省性能消耗</p>
+<h3 id="“weak-volatile”的场景："><a href="#“weak-volatile”的场景：" class="headerlink" title="“weak volatile”的场景："></a>“weak volatile”的场景：</h3><p>“weak volatile”适用于对实时性要求不高的场景，该方法可以较大的节省性能消耗</p>
 <ol>
-<li><del>一个链表中的某个节点被修改了，在volatile的情况下，整个链表都会一定被强制更新；而在”week volatile”的情况下，不被强制更新，节省部分性能。</del></li>
+<li><del>一个链表中的某个节点被修改了，在volatile的情况下，整个链表都会一定被强制更新；而在”weak volatile”的情况下，不被强制更新，节省部分性能。</del></li>
 <li>在修改帖子状态的时，如果对性能要求很高，可以使用“lazySet”保证写入内存，但是对实时性的要求不高</li>
 </ol>
 <p>具体的其他场景可以看下面的链接（表示第一个回答没看懂，功力深了后再来）</p>
@@ -120,7 +120,7 @@
 <li><a href="https://stackoverflow.com/questions/7557156/atomicxxx-lazyset-in-terms-of-happens-before-edges" target="_blank" rel="noopener">AtomicXXX.lazySet(…) in terms of happens before edges —-StackOverflow</a></li>
 </ol>
 <hr>
-<h3 id="“week-volatile”的原理"><a href="#“week-volatile”的原理" class="headerlink" title="“week volatile”的原理"></a>“week volatile”的原理</h3><p>volatile的工作原理是插入屏障，在写入的时候插入StoreStore，写完后插入StoreLoad，根据Doug Lea的说法，StoreLoad相比StoreStore更消耗资源<br>而“week volatile”则是省去了最后的StoreLoad的步骤，相比插入两个屏障，“week volatile”性能提升了不少</p>
+<h3 id="“weak-volatile”的原理"><a href="#“weak-volatile”的原理" class="headerlink" title="“weak volatile”的原理"></a>“weak volatile”的原理</h3><p>volatile的工作原理是插入屏障，在写入的时候插入StoreStore，写完后插入StoreLoad，根据Doug Lea的说法，StoreLoad相比StoreStore更消耗资源<br>而“weak volatile”则是省去了最后的StoreLoad的步骤，相比插入两个屏障，“weak volatile”性能提升了不少</p>
 <p>更加具体的底层原理可以看下面的链接</p>
 <ol>
 <li><a href="http://ifeve.com/juc-atomic-class-lazyset-que/" target="_blank" rel="noopener">JUC中Atomic class之lazySet的一点疑惑—-并发编程网</a></li>
@@ -129,7 +129,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjfmk9a5m0005mwv949t92m8l" class="article-share-link">Partager</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjfmkznul0005kcv9er590gli" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -141,7 +141,7 @@
 <nav id="article-nav">
   
     <a href="/codeleven.github.io/2018/04/05/了解AQS之排斥锁篇/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Récent</strong>
+      <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
           了解AQS之排斥锁篇
@@ -151,7 +151,7 @@
   
   
     <a href="/codeleven.github.io/2018/04/05/了解LockSupport的原理/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Ancien</strong>
+      <strong class="article-nav-caption">Older</strong>
       <div class="article-nav-title">了解LockSupport的原理</div>
     </a>
   
@@ -169,7 +169,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Mot-clés</h3>
+    <h3 class="widget-title">Tags</h3>
     <div class="widget">
       <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
     </div>
@@ -179,7 +179,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Nuage de mot-clés</h3>
+    <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
       <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 10px;">Java集合</a>
     </div>
@@ -198,7 +198,7 @@
   
     
   <div class="widget-wrap">
-    <h3 class="widget-title">Articles récents</h3>
+    <h3 class="widget-title">Recent Posts</h3>
     <div class="widget">
       <ul>
         
@@ -235,7 +235,7 @@
   <div class="outer">
     <div id="footer-info" class="inner">
       &copy; 2018 CoDeleven<br>
-      Propulsé by <a href="http://hexo.io/" target="_blank">Hexo</a>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
     </div>
   </div>
 </footer>
