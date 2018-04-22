@@ -1,5 +1,5 @@
 ---
-title: 了解AQS之排斥锁篇
+title: 了解AQS之ExclusiveLock
 date: 2018-04-05 19:57:27
 tags: Java并发
 ---
