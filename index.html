@@ -65,6 +65,49 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-记一次List.subList的错误" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/" class="article-date">
+  <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">2018-04-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>以后有空完整了解下ArrayList和相关集合<br>这次先解决一个这样的问题，看下面代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; foo = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i)&#123;</span><br><span class="line">    foo.add(i);</span><br><span class="line">&#125;</span><br><span class="line">List&lt;Integer&gt; foo1 = foo.subList(<span class="number">0</span>, <span class="number">3</span>);</span><br><span class="line">List&lt;Integer&gt; foo2 = foo.subList(<span class="number">3</span>, <span class="number">5</span>);</span><br><span class="line">foo2.add(<span class="number">1</span>);</span><br><span class="line">System.out.println(foo1.size());</span><br></pre></td></tr></table></figure>
+<p>读者感觉是否挺正常的，没有<strong>迭代</strong>，没有在<strong>多线程</strong>下，单纯的给<em>foo1</em>列表添加一个值好像没什么问题。但是在运行后会抛出“ConcurrentModificationException”，这就很气了。博主因为这个问题思来想去，从<strong>迭代</strong>到<strong>多线程</strong>，每个角度都思考过，后来进入源码一看<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SubList是ArrayList的内部类</span></span><br><span class="line"><span class="comment">/* parent = ArrayList.this</span></span><br><span class="line"><span class="comment"> * offset = 0</span></span><br><span class="line"><span class="comment"> * 剩下两个就不用解释了</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">SubList(AbstractList&lt;E&gt; parent,</span><br><span class="line">        <span class="keyword">int</span> offset, <span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex) &#123;</span><br><span class="line">    <span class="keyword">this</span>.parent = parent;</span><br><span class="line">    <span class="keyword">this</span>.parentOffset = fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.offset = offset + fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.size = toIndex - fromIndex;</span><br><span class="line">    <span class="comment">// 注意，这里从ArrayList.this获取了modCount</span></span><br><span class="line">    <span class="keyword">this</span>.modCount = ArrayList.<span class="keyword">this</span>.modCount;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在进入add等修改方法后，可以看到最终递增modCount的方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureExplicitCapacity</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 可以看到，这里递增的只是ArrayList.this的modCount</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// overflow-conscious code</span></span><br><span class="line">    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)</span><br><span class="line">        grow(minCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所以通过<em>size()</em>，<em>add()</em>等方法对<em>SubList内部类</em>的修改会引起<em>外部类的modCount变化</em>，但是<em>其他内部类的modCount</em> (作修改的内部类的modCount会改变)不改变就会产生不一致，所以抛出这个异常</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgds7o3m000ah4vjk0k0g60d" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-了解AQS之Condition" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/" class="article-date">
@@ -118,7 +161,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgaroj3p0000wgvjhyj1gre1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgds7o370000h4vjbpqbax75" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -244,7 +287,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgaroj3x0005wgvjku75oall" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgds7o3g0003h4vjz98s1wl6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -320,7 +363,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgaroj3z0008wgvj7y97n71e" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgds7o3k0008h4vjscw3ci4k" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -379,7 +422,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgaroj3w0004wgvj0l9yci1u" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgds7o3h0004h4vjxryljb32" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -441,7 +484,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgaroj3s0001wgvjsgjhmznl" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgds7o3i0005h4vjeh9bq1xg" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -493,7 +536,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgaroj3v0003wgvj6x4yyw1p" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgds7o3c0001h4vjtafhpe4d" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -549,6 +592,10 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/">了解AQS之Condition</a>
           </li>
         
@@ -562,10 +609,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/04/05/了解LockSupport的原理/">了解LockSupport的原理</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/">了解HashMap原理</a>
           </li>
         
       </ul>
