@@ -119,10 +119,30 @@
 <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg" alt="偏向锁到重量锁的过程"></p>
 <p>当关闭了偏向锁的设置，那么就会走左边的流程；反之则走右边的流程。</p>
 <h2 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h2><p>由于大多数情况下，锁大多都不处于多线程竞争状态，而且总是由同一个线程获取，所以JVM在1.6之后加入了<strong>偏向锁</strong> 和 <strong>轻量锁</strong> ，如今总共由4种锁状态：<strong>无状态锁</strong>、<strong>偏向锁</strong>、<strong>轻量锁</strong>、<strong>重量锁</strong>。随着线程竞争的提升，锁会逐渐升级（无法降级）。<br>偏向锁在没有竞争的情况下可以提高同步的性能，这方面主要体现在偏向锁只需要进行一次CAS而轻量锁需要两次。它是一个需要权衡利弊的选择，它不是在任何情况下都对程序有利的。如果竞争很多，那么撤销偏向锁的过程就会成为性能瓶颈。</p>
-<p>当偏向锁可用时，初始化的对象头分配如下所示：<br>锁状态 | 23bit | 2bit | 4bit | 1bit 是否是偏向锁| 2bit 锁标志位| </p>
-<ul>
-<li>| :-: | :-: | :-: | :-:| :-: |<br>偏向锁 | 线程ID | epoch | 对象分代年龄 | 1 | 01|</li>
-</ul>
+<p>当偏向锁可用时，初始化的对象头分配如下所示</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th style="text-align:center">23bit</th>
+<th style="text-align:center">2bit</th>
+<th style="text-align:center">4bit</th>
+<th style="text-align:center">1bit 是否是偏向锁</th>
+<th style="text-align:center">2bit 锁标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>偏向锁</td>
+<td style="text-align:center">线程ID</td>
+<td style="text-align:center">epoch</td>
+<td style="text-align:center">对象分代年龄</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">01</td>
+<td></td>
+</tr>
+</tbody>
+</table>
 <h3 id="加锁过程"><a href="#加锁过程" class="headerlink" title="加锁过程"></a>加锁过程</h3><ol>
 <li>当对象头的<em>isBiased</em> 为1时且锁状态为<em>01</em>时，偏向锁可用，继续后面的流程</li>
 <li>判断目标对象头是否包含本线程ID，如果没有，则直接CAS往对象头里写入本线程ID。到这一步加锁就结束了</li>
@@ -174,7 +194,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi351vd000ei0vjla1gidez" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi36qpj000d2gvjt8rsmm2h" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -203,7 +223,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgi351uu0000i0vj0ciao9s2" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgi36qp200002gvj5s95r9ti" class="article-share-link">Share</a>
       
       
     </footer>
@@ -244,7 +264,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgi351vb000bi0vjy7ppyysj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgi36qpg00092gvjybv8mb8m" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -309,7 +329,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgi351v00002i0vjo4wsary1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgi36qp700022gvjonvj4ema" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -435,7 +455,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgi351va0009i0vj9cuv6mvi" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgi36qpb00052gvj0e5er4wi" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -511,7 +531,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgi351v50006i0vjyq7w6wnn" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgi36qph000a2gvjf3qi42lr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -570,7 +590,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgi351v30004i0vjy3ojleog" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgi36qpc00062gvjgwt3akbv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -632,7 +652,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgi351v40005i0vjrh4ipofh" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgi36qp500012gvjwlhygn3m" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -684,7 +704,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgi351uy0001i0vjwqv2acjd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgi36qpa00042gvj51zyd0g6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
