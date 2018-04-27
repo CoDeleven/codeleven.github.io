@@ -110,7 +110,8 @@
 <td style="text-align:center">对象的hashcode</td>
 <td style="text-align:center">对象分代年龄</td>
 <td style="text-align:center">0</td>
-<td style="text-align:center">01 </td>
+<td style="text-align:center">01</td>
+<td></td>
 </tr>
 </tbody>
 </table>
@@ -120,7 +121,7 @@
 <h2 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h2><p>由于大多数情况下，锁大多都不处于多线程竞争状态，而且总是由同一个线程获取，所以JVM在1.6之后加入了<strong>偏向锁</strong> 和 <strong>轻量锁</strong> ，如今总共由4种锁状态：<strong>无状态锁</strong>、<strong>偏向锁</strong>、<strong>轻量锁</strong>、<strong>重量锁</strong>。随着线程竞争的提升，锁会逐渐升级（无法降级）。<br>偏向锁在没有竞争的情况下可以提高同步的性能，这方面主要体现在偏向锁只需要进行一次CAS而轻量锁需要两次。它是一个需要权衡利弊的选择，它不是在任何情况下都对程序有利的。如果竞争很多，那么撤销偏向锁的过程就会成为性能瓶颈。</p>
 <p>当偏向锁可用时，初始化的对象头分配如下所示：<br>锁状态 | 23bit | 2bit | 4bit | 1bit 是否是偏向锁| 2bit 锁标志位| </p>
 <ul>
-<li>| :-: | :-: | :-: | :-:| :-:<br>偏向锁 | 线程ID | epoch | 对象分代年龄 | 1 | 01|</li>
+<li>| :-: | :-: | :-: | :-:| :-: |<br>偏向锁 | 线程ID | epoch | 对象分代年龄 | 1 | 01|</li>
 </ul>
 <h3 id="加锁过程"><a href="#加锁过程" class="headerlink" title="加锁过程"></a>加锁过程</h3><ol>
 <li>当对象头的<em>isBiased</em> 为1时且锁状态为<em>01</em>时，偏向锁可用，继续后面的流程</li>
@@ -151,23 +152,29 @@
 </ol>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本章是对<em>synchronized</em> 在JVM里的各种等级及升级的流程进行了讲解，其中主要是通过控制<strong>对象头</strong>的一些状态来控制锁的等级。偏向锁通过标记<em>Thread ID</em> 来表示，当前对象已经被对应线程占用；轻量锁则替换<em>Mark Word</em> 为 <em>Lock Record 地址</em> 来表示当前对象被对应线程占用。无论是哪种锁，在不同的场景下有不同的需求，可以参考以下表格做出选择</p>
 <p>偏向锁：</p>
-<pre><code>- 优点：加锁和解锁不需要额外小号，和执行非同步方法相比，仅存在纳秒级的差距
-- 缺点：如果线程间存在竞争，会带来额外开销（偏向锁的撤销）
-- 适用场景： 适用于只有一个线程访问同步块的场景
-</code></pre><p>轻量锁：</p>
-<pre><code>- 优点： 竞争的线程不会造成阻塞，提高了程序的响应速度
-- 缺点： 如果始终得不到锁，使用自旋会消耗CPU
-- 适用场景： 追求相应实践，同步块执行速度非常快
-</code></pre><p>重量锁：</p>
-<pre><code>- 优点： 线程竞争不使用自选，不会消耗CPU
-- 缺点： 线程阻塞，响应时间缓慢
-- 适用场景： 追求吞吐量，同步块执行速度较慢
-</code></pre><p>这个是网上找到的关于锁撤销、膨胀等操作的总流程<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg" alt=""></p>
+<ul>
+<li>优点：加锁和解锁不需要额外小号，和执行非同步方法相比，仅存在纳秒级的差距</li>
+<li>缺点：如果线程间存在竞争，会带来额外开销（偏向锁的撤销）</li>
+<li>适用场景： 适用于只有一个线程访问同步块的场景</li>
+</ul>
+<p>轻量锁：</p>
+<ul>
+<li>优点： 竞争的线程不会造成阻塞，提高了程序的响应速度</li>
+<li>缺点： 如果始终得不到锁，使用自旋会消耗CPU</li>
+<li>适用场景： 追求相应实践，同步块执行速度非常快</li>
+</ul>
+<p>重量锁：</p>
+<ul>
+<li>优点： 线程竞争不使用自选，不会消耗CPU</li>
+<li>缺点： 线程阻塞，响应时间缓慢</li>
+<li>适用场景： 追求吞吐量，同步块执行速度较慢</li>
+</ul>
+<p>这个是网上找到的关于锁撤销、膨胀等操作的总流程<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg" alt=""></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi2z4cm000easvjcwuqajnr" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi351vd000ei0vjla1gidez" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -196,7 +203,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgi2z4c90001asvj3mzoft9w" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgi351uu0000i0vj0ciao9s2" class="article-share-link">Share</a>
       
       
     </footer>
@@ -237,7 +244,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgi2z4cj0009asvjwqco0y28" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgi351vb000bi0vjy7ppyysj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -302,7 +309,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgi2z4cc0003asvjianmvr15" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgi351v00002i0vjo4wsary1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -428,7 +435,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgi2z4cf0008asvjrs5l915l" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgi351va0009i0vj9cuv6mvi" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -504,7 +511,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgi2z4cl000casvjil2hyixt" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgi351v50006i0vjyq7w6wnn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -563,7 +570,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgi2z4ce0005asvj49t3suv1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgi351v30004i0vjy3ojleog" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -625,7 +632,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgi2z4c50000asvjlzt2g9sj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgi351v40005i0vjrh4ipofh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -677,7 +684,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgi2z4cd0004asvj2q26c065" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgi351uy0001i0vjwqv2acjd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
