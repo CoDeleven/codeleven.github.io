@@ -65,37 +65,10 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-ForkJoin并不是银弹" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/" class="article-date">
-  <time datetime="2018-04-27T14:52:35.847Z" itemprop="datePublished">2018-04-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这是一段难受的排Bug的经历，ForkJoin框架的粗浅理解让我在单核服务器下发生了<strong>栈溢出</strong>，因为”ForkJoinPool.invokeAll()”的底层原理不仅会调用空闲的线程，也会调用当前的线程。如果处理不好，在单核服务器下就会发生死循环，最终产生栈溢出。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread <span class="string">"main"</span> java.util.concurrent.ExecutionException: java.lang.St</span><br><span class="line">ackOverflowError</span><br><span class="line">        at java.util.concurrent.FutureTask.report(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.get(Unknown Source)</span><br><span class="line">        at cn.codeleven.App.main(App.java:<span class="number">20</span>)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Sou</span><br><span class="line">rce)</span><br><span class="line">        at java.lang.reflect.Constructor.newInstance(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.getThrowableException(Unknown Sourc</span><br><span class="line">e)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.reportException(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.join(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.XiCiHandler.handleDocument2IPEntity(XiCiHandler.</span><br><span class="line">java:<span class="number">40</span>)</span><br><span class="line">        at cn.codeleven.Crawler.start(Crawler.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.Crawler.run(Crawler.java:<span class="number">20</span>)</span><br><span class="line">        at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.run(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Unknown Source)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>$<span class="number">1</span>.&lt;init&gt;(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>.opWrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)</span><br><span class="line">        at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(Unknown Source</span><br><span class="line">)</span><br><span class="line">        at java.util.stream.AbstractPipeline.evaluate(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline.collect(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br></pre></td></tr></table></figure></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgi2txp90000mgvjzkw3jkkd" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
     <article id="post-偏向锁、轻量锁及重量锁非源码级流程学习" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/24/偏向锁、轻量锁及重量锁非源码级流程学习/" class="article-date">
-  <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">2018-04-24</time>
+    <a href="/codeleven.github.io/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" class="article-date">
+  <time datetime="2018-04-27T14:55:43.000Z" itemprop="datePublished">2018-04-27</time>
 </a>
     
   </div>
@@ -106,7 +79,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/24/偏向锁、轻量锁及重量锁非源码级流程学习/">偏向锁、轻量锁及重量锁非源码级流程学习</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/">偏向锁、轻量锁及重量锁非源码级流程学习</a>
     </h1>
   
 
@@ -194,11 +167,38 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi2txpi0004mgvjb47o7xus" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi2z4cm000easvjcwuqajnr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
 
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-ForkJoin并不是银弹" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/" class="article-date">
+  <time datetime="2018-04-27T14:52:35.847Z" itemprop="datePublished">2018-04-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这是一段难受的排Bug的经历，ForkJoin框架的粗浅理解让我在单核服务器下发生了<strong>栈溢出</strong>，因为”ForkJoinPool.invokeAll()”的底层原理不仅会调用空闲的线程，也会调用当前的线程。如果处理不好，在单核服务器下就会发生死循环，最终产生栈溢出。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread <span class="string">"main"</span> java.util.concurrent.ExecutionException: java.lang.St</span><br><span class="line">ackOverflowError</span><br><span class="line">        at java.util.concurrent.FutureTask.report(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.get(Unknown Source)</span><br><span class="line">        at cn.codeleven.App.main(App.java:<span class="number">20</span>)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Sou</span><br><span class="line">rce)</span><br><span class="line">        at java.lang.reflect.Constructor.newInstance(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.getThrowableException(Unknown Sourc</span><br><span class="line">e)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.reportException(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.join(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.XiCiHandler.handleDocument2IPEntity(XiCiHandler.</span><br><span class="line">java:<span class="number">40</span>)</span><br><span class="line">        at cn.codeleven.Crawler.start(Crawler.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.Crawler.run(Crawler.java:<span class="number">20</span>)</span><br><span class="line">        at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.run(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Unknown Source)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>$<span class="number">1</span>.&lt;init&gt;(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>.opWrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)</span><br><span class="line">        at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(Unknown Source</span><br><span class="line">)</span><br><span class="line">        at java.util.stream.AbstractPipeline.evaluate(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline.collect(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgi2z4c90001asvj3mzoft9w" class="article-share-link">Share</a>
+      
+      
     </footer>
   </div>
   
@@ -237,7 +237,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgi2txpu000emgvjso6j5pl9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgi2z4cj0009asvjwqco0y28" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -302,7 +302,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgi2txpl0006mgvjnbxr404n" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgi2z4cc0003asvjianmvr15" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -428,7 +428,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgi2txpj0005mgvjbareatqu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgi2z4cf0008asvjrs5l915l" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -504,7 +504,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgi2txpr0009mgvjmskrssdh" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgi2z4cl000casvjil2hyixt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -563,7 +563,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgi2txpg0002mgvjk6q84kng" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgi2z4ce0005asvj49t3suv1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -625,7 +625,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgi2txpt000bmgvjjqpfbdh0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgi2z4c50000asvjlzt2g9sj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -677,7 +677,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgi2txpd0001mgvjylzuwmb1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgi2z4cd0004asvj2q26c065" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -733,11 +733,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/">(no title)</a>
+            <a href="/codeleven.github.io/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/">偏向锁、轻量锁及重量锁非源码级流程学习</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/04/24/偏向锁、轻量锁及重量锁非源码级流程学习/">偏向锁、轻量锁及重量锁非源码级流程学习</a>
+            <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/">(no title)</a>
           </li>
         
           <li>
