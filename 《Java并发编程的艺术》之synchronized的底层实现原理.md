@@ -1,5 +1,5 @@
 ---
-title: 偏向锁、轻量锁及重量锁非源码级流程学习
+title: 《Java并发编程的艺术》之synchronized的底层实现原理
 date: 2018-04-27 22:55:43
 tags: [Java并发, JVM]
 ---
