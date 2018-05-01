@@ -64,9 +64,9 @@ tags: JVM
 屏障类型 | 指令示例 | 说明 |
 - | :-: | :-: |
 LoadLoad | Load1;LoadLoad;Load2 | 在Load2及所有后续读取指令之前，Load1读取数据完毕 |
-StoreStore | Store1;StoreStore;Store2 | 在Store2及所有后续写入指令执行前，Store1写入的数据对其他处理器可见 |
+StoreStore | Store1;StoreStore;Store2 | 在Store2及所有后续写入指令执行前，Store1写入的数据对其他处理器可见(将修改的变量都刷新到主内存中，毕竟刷新不可能只刷新Store1这一个数据，而是Store1及前面所有的修改后的共享变量) |
 LoadStore | Load1;LoadStore;Store2 | 在Store2及所有后续写入指令刷新到主内存前，Load1读取数据完毕|
-StoreLoad | Store1;StoreLoad;Load2 | 在Load2及后续所有读取操作执行前，保证Store1的写入对所有处理器可见 |
+StoreLoad | Store1;StoreLoad;Load2 | 在Load2及后续所有读取操作执行前，保证Store1的写入对所有处理器可见(将修改的变量都刷新到主内存中) |
 
 最后一个StoreLoad指令是万能指令（有些处理器不支持前三种指令），兼具前三种指令的功能，且开销最大。
 内存屏障在禁止重排序、保证内存可见性方面作用极大，为后续JMM的规则打下了基础。
