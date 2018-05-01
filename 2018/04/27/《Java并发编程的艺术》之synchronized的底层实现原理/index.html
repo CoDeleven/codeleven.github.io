@@ -3,13 +3,13 @@
 <head>
   <meta charset="utf-8">
   
-  <title>偏向锁、轻量锁及重量锁非源码级流程学习 | CoDeleven的个人博客</title>
+  <title>《Java并发编程的艺术》之synchronized的底层实现原理 | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="在学习锁优化时，对象头(Mark Word) 是必不可缺的一环，因为synchronized 用的锁是存在对象头里的。32位的虚拟机上对象头占64位（8字节），64位的虚拟机上对象头占128位(16字节）^objectHead；而不同的类型，对象头的布局不太一样：  数组类型：Mark Word、Class Metadata Address、Array Length 普通类型：Mark Word、">
 <meta name="keywords" content="Java并发,JVM">
 <meta property="og:type" content="article">
-<meta property="og:title" content="偏向锁、轻量锁及重量锁非源码级流程学习">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/index.html">
+<meta property="og:title" content="《Java并发编程的艺术》之synchronized的底层实现原理">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
 <meta property="og:description" content="在学习锁优化时，对象头(Mark Word) 是必不可缺的一环，因为synchronized 用的锁是存在对象头里的。32位的虚拟机上对象头占64位（8字节），64位的虚拟机上对象头占128位(16字节）^objectHead；而不同的类型，对象头的布局不太一样：  数组类型：Mark Word、Class Metadata Address、Array Length 普通类型：Mark Word、">
 <meta property="og:locale" content="zh">
@@ -18,9 +18,9 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/InitLockRecord.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CopyMW2LockRecord.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg">
-<meta property="og:updated_time" content="2018-04-27T15:02:24.341Z">
+<meta property="og:updated_time" content="2018-04-30T09:04:03.388Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="偏向锁、轻量锁及重量锁非源码级流程学习">
+<meta name="twitter:title" content="《Java并发编程的艺术》之synchronized的底层实现原理">
 <meta name="twitter:description" content="在学习锁优化时，对象头(Mark Word) 是必不可缺的一环，因为synchronized 用的锁是存在对象头里的。32位的虚拟机上对象头占64位（8字节），64位的虚拟机上对象头占128位(16字节）^objectHead；而不同的类型，对象头的布局不太一样：  数组类型：Mark Word、Class Metadata Address、Array Length 普通类型：Mark Word、">
 <meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg">
   
@@ -71,9 +71,9 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-偏向锁、轻量锁及重量锁非源码级流程学习" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-《Java并发编程的艺术》之synchronized的底层实现原理" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" class="article-date">
   <time datetime="2018-04-27T14:55:43.000Z" itemprop="datePublished">2018-04-27</time>
 </a>
     
@@ -85,7 +85,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      偏向锁、轻量锁及重量锁非源码级流程学习
+      《Java并发编程的艺术》之synchronized的底层实现原理
     </h1>
   
 
@@ -200,7 +200,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/" data-id="cjgi36qpj000d2gvjt8rsmm2h" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjgnrrk8400043kvjj99swpep" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -210,6 +210,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《Java并发编程的艺术》之Java内存模型
+        
+      </div>
+    </a>
   
   
     <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/" id="article-nav-older" class="article-nav-link-wrap">
@@ -243,7 +252,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 10px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a>
+      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 10px;">Java集合</a>
     </div>
   </div>
 
@@ -252,7 +261,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
     </div>
   </div>
 
@@ -265,7 +274,15 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/04/27/偏向锁、轻量锁及重量锁非源码级流程学习/">偏向锁、轻量锁及重量锁非源码级流程学习</a>
+            <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
           </li>
         
           <li>
@@ -274,14 +291,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/">了解AQS之Condition</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/">了解AQS之ExclusiveLock</a>
           </li>
         
       </ul>

@@ -3,20 +3,18 @@
 <head>
   <meta charset="utf-8">
   
-  <title>为什么Thread.suspend和resume被弃用 | CoDeleven的个人博客</title>
+  <title>CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="笔者在学习JUC包的时候，了解到同样用于线程阻塞和恢复功能的类—— LockSupport，那么这个类和Thread.suspend() 和 Thread.resume() 有什么区别，为什么后者被弃用了？ 阻塞小例子该例子(来源于Bug Database)很好的验证了Thread.suspend()/resume()这对兄弟天生容易犯错，在输出几个i之后就会发生永久性阻塞（通过jstack看，只">
-<meta name="keywords" content="Java并发">
-<meta property="og:type" content="article">
-<meta property="og:title" content="为什么Thread.suspend和resume被弃用">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/index.html">
+  <meta name="description" content="Codeleven的博客">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CoDeleven的个人博客">
+<meta property="og:url" content="http://yoursite.com/GithubPages/page/2/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="笔者在学习JUC包的时候，了解到同样用于线程阻塞和恢复功能的类—— LockSupport，那么这个类和Thread.suspend() 和 Thread.resume() 有什么区别，为什么后者被弃用了？ 阻塞小例子该例子(来源于Bug Database)很好的验证了Thread.suspend()/resume()这对兄弟天生容易犯错，在输出几个i之后就会发生永久性阻塞（通过jstack看，只">
+<meta property="og:description" content="Codeleven的博客">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2018-04-22T05:22:02.039Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="为什么Thread.suspend和resume被弃用">
-<meta name="twitter:description" content="笔者在学习JUC包的时候，了解到同样用于线程阻塞和恢复功能的类—— LockSupport，那么这个类和Thread.suspend() 和 Thread.resume() 有什么区别，为什么后者被弃用了？ 阻塞小例子该例子(来源于Bug Database)很好的验证了Thread.suspend()/resume()这对兄弟天生容易犯错，在输出几个i之后就会发生永久性阻塞（通过jstack看，只">
+<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:description" content="Codeleven的博客">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -65,7 +63,9 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-为什么Thread-suspend和resume被弃用" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main">
+  
+    <article id="post-为什么Thread-suspend和resume被弃用" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/" class="article-date">
   <time datetime="2018-04-04T01:13:24.000Z" itemprop="datePublished">2018-04-04</time>
@@ -78,8 +78,8 @@
       <header class="article-header">
         
   
-    <h1 class="article-title" itemprop="name">
-      为什么Thread.suspend和resume被弃用
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/">为什么Thread.suspend和resume被弃用</a>
     </h1>
   
 
@@ -113,24 +113,15 @@
     </footer>
   </div>
   
-    
-<nav id="article-nav">
-  
-    <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          了解HashMap原理
-        
-      </div>
-    </a>
-  
-  
-</nav>
-
-  
 </article>
 
+
+  
+
+
+  <nav id="page-nav">
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><span class="page-number current">2</span>
+  </nav>
 </section>
         
           <aside id="sidebar">
