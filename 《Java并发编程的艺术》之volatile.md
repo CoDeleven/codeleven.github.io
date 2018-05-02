@@ -43,6 +43,15 @@ public void doTask(){
 * 传递规则：如果操作A先行发生于操作B，而操作B又先行发生于操作C，则可以得出操作A先行发生于操作C
 
 ## volatile的内存语义
+**JMM针对编译器制定**的volatile的重排序规则
+![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png)
+
+* 第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被**编译器重排序**到volatile写之后。
+* 当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被**编译器重排序**到volatile读之前。
+* 当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。
+
+注意代码上的重排序一般都是由编译器来做的，所以volatile在JMM的帮助下能保证StoreStore内存屏障前的所有写操作都不会发生重排序。后面会接触到final语义插入的StoreStore内存屏障，很多朋友以为是StoreStore保证的不会发生重排序，其实是编译器保证的。
+
 ### volatile的写内存语义
 当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示
 
@@ -74,10 +83,12 @@ volatile关键字实现原理主要还是通过内存屏障进行控制的。编
 
 上面的插入策略十分保守，但它可以保证在任意处理器平台上（在X86里，写/写，读/读，读/写 是不会发生重排序的，而且只有StoreLoad一个内存屏障），任意的程序中都能实现正确的语义。
 
+
 ### volatile写的内存语义实现
 下面是保守策略下，volatile写插入内存屏障的指令序列示意图。
 
 ![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png)
+
 
 StoreStore保证在执行volatile写前，所有写操作的处理已经刷新至内存，保证对其他线程可见了。而StoreLoad的作用是避免后面还有其他的volatile读/写操作发生重排序。由于JMM无法准确判断StoreLoad所处的环境（比如结尾是return），所以有两种选择：
 
