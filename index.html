@@ -65,6 +65,99 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
+  <time datetime="2018-05-02T02:36:31.000Z" itemprop="datePublished">2018-05-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="synchrnoized的happens-before"><a href="#synchrnoized的happens-before" class="headerlink" title="synchrnoized的happens-before"></a>synchrnoized的happens-before</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;<span class="comment">// ①</span></span><br><span class="line">    a = <span class="number">100</span>; <span class="comment">// ②</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ③</span></span><br><span class="line">&#125;<span class="comment">// ④</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123; <span class="comment">// ⑤</span></span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ⑥</span></span><br><span class="line">        <span class="keyword">int</span> result = a; <span class="comment">// ⑦</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// ⑧</span></span><br></pre></td></tr></table></figure>
+<p>假设线程A执行init()，线程B执行doTask()，有如下的happens-before关系：</p>
+<ul>
+<li>根据程序次序规则：<ul>
+<li>① hb ②</li>
+<li>② hb ③</li>
+<li>③ hb ④</li>
+<li>⑤ hb ⑥</li>
+<li>⑥ hb ⑦</li>
+<li>⑦ hb ⑧</li>
+</ul>
+</li>
+<li>根据监视器规则：<ul>
+<li>① hb ④</li>
+<li>④ hb ⑤</li>
+<li>⑤ hb ⑧</li>
+</ul>
+</li>
+</ul>
+<p>根据传递规则，保证init()方法所有的修改对doTask()方法可见，happens-before关系如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png" alt=""></p>
+<p>1、2间的表示程序次序性规则，4、5间的表示监视器规则，由于3、4有happens-before关系，4、5有happens-before关系，所以根据传递性规则，2、6间有happens-before关系。</p>
+<p>线程A释放锁之前所有可见的共享变量，在线程B获取同个锁之后就变得可见了。</p>
+<h2 id="synchrnoized的内存语义"><a href="#synchrnoized的内存语义" class="headerlink" title="synchrnoized的内存语义"></a>synchrnoized的内存语义</h2><h3 id="synchrnoized获取锁内存语义"><a href="#synchrnoized获取锁内存语义" class="headerlink" title="synchrnoized获取锁内存语义"></a>synchrnoized获取锁内存语义</h3><p>当释放锁时，JMM会把线程对应的本地内存中的共享变量刷新到主内存。以上面的例子为例，共享数据的状态示意图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png" alt=""></p>
+<h3 id="synchrnoized释放锁内存语义"><a href="#synchrnoized释放锁内存语义" class="headerlink" title="synchrnoized释放锁内存语义"></a>synchrnoized释放锁内存语义</h3><p>当A线程获取到锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png" alt=""></p>
+<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><p>对比锁释放-获取的内存语义和volatile的写-读内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取和volatile读有相同的内存语义。</p>
+<ul>
+<li>线程A释放一个锁，实质上是告诉其他 要获取该共享变量 线程 一个消息（线程A所做的修改）</li>
+<li>线程B获取一个锁，实质上是接受到其他线程发出的消息（释放这个锁的线程对共享变量所做的修改）</li>
+<li>线程A释放，随后线程B获取，实质上是线程A通过主内存给线程B发送消息。</li>
+</ul>
+<p>这里判断语义是否相同是通过两个操作的流程是否相同，比如线程A的锁释放完时，刷新至主内存；volatile写完后，刷新至主内存，并通知其他线程本地内存的共享变量失效（在锁释放环节里是交给锁获取执行）；</p>
+<h2 id="CAS和JUC"><a href="#CAS和JUC" class="headerlink" title="CAS和JUC"></a>CAS和JUC</h2><p>synchronized是通过控制对象头来控制锁的升级，但是具体获取锁和释放锁的流程藏在JVM里，这里将通过ReentrantLock类比synchronized过程。</p>
+<p><a href="https://codeleven.cn/2018/04/05/%E4%BA%86%E8%A7%A3AQS%E4%B9%8BExclusiveLock/" target="_blank" rel="noopener">ReentrantLock的实现流程</a></p>
+<p>这里要学习的是CAS，JDK文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步设置为给定的更新值。此操作具有volatile读和写的语义。<br>前面讲到volatile写保证volatile写不会和前面的操作发生重排序，volatile读保证volatile读不会和后面的操作发生重排序。组合这两个条件就意味着同时实现了 禁止某一操作和操作前、操作后的重排序。CAS操作就是如此，它在是通过加上lock前缀来实现以下的功能：</p>
+<ul>
+<li>使用缓存锁定保证原子性</li>
+<li>禁止之前和之后的重排序</li>
+<li>把写缓冲区中的所有数据刷新到内存</li>
+</ul>
+<p>正是因为CAS同时具有volatile读和写的内存语义，因此Java线程之间的通信有下面四种方式。</p>
+<ol>
+<li>A线程写volatile变量，B线程读这个volatile变量</li>
+<li>A线程写volatile变量，B线程用CAS修改volatile变量</li>
+<li>A线程用CAS修改volatile变量，B线程用CAS修改这个变量</li>
+<li>A线程用CAS修改volatile变量，B线程用volatile读取该变量</li>
+</ol>
+<p>JUC包的通用化的实现模式：</p>
+<ul>
+<li>声明共享变量为volatile</li>
+<li>使用CAS的原子条件来实现线程间的同步</li>
+<li>配合volatile读/写和CAS 来实习线程间的通信</li>
+</ul>
+<p>AQS，非阻塞数据结构和原子变量类，这些JUC包中的基础都是使用上面的模式来实现的，而JUC包的高层类又是依赖这些基础类来实现的。从整体看，JUC包的实现示意图如下所示。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjgp17xvq0001d4vjpmezwuco" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="article-date">
@@ -108,7 +201,14 @@
 <li>volatile变量规则：对一个变量的写操作先行发生于后面对这个变量的读操作</li>
 <li>传递规则：如果操作A先行发生于操作B，而操作B又先行发生于操作C，则可以得出操作A先行发生于操作C</li>
 </ul>
-<h2 id="volatile的内存语义"><a href="#volatile的内存语义" class="headerlink" title="volatile的内存语义"></a>volatile的内存语义</h2><h3 id="volatile的写内存语义"><a href="#volatile的写内存语义" class="headerlink" title="volatile的写内存语义"></a>volatile的写内存语义</h3><p>当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示</p>
+<h2 id="volatile的内存语义"><a href="#volatile的内存语义" class="headerlink" title="volatile的内存语义"></a>volatile的内存语义</h2><p><strong>JMM针对编译器制定</strong>的volatile的重排序规则<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png" alt=""></p>
+<ul>
+<li>第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被<strong>编译器重排序</strong>到volatile写之后。</li>
+<li>当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被<strong>编译器重排序</strong>到volatile读之前。</li>
+<li>当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。</li>
+</ul>
+<p>注意代码上的重排序一般都是由编译器来做的，所以volatile在JMM的帮助下能保证StoreStore内存屏障前的所有写操作都不会发生重排序。后面会接触到final语义插入的StoreStore内存屏障，很多朋友以为是StoreStore保证的不会发生重排序，其实是编译器保证的。</p>
+<h3 id="volatile的写内存语义"><a href="#volatile的写内存语义" class="headerlink" title="volatile的写内存语义"></a>volatile的写内存语义</h3><p>当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示</p>
 <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_concept.png" alt=""></p>
 <p>线程A写入flag变量后，本地内存将<strong>更新的共享变量</strong>（更新了几个就刷新几个）刷新至主内存，此时A线程的本地内存和主内存的共享变量相同。</p>
 <h3 id="volatile的读内存语义"><a href="#volatile的读内存语义" class="headerlink" title="volatile的读内存语义"></a>volatile的读内存语义</h3><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_memory_concept.png" alt=""></p>
@@ -150,7 +250,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjgnrrk8h000c3kvjm7zgv54y" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjgp17xvv0004d4vjo2vg9poo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -295,7 +395,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjgnrrk8100023kvjl9w5qppu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjgp17xvw0005d4vjjv56z8b9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -436,7 +536,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjgnrrk8400043kvjj99swpep" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjgp17xvs0002d4vj3z2l9xki" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -465,7 +565,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgnrrk7t00003kvjqfqywi5e" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/ForkJoin并不是银弹/" data-id="cjgp17xvl0000d4vjvg7dxcol" class="article-share-link">Share</a>
       
       
     </footer>
@@ -506,7 +606,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgnrrk8u000o3kvjzt7ifo9r" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjgp17xw5000id4vjz5xdesdd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -571,7 +671,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgnrrk8m000d3kvje93t2gu9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjgp17xvy0008d4vjzm2xj20u" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -697,7 +797,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgnrrk8p000h3kvjj6qr2t3o" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgp17xvz000ad4vjobqrew8s" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -773,7 +873,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgnrrk8t000l3kvjt9sbtwww" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgp17xwn000xd4vj0558yrtt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -832,72 +932,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgnrrk8o000f3kvj2o8zxaid" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgp17xw1000dd4vjj39owvnu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-了解HashMap原理" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/" class="article-date">
-  <time datetime="2018-04-05T11:51:39.000Z" itemprop="datePublished">2018-04-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/05/了解HashMap原理/">了解HashMap原理</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>对于写了这么久的HashMap，对其知之甚少，趁大三有点闲时，打算深入了解下HashMap的原理。</p>
-<ol>
-<li>HashMap、HashTable之间有什么关系</li>
-<li>HashMap在put、remove的时候做了什么</li>
-<li>resize（再哈希）是什么</li>
-<li>为什么每次扩容，容量都是原来的二次方</li>
-</ol>
-<h2 id="HashMap和HashTable间的关系"><a href="#HashMap和HashTable间的关系" class="headerlink" title="HashMap和HashTable间的关系"></a>HashMap和HashTable间的关系</h2><p>HashMap和HashTable间的差异：</p>
-<ol>
-<li>HashMap是线程不安全的,HashTable几乎都加上了方法级别的Synchronize，所以同一时间最多只有一个线程可以对同个方法进行调用</li>
-<li><p>HashMap允许null键和null值,HashTable遇到null值会抛出NPE</p>
-<p> HashTable的源码分析戳这里</p>
-<h2 id="HashMap再put、remove的时候做了什么"><a href="#HashMap再put、remove的时候做了什么" class="headerlink" title="HashMap再put、remove的时候做了什么"></a>HashMap再put、remove的时候做了什么</h2></li>
-</ol>
-<h3 id="JDK6"><a href="#JDK6" class="headerlink" title="JDK6"></a>JDK6</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 第一次注意到put有返回值</span></span><br><span class="line"><span class="comment"> * 如果put之前key已经存在和值X的对应关系，则返回值X</span></span><br><span class="line"><span class="comment"> * 如果put之前key没有对应关系，则返回null</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 当key为null时，特殊处理，这是和HashTable不一样的地方</span></span><br><span class="line">    <span class="comment">// HashMap允许key、value为null</span></span><br><span class="line">    <span class="keyword">if</span> (key == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> putForNullKey(value);</span><br><span class="line">    <span class="comment">// hash一下，这里用到的是扰动函数</span></span><br><span class="line">    <span class="keyword">int</span> hash = hash(key.hashCode());</span><br><span class="line">    <span class="comment">// 获取该hash值的bucketIndex</span></span><br><span class="line">    <span class="keyword">int</span> i = indexFor(hash, table.length);</span><br><span class="line">    <span class="comment">// 遍历对应bucktIndex位置的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[i]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        Object k;</span><br><span class="line">        <span class="comment">// 比较该bucktIndex下的所有Entry</span></span><br><span class="line">        <span class="comment">// 比较hash值、比较key是否相等（从值和地址两方面进行比较）</span></span><br><span class="line">        <span class="comment">// 为什么要再比较次hash值</span></span><br><span class="line">        <span class="keyword">if</span> (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// fail-fast的计数器</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 添加新值</span></span><br><span class="line">    addEntry(hash, key, value, i);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> V <span class="title">putForNullKey</span><span class="params">(V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 从Entry数组下标为0的位置开始一一遍历</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[<span class="number">0</span>]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        <span class="comment">// 是否存在这么一个entry，其key为null</span></span><br><span class="line">        <span class="comment">// 如果存在则替换新值</span></span><br><span class="line">        <span class="keyword">if</span> (e.key == <span class="keyword">null</span>) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            <span class="comment">// 钩子函数</span></span><br><span class="line">            <span class="comment">// 可以看一下LinkedHashMap</span></span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计数器加一</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 新添加一个键值对</span></span><br><span class="line">    addEntry(<span class="number">0</span>, <span class="keyword">null</span>, value, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addEntry</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">int</span> bucketIndex)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取下该bucketIndex下的Entry</span></span><br><span class="line">    Entry&lt;K,V&gt; e = table[bucketIndex];</span><br><span class="line">    <span class="comment">// 如果产生了hash冲突，那么就将Old Entry连接到New Entry后面</span></span><br><span class="line">    table[bucketIndex] = <span class="keyword">new</span> Entry&lt;K,V&gt;(hash, key, value, e);</span><br><span class="line">    <span class="comment">// 判断是否要再hash</span></span><br><span class="line">    <span class="keyword">if</span> (size++ &gt;= threshold)</span><br><span class="line">        <span class="comment">// 因为capacity本身就是2的n次方，见HashMap的初始方法</span></span><br><span class="line">        <span class="comment">// 所以每次扩大，只需要*2</span></span><br><span class="line">        resize(<span class="number">2</span> * table.length);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">transfer</span><span class="params">(Entry[] newTable)</span> </span>&#123;</span><br><span class="line">    Entry[] src = table;</span><br><span class="line">    <span class="keyword">int</span> newCapacity = newTable.length;</span><br><span class="line">    <span class="comment">// 遍历全部的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; src.length; j++) &#123;</span><br><span class="line">        Entry&lt;K,V&gt; e = src[j];</span><br><span class="line">        <span class="comment">// 如果该BucketIndex存在数值</span></span><br><span class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>) &#123;</span><br><span class="line">            src[j] = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="comment">// 保存下一个Entry</span></span><br><span class="line">                Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">                <span class="comment">// 获取该e对象在新entry数组的index</span></span><br><span class="line">                <span class="keyword">int</span> i = indexFor(e.hash, newCapacity);</span><br><span class="line">                <span class="comment">// 是否发生hash冲突，如果有，就接到e对象的后面，没有就是null</span></span><br><span class="line">                e.next = newTable[i];</span><br><span class="line">                <span class="comment">// 将e设置到对应的位置</span></span><br><span class="line">                newTable[i] = e;</span><br><span class="line">                e = next;</span><br><span class="line">            &#125; <span class="keyword">while</span> (e != <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="JDK7"><a href="#JDK7" class="headerlink" title="JDK7"></a>JDK7</h3><p>在JDK6的基础上，没有做特别的改变，倒是去除了modCount的volatile关键字(1.7取消了modCount的volatile)。</p>
-<p>移除volatile的原因:<br>对于单线程集合，没必要承担volatile的额外消耗；多线程情况下，也不应该使用单线程集合，所以在hashmap里面移除volatile</p>
-<p><a href="https://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6625725" target="_blank" rel="noopener">移除Volatile的原文</a></p>
-<h3 id="JDK8"><a href="#JDK8" class="headerlink" title="JDK8"></a>JDK8</h3><p>需要红黑树的知识，待学习</p>
-<h2 id="再哈希"><a href="#再哈希" class="headerlink" title="再哈希"></a>再哈希</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 扩容，根据key的hash和数组总长度重新hash获取新的BucketIndex，然后存放</span></span><br><span class="line"><span class="comment"> * 因为不是线程安全的，再哈希可能会发生死循环</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="每次扩容，容量都是原来的二次方"><a href="#每次扩容，容量都是原来的二次方" class="headerlink" title="每次扩容，容量都是原来的二次方"></a>每次扩容，容量都是原来的二次方</h2><p>可以看一下，如果容量的长度不是2的幂次方<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">容量: 1000 0000</span><br><span class="line">          &amp;</span><br><span class="line">实际: 1110 1111</span><br></pre></td></tr></table></figure></p>
-<p>会有大量的空间被浪费，很多位被设置成0，增大了hash冲突，所以应该尽可能的让所有位都是1，那么理想状况下应该是如下所示<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">容量: 1111 1111</span><br><span class="line">          &amp;</span><br><span class="line">实际: 1110 1111</span><br></pre></td></tr></table></figure></p>
-<p>但是这样处理的话，总容量为255,但是实际数组可用位置为[0, 255)，所以会发生数组越界，故要减1</p>
-<p>所以容量是2的幂次方是为了减少空间的浪费，降低hash冲突的几率</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgnrrk8q000j3kvjbz9zc92d" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
 
     </footer>
   </div>
@@ -954,6 +992,10 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
           </li>
         
@@ -967,10 +1009,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/">(no title)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
           </li>
         
       </ul>

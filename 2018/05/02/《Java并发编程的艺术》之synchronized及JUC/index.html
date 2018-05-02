@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>《Java并发编程的艺术》之synchronized及JUC | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="synchrnoized的happens-before1234567891011int a;boolean flag;public synchronized void init()&amp;#123;// ①    a = 100; // ②    flag = true; // ③&amp;#125;// ④public synchronized void doTask()&amp;#123; // ⑤    if(f">
+<meta name="keywords" content="Java并发,JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Java并发编程的艺术》之synchronized及JUC">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="synchrnoized的happens-before1234567891011int a;boolean flag;public synchronized void init()&amp;#123;// ①    a = 100; // ②    flag = true; // ③&amp;#125;// ④public synchronized void doTask()&amp;#123; // ⑤    if(f">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png">
+<meta property="og:updated_time" content="2018-05-02T06:31:25.767Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Java并发编程的艺术》之synchronized及JUC">
+<meta name="twitter:description" content="synchrnoized的happens-before1234567891011int a;boolean flag;public synchronized void init()&amp;#123;// ①    a = 100; // ②    flag = true; // ③&amp;#125;// ④public synchronized void doTask()&amp;#123; // ⑤    if(f">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
+  <time datetime="2018-05-02T02:36:31.000Z" itemprop="datePublished">2018-05-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《Java并发编程的艺术》之synchronized及JUC
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="synchrnoized的happens-before"><a href="#synchrnoized的happens-before" class="headerlink" title="synchrnoized的happens-before"></a>synchrnoized的happens-before</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;<span class="comment">// ①</span></span><br><span class="line">    a = <span class="number">100</span>; <span class="comment">// ②</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ③</span></span><br><span class="line">&#125;<span class="comment">// ④</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123; <span class="comment">// ⑤</span></span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ⑥</span></span><br><span class="line">        <span class="keyword">int</span> result = a; <span class="comment">// ⑦</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// ⑧</span></span><br></pre></td></tr></table></figure>
+<p>假设线程A执行init()，线程B执行doTask()，有如下的happens-before关系：</p>
+<ul>
+<li>根据程序次序规则：<ul>
+<li>① hb ②</li>
+<li>② hb ③</li>
+<li>③ hb ④</li>
+<li>⑤ hb ⑥</li>
+<li>⑥ hb ⑦</li>
+<li>⑦ hb ⑧</li>
+</ul>
+</li>
+<li>根据监视器规则：<ul>
+<li>① hb ④</li>
+<li>④ hb ⑤</li>
+<li>⑤ hb ⑧</li>
+</ul>
+</li>
+</ul>
+<p>根据传递规则，保证init()方法所有的修改对doTask()方法可见，happens-before关系如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png" alt=""></p>
+<p>1、2间的表示程序次序性规则，4、5间的表示监视器规则，由于3、4有happens-before关系，4、5有happens-before关系，所以根据传递性规则，2、6间有happens-before关系。</p>
+<p>线程A释放锁之前所有可见的共享变量，在线程B获取同个锁之后就变得可见了。</p>
+<h2 id="synchrnoized的内存语义"><a href="#synchrnoized的内存语义" class="headerlink" title="synchrnoized的内存语义"></a>synchrnoized的内存语义</h2><h3 id="synchrnoized获取锁内存语义"><a href="#synchrnoized获取锁内存语义" class="headerlink" title="synchrnoized获取锁内存语义"></a>synchrnoized获取锁内存语义</h3><p>当释放锁时，JMM会把线程对应的本地内存中的共享变量刷新到主内存。以上面的例子为例，共享数据的状态示意图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png" alt=""></p>
+<h3 id="synchrnoized释放锁内存语义"><a href="#synchrnoized释放锁内存语义" class="headerlink" title="synchrnoized释放锁内存语义"></a>synchrnoized释放锁内存语义</h3><p>当A线程获取到锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png" alt=""></p>
+<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><p>对比锁释放-获取的内存语义和volatile的写-读内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取和volatile读有相同的内存语义。</p>
+<ul>
+<li>线程A释放一个锁，实质上是告诉其他 要获取该共享变量 线程 一个消息（线程A所做的修改）</li>
+<li>线程B获取一个锁，实质上是接受到其他线程发出的消息（释放这个锁的线程对共享变量所做的修改）</li>
+<li>线程A释放，随后线程B获取，实质上是线程A通过主内存给线程B发送消息。</li>
+</ul>
+<p>这里判断语义是否相同是通过两个操作的流程是否相同，比如线程A的锁释放完时，刷新至主内存；volatile写完后，刷新至主内存，并通知其他线程本地内存的共享变量失效（在锁释放环节里是交给锁获取执行）；</p>
+<h2 id="CAS和JUC"><a href="#CAS和JUC" class="headerlink" title="CAS和JUC"></a>CAS和JUC</h2><p>synchronized是通过控制对象头来控制锁的升级，但是具体获取锁和释放锁的流程藏在JVM里，这里将通过ReentrantLock类比synchronized过程。</p>
+<p><a href="https://codeleven.cn/2018/04/05/%E4%BA%86%E8%A7%A3AQS%E4%B9%8BExclusiveLock/" target="_blank" rel="noopener">ReentrantLock的实现流程</a></p>
+<p>这里要学习的是CAS，JDK文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步设置为给定的更新值。此操作具有volatile读和写的语义。<br>前面讲到volatile写保证volatile写不会和前面的操作发生重排序，volatile读保证volatile读不会和后面的操作发生重排序。组合这两个条件就意味着同时实现了 禁止某一操作和操作前、操作后的重排序。CAS操作就是如此，它在是通过加上lock前缀来实现以下的功能：</p>
+<ul>
+<li>使用缓存锁定保证原子性</li>
+<li>禁止之前和之后的重排序</li>
+<li>把写缓冲区中的所有数据刷新到内存</li>
+</ul>
+<p>正是因为CAS同时具有volatile读和写的内存语义，因此Java线程之间的通信有下面四种方式。</p>
+<ol>
+<li>A线程写volatile变量，B线程读这个volatile变量</li>
+<li>A线程写volatile变量，B线程用CAS修改volatile变量</li>
+<li>A线程用CAS修改volatile变量，B线程用CAS修改这个变量</li>
+<li>A线程用CAS修改volatile变量，B线程用volatile读取该变量</li>
+</ol>
+<p>JUC包的通用化的实现模式：</p>
+<ul>
+<li>声明共享变量为volatile</li>
+<li>使用CAS的原子条件来实现线程间的同步</li>
+<li>配合volatile读/写和CAS 来实习线程间的通信</li>
+</ul>
+<p>AQS，非阻塞数据结构和原子变量类，这些JUC包中的基础都是使用上面的模式来实现的，而JUC包的高层类又是依赖这些基础类来实现的。从整体看，JUC包的实现示意图如下所示。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjgp17xvq0001d4vjpmezwuco" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+  
+    <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《Java并发编程的艺术》之volatile</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 10px;">Java集合</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/">(no title)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

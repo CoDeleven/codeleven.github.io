@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png">
-<meta property="og:updated_time" content="2018-05-01T06:51:31.040Z">
+<meta property="og:updated_time" content="2018-05-01T14:40:25.208Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Java并发编程的艺术》之Java内存模型">
 <meta name="twitter:description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由重排序 和 写缓冲区 引发的，重排序又分为处理器重排序 和 编译器重排序。面对写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高">
@@ -207,7 +207,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjgnrrk8100023kvjl9w5qppu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjgp17xvw0005d4vjjv56z8b9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -281,6 +281,10 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
           </li>
         
@@ -294,10 +298,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/">(no title)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
           </li>
         
       </ul>
