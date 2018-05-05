@@ -50,8 +50,6 @@ public void doTask(){
 * 当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被**编译器重排序**到volatile读之前。
 * 当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。
 
-注意代码上的重排序一般都是由编译器来做的，所以volatile在JMM的帮助下能保证StoreStore内存屏障前的所有写操作都不会发生重排序。后面会接触到final语义插入的StoreStore内存屏障，很多朋友以为是StoreStore保证的不会发生重排序，其实是编译器保证的。
-
 ### volatile的写内存语义
 当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示
 
