@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_semantic.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png">
-<meta property="og:updated_time" content="2018-05-02T11:40:44.394Z">
+<meta property="og:updated_time" content="2018-05-05T03:02:59.688Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Java并发编程的艺术》之volatile">
 <meta name="twitter:description" content="本章是在学习内存模型后，对Volatile关键字 有了更加全面得理解，对知识点进行一个分析总结。 volatile的特性volatile在单个操作上和synchronized一样  可见性：volatile字段的写操作保证对所有线程可见 原子性：volatile字段的单个读写操作是原子性的（比如在32位机上，读取64位的long、double类型），但是volatile++就不具有原子性  vol">
@@ -123,7 +123,6 @@
 <li>当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被<strong>编译器重排序</strong>到volatile读之前。</li>
 <li>当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。</li>
 </ul>
-<p>注意代码上的重排序一般都是由编译器来做的，所以volatile在JMM的帮助下能保证StoreStore内存屏障前的所有写操作都不会发生重排序。后面会接触到final语义插入的StoreStore内存屏障，很多朋友以为是StoreStore保证的不会发生重排序，其实是编译器保证的。</p>
 <h3 id="volatile的写内存语义"><a href="#volatile的写内存语义" class="headerlink" title="volatile的写内存语义"></a>volatile的写内存语义</h3><p>当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示</p>
 <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_concept.png" alt=""></p>
 <p>线程A写入flag变量后，本地内存将<strong>更新的共享变量</strong>（更新了几个就刷新几个）刷新至主内存，此时A线程的本地内存和主内存的共享变量相同。</p>
@@ -166,7 +165,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjgp17xvv0004d4vjo2vg9poo" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjgszdgz300089cvj9643iykh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -187,9 +186,9 @@
     </a>
   
   
-    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">《Java并发编程的艺术》之Java内存模型</div>
+      <div class="article-nav-title">关于final插入StoreStore的疑惑</div>
     </a>
   
 </nav>
@@ -240,6 +239,14 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》之happens-before/">《Java并发编程的艺术》之happens-before</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》之final/">《Java并发编程的艺术》之final</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
           </li>
         
@@ -248,15 +255,7 @@
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/04/27/ForkJoin并不是银弹/">(no title)</a>
+            <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
           </li>
         
       </ul>
