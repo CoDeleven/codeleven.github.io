@@ -78,7 +78,7 @@ private V putForNullKey(V value) {
 void addEntry(int hash, K key, V value, int bucketIndex) {
     // 获取下该bucketIndex下的Entry
     Entry<K,V> e = table[bucketIndex];
-    // 如果产生了hash冲突，那么就将Old Entry连接到New Entry后面
+    // 产生了hash冲突。将Old Entry连接到New Entry后面
     table[bucketIndex] = new Entry<K,V>(hash, key, value, e);
     // 判断是否要再hash
     if (size++ >= threshold)
