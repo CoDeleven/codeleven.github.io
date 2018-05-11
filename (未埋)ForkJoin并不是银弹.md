@@ -1,3 +1,9 @@
+---
+title: (未埋)ForkJoin并不是银弹
+date: 2018-04-26 15:11:46
+tags: [Java并发]
+---
+
 这是一段难受的排Bug的经历，ForkJoin框架的粗浅理解让我在单核服务器下发生了**栈溢出**，因为"ForkJoinPool.invokeAll()"的底层原理不仅会调用空闲的线程，也会调用当前的线程。如果处理不好，在单核服务器下就会发生死循环，最终产生栈溢出。
 ```java
 Exception in thread "main" java.util.concurrent.ExecutionException: java.lang.St
