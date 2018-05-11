@@ -65,6 +65,339 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
+  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在学习volatile和final时，注意到写时的区别：</p>
+<ol>
+<li>volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写</li>
+<li>final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作</li>
+</ol>
+<p>想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。</p>
+<p>而在<strong>对final域和普通域初始化的构造函数</strong>里，即使final写前面有StoreStore，前面的普通写/读仍然会发生重排序？？</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjh1olkqq000u6svj2rhnellt" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之synchronized的底层实现原理" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" class="article-date">
+  <time datetime="2018-04-27T14:55:43.000Z" itemprop="datePublished">2018-04-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在学习锁优化时，<strong>对象头(Mark Word)</strong> 是必不可缺的一环，因为<em>synchronized</em> 用的锁是存在<strong>对象头</strong>里的。32位的虚拟机上对象头占64位（8字节），64位的虚拟机上对象头占128位(16字节）<a href="https://www.zhihu.com/question/63340239" target="_blank" rel="noopener">^objectHead</a>；而不同的类型，对象头的布局不太一样：</p>
+<ul>
+<li>数组类型：Mark Word、Class Metadata Address、Array Length</li>
+<li>普通类型：Mark Word、Class Metadata Address</li>
+</ul>
+<p><em>Mark Word</em> 表示对象的<em>HashCode</em> 或 <em>锁信息</em><br><em>Class Metadata Address</em> 表示对象的数据类型在方法区对应的地址<br><em>Array Length</em> 表示数组的长度（只在对象是数组的情况下才会存在）</p>
+<p>对象头的默认表示应该如下所示</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th style="text-align:center">25bit</th>
+<th style="text-align:center">4bit</th>
+<th style="text-align:center">1bit是否是偏向锁</th>
+<th style="text-align:center">2bit 锁标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无状态锁</td>
+<td style="text-align:center">对象的hashcode</td>
+<td style="text-align:center">对象分代年龄</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">01</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>而根据JVM的设置<sup><a href="关于偏向锁的相关JVM设置:-XXBiasedLockingStartupDelay=0表示启动程序几秒钟后激活偏向锁-XXUseBiasedLocking=false表示关闭偏向锁（确定会发生竞争时可以这么设置）">^1</a></sup>，具体分配时又会有不同的情况，如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg" alt="偏向锁到重量锁的过程"></p>
+<p>当关闭了偏向锁的设置，那么就会走左边的流程；反之则走右边的流程。</p>
+<h2 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h2><p>由于大多数情况下，锁大多都不处于多线程竞争状态，而且总是由同一个线程获取，所以JVM在1.6之后加入了<strong>偏向锁</strong> 和 <strong>轻量锁</strong> ，如今总共由4种锁状态：<strong>无状态锁</strong>、<strong>偏向锁</strong>、<strong>轻量锁</strong>、<strong>重量锁</strong>。随着线程竞争的提升，锁会逐渐升级（无法降级）。<br>偏向锁在没有竞争的情况下可以提高同步的性能，这方面主要体现在偏向锁只需要进行一次CAS而轻量锁需要两次。它是一个需要权衡利弊的选择，它不是在任何情况下都对程序有利的。如果竞争很多，那么撤销偏向锁的过程就会成为性能瓶颈。</p>
+<p>当偏向锁可用时，初始化的对象头分配如下所示</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th style="text-align:center">23bit</th>
+<th style="text-align:center">2bit</th>
+<th style="text-align:center">4bit</th>
+<th style="text-align:center">1bit 是否是偏向锁</th>
+<th style="text-align:center">2bit 锁标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>偏向锁</td>
+<td style="text-align:center">线程ID</td>
+<td style="text-align:center">epoch</td>
+<td style="text-align:center">对象分代年龄</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">01</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="加锁过程"><a href="#加锁过程" class="headerlink" title="加锁过程"></a>加锁过程</h3><ol>
+<li>当对象头的<em>isBiased</em> 为1时且锁状态为<em>01</em>时，偏向锁可用，继续后面的流程</li>
+<li>判断目标对象头是否包含本线程ID，如果没有，则直接CAS往对象头里写入本线程ID。到这一步加锁就结束了</li>
+</ol>
+<h3 id="锁撤销"><a href="#锁撤销" class="headerlink" title="锁撤销"></a>锁撤销</h3><p>由于偏向锁使用了一种<strong>直到竞争发生时才会释放</strong>的机制，所以当其他线程竞争偏向锁时，持有偏向锁的线程才会去释放锁。</p>
+<ol>
+<li>等待<strong>原持有偏向锁的线程(后文简称原线程)</strong>运行至<strong>全局安全点(safe point)</strong></li>
+<li>暂停<strong>原线程</strong></li>
+<li>检查<strong>原线程</strong> 的线程状态，如果退出了同步代码块，则重偏向；反之升级为轻量锁</li>
+<li>恢复<strong>原线程</strong> </li>
+</ol>
+<h2 id="轻量锁"><a href="#轻量锁" class="headerlink" title="轻量锁"></a>轻量锁</h2><h3 id="加锁过程-1"><a href="#加锁过程-1" class="headerlink" title="加锁过程"></a>加锁过程</h3><p>注意：轻量锁会一直保持，唤醒总是发生在轻量锁解锁的时候，因为加锁的时候已经成功CAS操作；而CAS失败的线程，会立即锁膨胀，并阻塞等待唤醒。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LightLockFlowChart.png" alt="引用Java并发编程艺术的图片"></p>
+<ol>
+<li>第一次进入同步块，开辟一个叫做<em>Lock Record</em> 的空间用于存储锁记录<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/InitLockRecord.png" alt=""></li>
+<li>将对象头中的Mark Word 复制到 当前线程栈中</li>
+<li>尝试用CAS将<em>Mark Word</em> <strong>替换</strong>为 <em>指向Lock Record的指针</em> <img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CopyMW2LockRecord.png" alt=""></li>
+<li>第三步操作成功，则将<em>Mark Word</em> 设置为<em>00</em>状态，标识<strong>轻量锁</strong></li>
+<li>然后执行同步体</li>
+<li>第三部操作失败，进入自旋获取锁</li>
+<li>自旋获取锁的失败次数到达阈值，膨胀锁，修改为重量级锁（状态改为<strong>10</strong>）</li>
+<li>线程阻塞</li>
+</ol>
+<h3 id="锁释放过程"><a href="#锁释放过程" class="headerlink" title="锁释放过程"></a>锁释放过程</h3><ol>
+<li>尝试CAS将<strong>Lock Record的Owner</strong> 复制回 <strong>Mark Word</strong></li>
+<li>如果CAS操作成功，则表示没有竞争发生；否则看步骤3</li>
+<li>释放锁并唤醒等待的线程</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本章是对<em>synchronized</em> 在JVM里的各种等级及升级的流程进行了讲解，其中主要是通过控制<strong>对象头</strong>的一些状态来控制锁的等级。偏向锁通过标记<em>Thread ID</em> 来表示，当前对象已经被对应线程占用；轻量锁则替换<em>Mark Word</em> 为 <em>Lock Record 地址</em> 来表示当前对象被对应线程占用。无论是哪种锁，在不同的场景下有不同的需求，可以参考以下表格做出选择</p>
+<p>偏向锁：</p>
+<ul>
+<li>优点：加锁和解锁不需要额外小号，和执行非同步方法相比，仅存在纳秒级的差距</li>
+<li>缺点：如果线程间存在竞争，会带来额外开销（偏向锁的撤销）</li>
+<li>适用场景： 适用于只有一个线程访问同步块的场景</li>
+</ul>
+<p>轻量锁：</p>
+<ul>
+<li>优点： 竞争的线程不会造成阻塞，提高了程序的响应速度</li>
+<li>缺点： 如果始终得不到锁，使用自旋会消耗CPU</li>
+<li>适用场景： 追求相应实践，同步块执行速度非常快</li>
+</ul>
+<p>重量锁：</p>
+<ul>
+<li>优点： 线程竞争不使用自选，不会消耗CPU</li>
+<li>缺点： 线程阻塞，响应时间缓慢</li>
+<li>适用场景： 追求吞吐量，同步块执行速度较慢</li>
+</ul>
+<p>这个是网上找到的关于锁撤销、膨胀等操作的总流程<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjh1olkqd000f6svjzdx7t11m" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-(未埋)ForkJoin并不是银弹" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/26/(未埋)ForkJoin并不是银弹/" class="article-date">
+  <time datetime="2018-04-26T07:11:46.000Z" itemprop="datePublished">2018-04-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/26/(未埋)ForkJoin并不是银弹/">(未埋)ForkJoin并不是银弹</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这是一段难受的排Bug的经历，ForkJoin框架的粗浅理解让我在单核服务器下发生了<strong>栈溢出</strong>，因为”ForkJoinPool.invokeAll()”的底层原理不仅会调用空闲的线程，也会调用当前的线程。如果处理不好，在单核服务器下就会发生死循环，最终产生栈溢出。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread <span class="string">"main"</span> java.util.concurrent.ExecutionException: java.lang.St</span><br><span class="line">ackOverflowError</span><br><span class="line">        at java.util.concurrent.FutureTask.report(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.get(Unknown Source)</span><br><span class="line">        at cn.codeleven.App.main(App.java:<span class="number">20</span>)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Sou</span><br><span class="line">rce)</span><br><span class="line">        at java.lang.reflect.Constructor.newInstance(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.getThrowableException(Unknown Sourc</span><br><span class="line">e)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.reportException(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.join(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.XiCiHandler.handleDocument2IPEntity(XiCiHandler.</span><br><span class="line">java:<span class="number">40</span>)</span><br><span class="line">        at cn.codeleven.Crawler.start(Crawler.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.Crawler.run(Crawler.java:<span class="number">20</span>)</span><br><span class="line">        at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.run(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Unknown Source)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>$<span class="number">1</span>.&lt;init&gt;(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>.opWrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)</span><br><span class="line">        at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(Unknown Source</span><br><span class="line">)</span><br><span class="line">        at java.util.stream.AbstractPipeline.evaluate(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline.collect(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjh1olkps00016svjuz5ya3db" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-记一次List.subList的错误" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/" class="article-date">
+  <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">2018-04-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>以后有空完整了解下ArrayList和相关集合<br>这次先解决一个这样的问题，看下面代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; foo = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i)&#123;</span><br><span class="line">    foo.add(i);</span><br><span class="line">&#125;</span><br><span class="line">List&lt;Integer&gt; foo1 = foo.subList(<span class="number">0</span>, <span class="number">3</span>);</span><br><span class="line">List&lt;Integer&gt; foo2 = foo.subList(<span class="number">3</span>, <span class="number">5</span>);</span><br><span class="line">foo2.add(<span class="number">1</span>);</span><br><span class="line">System.out.println(foo1.size());</span><br></pre></td></tr></table></figure>
+<p>读者感觉是否挺正常的，没有<strong>迭代</strong>，没有在<strong>多线程</strong>下，单纯的给<em>foo1</em>列表添加一个值好像没什么问题。但是在运行后会抛出“ConcurrentModificationException”，这就很气了。博主因为这个问题思来想去，从<strong>迭代</strong>到<strong>多线程</strong>，每个角度都思考过，后来进入源码一看<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SubList是ArrayList的内部类</span></span><br><span class="line"><span class="comment">/* parent = ArrayList.this</span></span><br><span class="line"><span class="comment"> * offset = 0</span></span><br><span class="line"><span class="comment"> * 剩下两个就不用解释了</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">SubList(AbstractList&lt;E&gt; parent,</span><br><span class="line">        <span class="keyword">int</span> offset, <span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex) &#123;</span><br><span class="line">    <span class="keyword">this</span>.parent = parent;</span><br><span class="line">    <span class="keyword">this</span>.parentOffset = fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.offset = offset + fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.size = toIndex - fromIndex;</span><br><span class="line">    <span class="comment">// 注意，这里从ArrayList.this获取了modCount</span></span><br><span class="line">    <span class="keyword">this</span>.modCount = ArrayList.<span class="keyword">this</span>.modCount;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在进入add等修改方法后，可以看到最终递增modCount的方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureExplicitCapacity</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 可以看到，这里递增的只是ArrayList.this的modCount</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// overflow-conscious code</span></span><br><span class="line">    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)</span><br><span class="line">        grow(minCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所以通过<em>size()</em>，<em>add()</em>等方法对<em>SubList内部类</em>的修改会引起<em>外部类的modCount变化</em>，但是<em>其他内部类的modCount</em> (作修改的内部类的modCount会改变)不改变就会产生不一致，所以抛出这个异常</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjh1olkqw00136svjg7aix1c0" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-了解AQS之Condition" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/" class="article-date">
+  <time datetime="2018-04-06T01:54:53.000Z" itemprop="datePublished">2018-04-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/06/了解AQS之Condition/">了解AQS之Condition</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在实现生产队列和消费队列时，第一个想到的大多数都是<em>Object.wait()</em> 和 <em>Object.notify()</em> ，而今天要介绍一个<em>ReentrantLock</em> 自带的一个工具<em>Condition</em>。它相比<em>Object</em> 在唤醒方面多了一些可控性，阻塞方面多了一个限时功能。两者的等待唤醒机制几乎一致，宏观流程图如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SimpleConditionObjectWaitFlow.png" alt="宏观的Condition和Object的等待唤醒机制"></p>
+<ol>
+<li>在当前线程A获取到锁</li>
+<li>调用对象的等待方法（AQS是Condition.await(),Object是Object.wait()），并进入阻塞</li>
+<li>其他线程B获取锁（是不是发现了问题，为什么B线程可以获取锁？）</li>
+<li>B线程唤醒阻塞的A线程（AQS是Condition.signal()，Object是Object.notify()）；B线程释放锁（如果A线程解除阻塞会做什么？）</li>
+<li>A线程尝试获取锁（为什么要尝试获取锁？）</li>
+<li>A线程执行下文</li>
+<li>A线程释放锁</li>
+</ol>
+<p>由于Object的实现机制涉及到<em>native方法</em>，所以这里趁机讲解一波AQS的实现过程，我猜测两者的实现原理不会相差太大。这里根据宏观流程图的①、②、③等序号分别进行解释</p>
+<h2 id="流程详解"><a href="#流程详解" class="headerlink" title="流程详解"></a>流程详解</h2><ol>
+<li>当<em>Condition</em>对象调用了<em>await()</em> 方法时，<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/whenWait%28%291.png" alt="*await()*方法的执行细节"></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</span><br><span class="line">    <span class="comment">// 将当前线程封装成结点，加入Condition队列尾部，类似enq()方法，但是在锁内进行await()，不需要CAS</span></span><br><span class="line">    Node node = addConditionWaiter();</span><br><span class="line">    <span class="comment">// 释放当前线程持有的所有锁，在这个操作之后很有可能出现竞态条件</span></span><br><span class="line">    <span class="keyword">int</span> savedState = fullyRelease(node);</span><br><span class="line">    <span class="keyword">int</span> interruptMode = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 结点在同步队列里时就返回true</span></span><br><span class="line">    <span class="comment">// 结点在CONDITION队列里时就返回false</span></span><br><span class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node)) &#123;</span><br><span class="line">        <span class="comment">// 当唤醒线程调用unlock()时就会解除该线程的等待</span></span><br><span class="line">        LockSupport.park(<span class="keyword">this</span>);</span><br><span class="line">        <span class="comment">/* 第一种情况，该线程被中断，就会将interruptMode设置为THROW_IE</span></span><br><span class="line"><span class="comment">         * 第二种情况，该线程被中断且在检查过程中状态改变（比如中断时，被唤醒），就会将mode设置为REINTERRUPT</span></span><br><span class="line"><span class="comment">         * 第三种情况，该线程被正常signal(notify)，此时结点状态值为0</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> ((interruptMode = checkInterruptWhileWaiting(node)) != <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 加入获取锁的 Sync队列中，获取成功时判断一下mode类型</span></span><br><span class="line">    <span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</span><br><span class="line">        interruptMode = REINTERRUPT;</span><br><span class="line">    <span class="comment">// 如果当前结点有后续结点，那么就清理一下链表</span></span><br><span class="line">    <span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></span><br><span class="line">        unlinkCancelledWaiters();    </span><br><span class="line">    <span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</span><br><span class="line">        <span class="comment">// 这里判断事抛出异常还是简单的中断</span></span><br><span class="line">        reportInterruptAfterWait(interruptMode);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">isOnSyncQueue</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// node是CONDITION状态 或者 是CONDITION队列里的第一个</span></span><br><span class="line">    <span class="keyword">if</span> (node.waitStatus == Node.CONDITION || node.prev == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">// 该状态一般发生在两个以上Condition处于wait且被唤醒一个</span></span><br><span class="line">    <span class="keyword">if</span> (node.next != <span class="keyword">null</span>) </span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * node.prev can be non-null, but not yet on queue because</span></span><br><span class="line"><span class="comment">     * the CAS to place it on queue can fail. So we have to</span></span><br><span class="line"><span class="comment">     * traverse from tail to make sure it actually made it.  It</span></span><br><span class="line"><span class="comment">     * will always be near the tail in calls to this method, and</span></span><br><span class="line"><span class="comment">     * unless the CAS failed (which is unlikely), it will be</span></span><br><span class="line"><span class="comment">     * there, so we hardly ever traverse much.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="comment">// 当前结点是尾结点返回true；反之返回false</span></span><br><span class="line">    <span class="keyword">return</span> findNodeFromTail(node);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p>当其他线程唤醒等待线程，因为这部分比较简单就省略了前面的内容，讲一下重要的地方。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">transferForSignal</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 更改node结点的状态；如果更改失败就是已经取消了</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (!compareAndSetWaitStatus(node, Node.CONDITION, <span class="number">0</span>))</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 将当前结点接入Sync队列，让这个结点加入等待；如果结点处于取消状态或者CAS</span></span><br><span class="line"><span class="comment">     * 设置状态失败，都会重新唤醒结点所在的线程，重新来过（在这一步会有一些不影</span></span><br><span class="line"><span class="comment">     * 响整体的小错误）</span></span><br><span class="line"><span class="comment">     */</span> </span><br><span class="line">    Node p = enq(node);</span><br><span class="line">    <span class="keyword">int</span> ws = p.waitStatus;</span><br><span class="line">    <span class="comment">// 如果这边修改状态失败了，那么就直接唤醒线程；否则交给release()方法来唤醒</span></span><br><span class="line">    <span class="keyword">if</span> (ws &gt; <span class="number">0</span> || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))</span><br><span class="line">        LockSupport.unpark(node.thread);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>阻塞线程被唤醒后，检查结点状态，然后设置interruptMode，最后进入争夺锁的过程里</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">checkInterruptWhileWaiting</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">     <span class="comment">// 判断是否有中断</span></span><br><span class="line">     <span class="keyword">return</span> Thread.interrupted() ?</span><br><span class="line">         (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) :</span><br><span class="line">         <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">transferAfterCancelledWait</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (compareAndSetWaitStatus(node, Node.CONDITION, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="comment">// 加入Sync队列，这一步做了signal()做的事</span></span><br><span class="line">        enq(node);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 该线程先被signal()后又被中断，我们就等该signal()流程结束。</span></span><br><span class="line"><span class="comment">     * 因为transfer过程不会太长，就选择自选</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node))</span><br><span class="line">        Thread.yield();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里是await()的后半部分</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 加入锁的获取，因为后半部分还有lock.unlock()，所以必须要重新获取锁</span></span><br><span class="line"><span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</span><br><span class="line">    interruptMode = REINTERRUPT;</span><br><span class="line"><span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></span><br><span class="line">    unlinkCancelledWaiters();</span><br><span class="line"><span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</span><br><span class="line">    <span class="comment">// 如果该线程是被中断的，那么就重新抛出异常</span></span><br><span class="line">    <span class="comment">// 如果该线程是被唤醒且中断的，那么就重新设置中断标志，交给程序员自己处理</span></span><br><span class="line">    reportInterruptAfterWait(interruptMode);</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>AQS的锁机制主要依靠双向的链表，而Condition的等待唤醒机制只需要普通链表即可实现。<br>这里对整体流程又进行了个总结。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/summary4AQS_Condition.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjh1olkqp000s6svjdlpnxavx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-了解AQS之ExclusiveLock" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/" class="article-date">
@@ -179,7 +512,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjgszdgzb000l9cvjy0igcja5" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjh1olkqu000z6svjsdsbxh7o" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -255,7 +588,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjgszdgzd000q9cvjm5f811vv" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjh1olkqv00116svjd58cw78b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -314,7 +647,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjgszdgz6000d9cvjmm9z1ina" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjh1olkqm000p6svjcdst258n" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -362,21 +695,23 @@
 <p> HashTable的源码分析戳这里</p>
 <h2 id="HashMap再put、remove的时候做了什么"><a href="#HashMap再put、remove的时候做了什么" class="headerlink" title="HashMap再put、remove的时候做了什么"></a>HashMap再put、remove的时候做了什么</h2></li>
 </ol>
-<h3 id="JDK6"><a href="#JDK6" class="headerlink" title="JDK6"></a>JDK6</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 第一次注意到put有返回值</span></span><br><span class="line"><span class="comment"> * 如果put之前key已经存在和值X的对应关系，则返回值X</span></span><br><span class="line"><span class="comment"> * 如果put之前key没有对应关系，则返回null</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 当key为null时，特殊处理，这是和HashTable不一样的地方</span></span><br><span class="line">    <span class="comment">// HashMap允许key、value为null</span></span><br><span class="line">    <span class="keyword">if</span> (key == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> putForNullKey(value);</span><br><span class="line">    <span class="comment">// hash一下，这里用到的是扰动函数</span></span><br><span class="line">    <span class="keyword">int</span> hash = hash(key.hashCode());</span><br><span class="line">    <span class="comment">// 获取该hash值的bucketIndex</span></span><br><span class="line">    <span class="keyword">int</span> i = indexFor(hash, table.length);</span><br><span class="line">    <span class="comment">// 遍历对应bucktIndex位置的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[i]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        Object k;</span><br><span class="line">        <span class="comment">// 比较该bucktIndex下的所有Entry</span></span><br><span class="line">        <span class="comment">// 比较hash值、比较key是否相等（从值和地址两方面进行比较）</span></span><br><span class="line">        <span class="comment">// 为什么要再比较次hash值</span></span><br><span class="line">        <span class="keyword">if</span> (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// fail-fast的计数器</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 添加新值</span></span><br><span class="line">    addEntry(hash, key, value, i);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> V <span class="title">putForNullKey</span><span class="params">(V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 从Entry数组下标为0的位置开始一一遍历</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[<span class="number">0</span>]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        <span class="comment">// 是否存在这么一个entry，其key为null</span></span><br><span class="line">        <span class="comment">// 如果存在则替换新值</span></span><br><span class="line">        <span class="keyword">if</span> (e.key == <span class="keyword">null</span>) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            <span class="comment">// 钩子函数</span></span><br><span class="line">            <span class="comment">// 可以看一下LinkedHashMap</span></span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计数器加一</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 新添加一个键值对</span></span><br><span class="line">    addEntry(<span class="number">0</span>, <span class="keyword">null</span>, value, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addEntry</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">int</span> bucketIndex)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取下该bucketIndex下的Entry</span></span><br><span class="line">    Entry&lt;K,V&gt; e = table[bucketIndex];</span><br><span class="line">    <span class="comment">// 如果产生了hash冲突，那么就将Old Entry连接到New Entry后面</span></span><br><span class="line">    table[bucketIndex] = <span class="keyword">new</span> Entry&lt;K,V&gt;(hash, key, value, e);</span><br><span class="line">    <span class="comment">// 判断是否要再hash</span></span><br><span class="line">    <span class="keyword">if</span> (size++ &gt;= threshold)</span><br><span class="line">        <span class="comment">// 因为capacity本身就是2的n次方，见HashMap的初始方法</span></span><br><span class="line">        <span class="comment">// 所以每次扩大，只需要*2</span></span><br><span class="line">        resize(<span class="number">2</span> * table.length);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">transfer</span><span class="params">(Entry[] newTable)</span> </span>&#123;</span><br><span class="line">    Entry[] src = table;</span><br><span class="line">    <span class="keyword">int</span> newCapacity = newTable.length;</span><br><span class="line">    <span class="comment">// 遍历全部的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; src.length; j++) &#123;</span><br><span class="line">        Entry&lt;K,V&gt; e = src[j];</span><br><span class="line">        <span class="comment">// 如果该BucketIndex存在数值</span></span><br><span class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>) &#123;</span><br><span class="line">            src[j] = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="comment">// 保存下一个Entry</span></span><br><span class="line">                Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">                <span class="comment">// 获取该e对象在新entry数组的index</span></span><br><span class="line">                <span class="keyword">int</span> i = indexFor(e.hash, newCapacity);</span><br><span class="line">                <span class="comment">// 是否发生hash冲突，如果有，就接到e对象的后面，没有就是null</span></span><br><span class="line">                e.next = newTable[i];</span><br><span class="line">                <span class="comment">// 将e设置到对应的位置</span></span><br><span class="line">                newTable[i] = e;</span><br><span class="line">                e = next;</span><br><span class="line">            &#125; <span class="keyword">while</span> (e != <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="JDK6"><a href="#JDK6" class="headerlink" title="JDK6"></a>JDK6</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 第一次注意到put有返回值</span></span><br><span class="line"><span class="comment"> * 如果put之前key已经存在和值X的对应关系，则返回值X</span></span><br><span class="line"><span class="comment"> * 如果put之前key没有对应关系，则返回null</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 当key为null时，特殊处理，这是和HashTable不一样的地方</span></span><br><span class="line">    <span class="comment">// HashMap允许key、value为null</span></span><br><span class="line">    <span class="keyword">if</span> (key == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> putForNullKey(value);</span><br><span class="line">    <span class="comment">// hash一下，这里用到的是扰动函数</span></span><br><span class="line">    <span class="keyword">int</span> hash = hash(key.hashCode());</span><br><span class="line">    <span class="comment">// 获取该hash值的bucketIndex</span></span><br><span class="line">    <span class="keyword">int</span> i = indexFor(hash, table.length);</span><br><span class="line">    <span class="comment">// 遍历对应bucktIndex位置的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[i]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        Object k;</span><br><span class="line">        <span class="comment">// 比较该bucktIndex下的所有Entry</span></span><br><span class="line">        <span class="comment">// 比较hash值、比较key是否相等（从值和地址两方面进行比较）</span></span><br><span class="line">        <span class="comment">// 为什么要再比较次hash值</span></span><br><span class="line">        <span class="keyword">if</span> (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// fail-fast的计数器</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 添加新值</span></span><br><span class="line">    addEntry(hash, key, value, i);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> V <span class="title">putForNullKey</span><span class="params">(V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 从Entry数组下标为0的位置开始一一遍历</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[<span class="number">0</span>]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        <span class="comment">// 是否存在这么一个entry，其key为null</span></span><br><span class="line">        <span class="comment">// 如果存在则替换新值</span></span><br><span class="line">        <span class="keyword">if</span> (e.key == <span class="keyword">null</span>) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            <span class="comment">// 钩子函数</span></span><br><span class="line">            <span class="comment">// 可以看一下LinkedHashMap</span></span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计数器加一</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 新添加一个键值对</span></span><br><span class="line">    addEntry(<span class="number">0</span>, <span class="keyword">null</span>, value, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addEntry</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">int</span> bucketIndex)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取下该bucketIndex下的Entry</span></span><br><span class="line">    Entry&lt;K,V&gt; e = table[bucketIndex];</span><br><span class="line">    <span class="comment">// 产生了hash冲突。将Old Entry连接到New Entry后面</span></span><br><span class="line">    table[bucketIndex] = <span class="keyword">new</span> Entry&lt;K,V&gt;(hash, key, value, e);</span><br><span class="line">    <span class="comment">// 判断是否要再hash</span></span><br><span class="line">    <span class="keyword">if</span> (size++ &gt;= threshold)</span><br><span class="line">        <span class="comment">// 因为capacity本身就是2的n次方，见HashMap的初始方法</span></span><br><span class="line">        <span class="comment">// 所以每次扩大，只需要*2</span></span><br><span class="line">        resize(<span class="number">2</span> * table.length);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">transfer</span><span class="params">(Entry[] newTable)</span> </span>&#123;</span><br><span class="line">    Entry[] src = table;</span><br><span class="line">    <span class="keyword">int</span> newCapacity = newTable.length;</span><br><span class="line">    <span class="comment">// 遍历全部的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; src.length; j++) &#123;</span><br><span class="line">        Entry&lt;K,V&gt; e = src[j];</span><br><span class="line">        <span class="comment">// 如果该BucketIndex存在数值</span></span><br><span class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>) &#123;</span><br><span class="line">            src[j] = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="comment">// 保存下一个Entry</span></span><br><span class="line">                Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">                <span class="comment">// 获取该e对象在新entry数组的index</span></span><br><span class="line">                <span class="keyword">int</span> i = indexFor(e.hash, newCapacity);</span><br><span class="line">                <span class="comment">// 是否发生hash冲突，如果有，就接到e对象的后面，没有就是null</span></span><br><span class="line">                e.next = newTable[i];</span><br><span class="line">                <span class="comment">// 将e设置到对应的位置</span></span><br><span class="line">                newTable[i] = e;</span><br><span class="line">                e = next;</span><br><span class="line">            &#125; <span class="keyword">while</span> (e != <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h3 id="JDK7"><a href="#JDK7" class="headerlink" title="JDK7"></a>JDK7</h3><p>在JDK6的基础上，没有做特别的改变，倒是去除了modCount的volatile关键字(1.7取消了modCount的volatile)。</p>
 <p>移除volatile的原因:<br>对于单线程集合，没必要承担volatile的额外消耗；多线程情况下，也不应该使用单线程集合，所以在hashmap里面移除volatile</p>
 <p><a href="https://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6625725" target="_blank" rel="noopener">移除Volatile的原文</a></p>
 <h3 id="JDK8"><a href="#JDK8" class="headerlink" title="JDK8"></a>JDK8</h3><p>需要红黑树的知识，待学习</p>
 <h2 id="再哈希"><a href="#再哈希" class="headerlink" title="再哈希"></a>再哈希</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 扩容，根据key的hash和数组总长度重新hash获取新的BucketIndex，然后存放</span></span><br><span class="line"><span class="comment"> * 因为不是线程安全的，再哈希可能会发生死循环</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="每次扩容，容量都是原来的二次方"><a href="#每次扩容，容量都是原来的二次方" class="headerlink" title="每次扩容，容量都是原来的二次方"></a>每次扩容，容量都是原来的二次方</h2><p>可以看一下，如果容量的长度不是2的幂次方<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">容量: 1000 0000</span><br><span class="line">          &amp;</span><br><span class="line">实际: 1110 1111</span><br></pre></td></tr></table></figure></p>
-<p>会有大量的空间被浪费，很多位被设置成0，增大了hash冲突，所以应该尽可能的让所有位都是1，那么理想状况下应该是如下所示<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">容量: 1111 1111</span><br><span class="line">          &amp;</span><br><span class="line">实际: 1110 1111</span><br></pre></td></tr></table></figure></p>
-<p>但是这样处理的话，总容量为255,但是实际数组可用位置为[0, 255)，所以会发生数组越界，故要减1</p>
+<h2 id="每次扩容，容量都是原来的二次方"><a href="#每次扩容，容量都是原来的二次方" class="headerlink" title="每次扩容，容量都是原来的二次方"></a>每次扩容，容量都是原来的二次方</h2><p>容量都是2的N次，主要是为了下面的<figure class="highlight plain"><figcaption><span>% length```，先保证不超过最大长度，其次保证hash坐落的位置。但是取模运算是所有运算符里较为繁杂的运算指令。大师们为了更高效，就不得不采用位运算符并让```hash```的每位都参与到运算中。这里放出式子```hash & (length - 1)```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">```java</span><br><span class="line">/** </span><br><span class="line"> * Returns index for hash code h. </span><br><span class="line"> */  </span><br><span class="line">static int indexFor(int h, int length) &#123;  </span><br><span class="line">    return h &amp; (length-1);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>可以看一下，如果容量的长度不是2的幂次方<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">length: 1000 0000</span><br><span class="line">          &amp;</span><br><span class="line">hash:   0110 1111</span><br></pre></td></tr></table></figure></p>
+<p>上述例子实际可存放的位置就只有一个: <strong>1000 0000</strong> ，会有大量的空间被浪费，<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure></p>
+<p>length: 1111 1111<br>          &amp;<br>hash:   0110 1111<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">但是这样的容量很难通过一次移位获取，所以实际情况应该是2的N次方 - 1，尽可能的将1布满。如下所示</span><br></pre></td></tr></table></figure></p>
+<p>length: 0111 1111<br>          &amp;<br>hash:   0110 1111<br><code>`</code><br>通过移位获取最大的2的N次方，减去1，获得最可能的理想情况，允许存在128个位置。一个是256，一个是255，前者只能存放1个位置，后者可以存放128个位置，其高效可想而知。</p>
 <p>所以容量是2的幂次方是为了减少空间的浪费，降低hash冲突的几率</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjgszdgzc000n9cvjwcrgxbzj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjh1olkqk000n6svjyqw8o3b8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -428,7 +763,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjgszdgz300079cvj8sw97cku" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjh1olkqg000i6svjng2a9xm3" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -488,23 +823,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》之happens-before/">《Java并发编程的艺术》之happens-before</a>
+            <a href="/codeleven.github.io/2018/05/11/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》之final/">《Java并发编程的艺术》之final</a>
+            <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/">《Java并发编程的艺术》之ConcurrentLinkedQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+            <a href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/">《Java并发编程的艺术》之final</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
+            <a href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/">了解AQS之SharedLock</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
+            <a href="/codeleven.github.io/2018/05/06/《Java并发编程的艺术》之延迟初始化/">《Java并发编程的艺术》之延迟初始化</a>
           </li>
         
       </ul>

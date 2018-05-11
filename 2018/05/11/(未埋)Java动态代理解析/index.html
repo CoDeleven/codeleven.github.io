@@ -3,20 +3,19 @@
 <head>
   <meta charset="utf-8">
   
-  <title>了解LockSupport的原理 | CoDeleven的个人博客</title>
+  <title>CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="在学习AQS的出现的LockSupport，秉着知根知底的想法，决定顺带着了解一下LockSupport。 LockSupport是什么一个可以创建锁、同步器的基础线程阻塞的底层工具。其工作方式和Semaphore十分相似：  调用 LockSupport.park() ，将在调用线程中消耗permit。如果permit可用，那么就会立即返回；否则阻塞调用线程 调用 LockSupport.unp">
-<meta name="keywords" content="Java并发">
+  <meta name="description" content="Codeleven的博客">
 <meta property="og:type" content="article">
-<meta property="og:title" content="了解LockSupport的原理">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/index.html">
+<meta property="og:title" content="CoDeleven的个人博客">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/11/(未埋)Java动态代理解析/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="在学习AQS的出现的LockSupport，秉着知根知底的想法，决定顺带着了解一下LockSupport。 LockSupport是什么一个可以创建锁、同步器的基础线程阻塞的底层工具。其工作方式和Semaphore十分相似：  调用 LockSupport.park() ，将在调用线程中消耗permit。如果permit可用，那么就会立即返回；否则阻塞调用线程 调用 LockSupport.unp">
+<meta property="og:description" content="Codeleven的博客">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2018-04-22T05:22:02.041Z">
+<meta property="og:updated_time" content="2018-05-08T14:26:42.130Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="了解LockSupport的原理">
-<meta name="twitter:description" content="在学习AQS的出现的LockSupport，秉着知根知底的想法，决定顺带着了解一下LockSupport。 LockSupport是什么一个可以创建锁、同步器的基础线程阻塞的底层工具。其工作方式和Semaphore十分相似：  调用 LockSupport.park() ，将在调用线程中消耗permit。如果permit可用，那么就会立即返回；否则阻塞调用线程 调用 LockSupport.unp">
+<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:description" content="Codeleven的博客">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -65,77 +64,35 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-了解LockSupport的原理" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-(未埋)Java动态代理解析" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/05/了解LockSupport的原理/" class="article-date">
-  <time datetime="2018-04-05T11:53:46.000Z" itemprop="datePublished">2018-04-05</time>
+    <a href="/codeleven.github.io/2018/05/11/(未埋)Java动态代理解析/" class="article-date">
+  <time datetime="2018-05-11T08:09:39.886Z" itemprop="datePublished">2018-05-11</time>
 </a>
     
   </div>
   <div class="article-inner">
     
     
-      <header class="article-header">
-        
-  
-    <h1 class="article-title" itemprop="name">
-      了解LockSupport的原理
-    </h1>
-  
-
-      </header>
-    
     <div class="article-entry" itemprop="articleBody">
       
-        <p>在学习AQS的出现的LockSupport，秉着知根知底的想法，决定顺带着了解一下LockSupport。</p>
-<h2 id="LockSupport是什么"><a href="#LockSupport是什么" class="headerlink" title="LockSupport是什么"></a>LockSupport是什么</h2><p>一个可以创建锁、同步器的基础线程阻塞的底层工具。其工作方式和<strong>Semaphore</strong>十分相似：</p>
-<ol>
-<li>调用 <em>LockSupport.park()</em> ，将在调用线程中消耗<em>permit</em>。如果<em>permit</em>可用，那么就会立即返回；否则阻塞调用线程</li>
-<li>调用 <em>LockSupport.unpark()</em> ，将会使得<em>permit</em>可用（注意，这方面和<em>Semaphore</em>不同，<em>Semaphore.release()</em> 可以叠加<em>permit</em>，而<em>LockSupport.unpark()</em> 至多只有一个<em>permit</em>）</li>
-</ol>
-<h2 id="LockSpport的优势"><a href="#LockSpport的优势" class="headerlink" title="LockSpport的优势"></a>LockSpport的优势</h2><p>针对线程的阻塞和解除阻塞，我们很容易想到<em>Thread.suspend()</em> 和 <em>Thread.resume()</em> 两个方法，然而这两个方法因为天生容易发生<strong>死锁</strong>（suspend()方法原理是暂停JVM，而暂停JVM是不稳定不安全的，所以容易发生问题）从而被抛弃使用。</p>
-<p><a href="">具体可以看我的《为什么Thread.suspend和resume被弃用》一文</a></p>
-<p>而<em>Object.wait()</em> 和 <em>Object.notify()</em> 使用起来过于麻烦，因为要放在<em>synchronized</em> 块里</p>
-<p>所以 <em>LockSupport</em> 就成为了很好的替代品</p>
-<h2 id="使用参数注意事项"><a href="#使用参数注意事项" class="headerlink" title="使用参数注意事项"></a>使用参数注意事项</h2><ul>
-<li><em>blocker</em> <ul>
-<li><em>blocker</em>在这个类里面主要起到一个线索作用，告诉我们是哪个对象阻塞了当前的线程，方便dump日志进行分析</li>
-</ul>
-</li>
-<li><em>isAbsolute</em><ul>
-<li>如果<em>isAbsolute</em> 为true，就是使用Epoch（Unix时间戳），在<em>LockSupport</em> 里面对应的方法是parkUntil()；</li>
-<li>如果<em>isAbsolute</em> 为false，就是使用相对时间（单位纳秒），在<em>LockSupport</em>里面对应的方法是parkNanos()</li>
-</ul>
-</li>
-</ul>
-
+        
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjh1olkqm000p6svjcdst258n" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/(未埋)Java动态代理解析/" data-id="cjh1olkp700006svjcsm33lws" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/04/05/深入Unsafe/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          深入Unsafe
-        
-      </div>
-    </a>
   
-  
-    <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">了解HashMap原理</div>
+      <div class="article-nav-title">《Java并发编程的艺术》之ConcurrentLinkedQueue</div>
     </a>
   
 </nav>
