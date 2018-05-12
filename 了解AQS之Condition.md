@@ -56,6 +56,9 @@ public final void await() throws InterruptedException {
         reportInterruptAfterWait(interruptMode);
 }
 ```
+在看到```acquireQueued()```时，我们可以知道Condition的要和其他线程一起在同步队列里竞争锁，所以如果想要实现公平竞争，那么可以在```tryAcquire()```方法里实现公平锁，言外之意是Condition也可以是公平竞争的。
+
+
 ```java
 final boolean isOnSyncQueue(Node node) {
     // node是CONDITION状态 或者 是CONDITION队列里的第一个
