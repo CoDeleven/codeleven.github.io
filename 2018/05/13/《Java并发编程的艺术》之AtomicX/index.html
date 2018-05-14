@@ -3,18 +3,22 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Tag: Java集合 | CoDeleven的个人博客</title>
+  <title>《Java并发编程的艺术》之AtomicX | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Codeleven的博客">
-<meta property="og:type" content="website">
-<meta property="og:title" content="CoDeleven的个人博客">
-<meta property="og:url" content="http://yoursite.com/GithubPages/tags/Java集合/index.html">
+  <meta name="description" content="其中主要是了解下AtomicReference以及AtomicXUpdater AtomicReference是支持对象引用原子更新的类，仅仅是支持引用，如果要让对象内的字段支持原子更新，就一定要使用到AtomicXUpdater。 字段更新类需要特别注意，字段必须是public volatile 类型的。 AtomicStampedReference和AtomicMarkableReferen">
+<meta name="keywords" content="Java并发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Java并发编程的艺术》之AtomicX">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="Codeleven的博客">
+<meta property="og:description" content="其中主要是了解下AtomicReference以及AtomicXUpdater AtomicReference是支持对象引用原子更新的类，仅仅是支持引用，如果要让对象内的字段支持原子更新，就一定要使用到AtomicXUpdater。 字段更新类需要特别注意，字段必须是public volatile 类型的。 AtomicStampedReference和AtomicMarkableReferen">
 <meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/atomic_family.png">
+<meta property="og:updated_time" content="2018-05-13T02:24:42.743Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CoDeleven的个人博客">
-<meta name="twitter:description" content="Codeleven的博客">
+<meta name="twitter:title" content="《Java并发编程的艺术》之AtomicX">
+<meta name="twitter:description" content="其中主要是了解下AtomicReference以及AtomicXUpdater AtomicReference是支持对象引用原子更新的类，仅仅是支持引用，如果要让对象内的字段支持原子更新，就一定要使用到AtomicXUpdater。 字段更新类需要特别注意，字段必须是public volatile 类型的。 AtomicStampedReference和AtomicMarkableReferen">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/atomic_family.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -63,58 +67,67 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/codeleven.github.io/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/" class="archive-article-date">
-  <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">Apr 24</time>
+        <section id="main"><article id="post-《Java并发编程的艺术》之AtomicX" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之AtomicX/" class="article-date">
+  <time datetime="2018-05-13T01:53:39.000Z" itemprop="datePublished">2018-05-13</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+    <h1 class="article-title" itemprop="name">
+      《Java并发编程的艺术》之AtomicX
     </h1>
   
 
-    </header>
-  </div>
-</article>
-  
+      </header>
     
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/" class="archive-article-date">
-  <time datetime="2018-04-05T11:51:39.000Z" itemprop="datePublished">Apr 5</time>
-</a>
+    <div class="article-entry" itemprop="articleBody">
       
-  
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/codeleven.github.io/2018/04/05/了解HashMap原理/">了解HashMap原理</a>
-    </h1>
-  
+        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/atomic_family.png" alt=""></p>
+<p>其中主要是了解下<code>AtomicReference</code>以及<code>AtomicXUpdater</code></p>
+<p>AtomicReference是支持对象引用原子更新的类，仅仅是支持引用，如果要让对象内的字段支持原子更新，就一定要使用到AtomicXUpdater。</p>
+<p>字段更新类需要特别注意，字段必须是<code>public volatile</code> 类型的。</p>
+<p>AtomicStampedReference和AtomicMarkableReference均是用于解决ABA问题的类（后者不知道有没有，暂时没实践经验）。前者解决字段方面的更新，后者解决引用类型的更新。</p>
 
-    </header>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjh6bwkth000864vjgaaw4e09" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《Java并发编程的艺术》之同步工具
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title"></div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
 </section>
         
