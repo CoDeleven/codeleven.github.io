@@ -3,21 +3,21 @@
 <head>
   <meta charset="utf-8">
   
-  <title>《Java并发编程的艺术》之线程池 | CoDeleven的个人博客</title>
+  <title>《Java并发编程的艺术》之线程池(一) | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="线程池线程池的优点：  降低资源开销：每次任务到达时不需要重新创建和销毁 提高可管理性：统一对线程进行调优、监控 提高任务响应速度：不需要等待线程创建  线程池创建的各个参数：  corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程） maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务 keepAl">
+  <meta name="description" content="线程池的优点：  降低资源开销：每次任务到达时不需要重新创建和销毁 提高可管理性：统一对线程进行调优、监控 提高任务响应速度：不需要等待线程创建  线程池创建的各个参数：  corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程） maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务 keepAlive">
 <meta name="keywords" content="Java并发">
 <meta property="og:type" content="article">
-<meta property="og:title" content="《Java并发编程的艺术》之线程池">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池/index.html">
+<meta property="og:title" content="《Java并发编程的艺术》之线程池(一)">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="线程池线程池的优点：  降低资源开销：每次任务到达时不需要重新创建和销毁 提高可管理性：统一对线程进行调优、监控 提高任务响应速度：不需要等待线程创建  线程池创建的各个参数：  corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程） maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务 keepAl">
+<meta property="og:description" content="线程池的优点：  降低资源开销：每次任务到达时不需要重新创建和销毁 提高可管理性：统一对线程进行调优、监控 提高任务响应速度：不需要等待线程创建  线程池创建的各个参数：  corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程） maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务 keepAlive">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png">
-<meta property="og:updated_time" content="2018-05-14T14:08:25.607Z">
+<meta property="og:updated_time" content="2018-05-15T01:26:03.896Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="《Java并发编程的艺术》之线程池">
-<meta name="twitter:description" content="线程池线程池的优点：  降低资源开销：每次任务到达时不需要重新创建和销毁 提高可管理性：统一对线程进行调优、监控 提高任务响应速度：不需要等待线程创建  线程池创建的各个参数：  corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程） maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务 keepAl">
+<meta name="twitter:title" content="《Java并发编程的艺术》之线程池(一)">
+<meta name="twitter:description" content="线程池的优点：  降低资源开销：每次任务到达时不需要重新创建和销毁 提高可管理性：统一对线程进行调优、监控 提高任务响应速度：不需要等待线程创建  线程池创建的各个参数：  corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程） maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务 keepAlive">
 <meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
@@ -67,9 +67,9 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-《Java并发编程的艺术》之线程池" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
   <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
 </a>
     
@@ -81,7 +81,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      《Java并发编程的艺术》之线程池
+      《Java并发编程的艺术》之线程池(一)
     </h1>
   
 
@@ -89,7 +89,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="线程池"><a href="#线程池" class="headerlink" title="线程池"></a>线程池</h1><p>线程池的优点：</p>
+        <p>线程池的优点：</p>
 <ul>
 <li>降低资源开销：每次任务到达时不需要重新创建和销毁</li>
 <li>提高可管理性：统一对线程进行调优、监控</li>
@@ -133,16 +133,13 @@
 <li>getPoolSize: 线程池的线程数量。如果线程池不销毁，线程池里的线程不会自动销毁，所以该值只增不减</li>
 <li>getActiveCount: 获取活动的线程数</li>
 </ul>
-<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<figure class="highlight plain"><figcaption><span>```afterExecute()```, ```terminated()``` 方法，也可以在任务执行前、后执行一些代码来监控。</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"># 线程池核心Executor</span><br><span class="line">Java的线程既是工作单元，也是执行机制。从JDK5开始，把工作单元与执行机制分离开来。工作单元包括Runnable、Callable，而执行机制由Executor提供。</span><br><span class="line"></span><br><span class="line">## Executor框架结构和流程</span><br><span class="line">主要由以下三部分组成：</span><br><span class="line">* 任务：Runnable、Callable接口</span><br><span class="line">* 任务的执行：Executor，以及继承Executor的ExecutorService</span><br><span class="line">* 异步计算的结果：Future接口、实现Future接口的FutureTask类</span><br><span class="line"></span><br><span class="line">![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_member_flow.png)</span><br><span class="line"></span><br><span class="line">各个部分的执行流程：</span><br><span class="line"></span><br><span class="line">* 主线程创建任务（实现Runnable或Callable接口的任务对象）。工具类Executors可以把一个Runnable对象封装成Callable对象。</span><br><span class="line">* 把Runnable对象直接交给ExecutorSerivce执行，或者也可以把Runnable对象或Callable对象提交给ExecutorService执行。</span><br><span class="line">* submit()会返回一个实现Future接口的对象。主线程可以执行FutureTask.get()方法来等待任务执行完成。主线程也可以通过FutureTask.cancel()方法取消任务执行。</span><br><span class="line"></span><br><span class="line">## Executor框架成员</span><br><span class="line">![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_uml.jpg)</span><br><span class="line"></span><br><span class="line">Executors可以创建以下四个ThreadPoolExecutor特殊应用的类：</span><br><span class="line">* ThreadPoolExecutor</span><br><span class="line">* FixedThreadPool，固定线程数量的线程池，多余的任务会加入无界的阻塞队列中</span><br><span class="line">* SingleThreadPool，只有单个线程的线程池，多余的任务会加入无界的阻塞队列中</span><br><span class="line">* CachedThreadPool，</span><br><span class="line"></span><br><span class="line">Executors可以创建以下两个ScheduledThreadPoolExecutor特殊应用的类：</span><br><span class="line">* ScheduledThreadPoolExecutor</span><br><span class="line">* SingleThreadScheduledExecutor</span><br><span class="line"></span><br><span class="line">## ThreadPoolExecutor下的特殊应用</span><br><span class="line"></span><br><span class="line">### FixedThreadPool</span><br><span class="line">FixedThreadPool的创建方法，FixedThreadPool其实就是ThreadPoolExecutors的特殊用法：</span><br><span class="line">```java</span><br><span class="line">// 只能通过Executors.newFixedThreadPool()创建</span><br><span class="line">public static ExecutorService newFixedThreadPool(int nThreads) &#123;</span><br><span class="line">    return new ThreadPoolExecutor(nThreads, nThreads,</span><br><span class="line">                                  0L, TimeUnit.MILLISECONDS,</span><br><span class="line">                                  new LinkedBlockingQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>主要需要注意的是<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">* 执行中的线程数达到corePoolSize，新任务会在无界队列中等待，所以线程数不会超过corePoolSize</span><br><span class="line">* 因为不会创建更多的线程，所以maximumPoolSize和keepAliveTime参数就没什么作用了</span><br><span class="line">* 因为是无界队列，所以也不需要用到RejectPolicyHandler</span><br><span class="line"></span><br><span class="line">### SingleThreadExecutor</span><br><span class="line">该类也是ThreadPoolExecutor的特殊用法</span><br><span class="line">```java</span><br><span class="line">public static ExecutorService newSingleThreadExecutor() &#123;</span><br><span class="line">    return new FinalizableDelegatedExecutorService</span><br><span class="line">        (new ThreadPoolExecutor(1, 1,</span><br><span class="line">                                0L, TimeUnit.MILLISECONDS,</span><br><span class="line">                                new LinkedBlockingQueue&lt;Runnable&gt;()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>相比FixedThreadPool，除一个正在执行任务的线程，其他任务都会一一加入队列中等待执行。</p>
-<h3 id="CachedThreadPool"><a href="#CachedThreadPool" class="headerlink" title="CachedThreadPool"></a>CachedThreadPool</h3><p>该类比较特殊，是FixedThreadPool的无限版本：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,</span><br><span class="line">                                  <span class="number">60L</span>, TimeUnit.SECONDS,</span><br><span class="line">                                  <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>一手<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## ScheduledThreadPoolExecutor</span><br><span class="line">该类主要用来在给定的延时之后执行任务或定期执行任务。ScheduledThreadPoolExecutor和Timer类似，但是更强大。Timer在单线程下执行，如果前一个任务执行时间过长，会影响下一个任务的执行。</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">public ScheduledThreadPoolExecutor(int corePoolSize,</span><br><span class="line">                                   ThreadFactory threadFactory,</span><br><span class="line">                                   RejectedExecutionHandler handler) &#123;</span><br><span class="line">    // 继承ThreadPoolExecutor</span><br><span class="line">    super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,</span><br><span class="line">          new DelayedWorkQueue(), threadFactory, handler);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<code>beforeExecute()</code>, <code>afterExecute()</code>, <code>terminated()</code> 方法，也可以在任务执行前、后执行一些代码来监控。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该篇主要了解了线程池的使用已经各个元素的含义以及监控时的优化。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池/" data-id="cjh6bwkue000v64vjl6w5vkyy" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjh7f5m050010bcvjh7qbyyk0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -152,6 +149,15 @@
   
     
 <nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《Java并发编程的艺术》之线程池(二)
+        
+      </div>
+    </a>
   
   
     <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/" id="article-nav-older" class="article-nav-link-wrap">
@@ -207,7 +213,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池/">《Java并发编程的艺术》之线程池</a>
+            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
           </li>
         
           <li>
@@ -220,10 +230,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
       </ul>

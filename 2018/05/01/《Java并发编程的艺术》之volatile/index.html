@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_semantic.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png">
-<meta property="og:updated_time" content="2018-05-05T03:02:59.688Z">
+<meta property="og:updated_time" content="2018-05-15T02:48:37.931Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Java并发编程的艺术》之volatile">
 <meta name="twitter:description" content="本章是在学习内存模型后，对Volatile关键字 有了更加全面得理解，对知识点进行一个分析总结。 volatile的特性volatile在单个操作上和synchronized一样  可见性：volatile字段的写操作保证对所有线程可见 原子性：volatile字段的单个读写操作是原子性的（比如在32位机上，读取64位的long、double类型），但是volatile++就不具有原子性  vol">
@@ -103,7 +103,7 @@
 <li>原子性：volatile字段的单个读写操作是原子性的（比如在32位机上，读取64位的long、double类型），但是volatile++就不具有原子性</li>
 </ul>
 <h2 id="volatile的happens-before"><a href="#volatile的happens-before" class="headerlink" title="volatile的happens-before"></a>volatile的happens-before</h2><p>本节采用happens-before关系阐述volatile的作用</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">volatile</span> <span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>; <span class="comment">//①</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ②</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ③</span></span><br><span class="line">        result = a; <span class="comment">// ④</span></span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>; <span class="comment">//①</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ②</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ③</span></span><br><span class="line">        result = a; <span class="comment">// ④</span></span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>假设线程A执行init(), 线程B执行doTask()；这个过程里，happens-before关系共分为三类：</p>
 <ol>
 <li>① happens-before ②</li>
@@ -165,7 +165,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjh6bwku6000m64vjjxiwo105" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjh7f5m05000nbcvj5k2p24kp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -186,9 +186,9 @@
     </a>
   
   
-    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">关于final插入StoreStore的疑惑</div>
+      <div class="article-nav-title">《Java并发编程的艺术》之Java内存模型</div>
     </a>
   
 </nav>
@@ -239,7 +239,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池/">《Java并发编程的艺术》之线程池</a>
+            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
           </li>
         
           <li>
@@ -252,10 +256,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
       </ul>
