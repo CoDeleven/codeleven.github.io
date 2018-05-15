@@ -16,6 +16,7 @@ volatile在单个操作上和synchronized一样
 本节采用happens-before关系阐述volatile的作用
 
 ```java
+int a;
 volatile boolean flag;
 public void init(){
     a = 1; //①
