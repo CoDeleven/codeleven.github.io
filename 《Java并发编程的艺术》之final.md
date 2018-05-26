@@ -1,7 +1,7 @@
 ---
 title: 《Java并发编程的艺术》之final
 date: 2018-05-03 10:52:35
-tags: [Java并发, JVM]
+tags: [Java并发, JMM]
 ---
 
 ## final的重排序规则
@@ -30,7 +30,7 @@ public FinalExample{
 
 ### final写的重排序规则
 * JMM保证写final变量时不被编译器重排序到构造函数外
-* 编译器会在写final域的前面插入StoreStore屏障
+* 编译器会在写final域后，构造函数返回前插入StoreStore屏障
 
 假设现在线程A执行init()，线程B执行read()时，可能的执行顺序如下所示：
 

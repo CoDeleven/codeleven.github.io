@@ -1,7 +1,7 @@
 ---
 title: 《Java并发编程的艺术》之volatile
 date: 2018-05-01 10:52:35
-tags: [Java并发, JVM]
+tags: [Java并发, JMM]
 ---
 
 本章是在学习内存模型后，对*Volatile*关键字 有了更加全面得理解，对知识点进行一个分析总结。

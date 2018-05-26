@@ -1,7 +1,7 @@
 ---
 title: 《Java并发编程的艺术》之happens-before
 date: 2018-05-05 10:32:09
-tags: [Java并发, JVM]
+tags: [Java并发, JMM]
 ---
 
 **happens-before** 是JMM的核心概念

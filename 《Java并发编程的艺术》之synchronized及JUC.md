@@ -1,7 +1,7 @@
 ---
 title: 《Java并发编程的艺术》之synchronized及JUC
 date: 2018-05-02 10:36:31
-tags: [Java并发, JVM]
+tags: [Java并发, JMM]
 ---
 
 ## synchrnoized的happens-before
