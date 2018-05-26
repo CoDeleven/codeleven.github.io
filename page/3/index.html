@@ -65,6 +65,251 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="article-date">
+  <time datetime="2018-05-01T02:52:35.000Z" itemprop="datePublished">2018-05-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本章是在学习内存模型后，对<em>Volatile</em>关键字 有了更加全面得理解，对知识点进行一个分析总结。</p>
+<h2 id="volatile的特性"><a href="#volatile的特性" class="headerlink" title="volatile的特性"></a>volatile的特性</h2><p>volatile在单个操作上和synchronized一样</p>
+<ul>
+<li>可见性：volatile字段的写操作保证对所有线程可见</li>
+<li>原子性：volatile字段的单个读写操作是原子性的（比如在32位机上，读取64位的long、double类型），但是volatile++就不具有原子性</li>
+</ul>
+<h2 id="volatile的happens-before"><a href="#volatile的happens-before" class="headerlink" title="volatile的happens-before"></a>volatile的happens-before</h2><p>本节采用happens-before关系阐述volatile的作用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>; <span class="comment">//①</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ②</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ③</span></span><br><span class="line">        result = a; <span class="comment">// ④</span></span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>假设线程A执行init(), 线程B执行doTask()；这个过程里，happens-before关系共分为三类：</p>
+<ol>
+<li>① happens-before ②</li>
+<li>③ happens-before ④</li>
+<li>② happens-before ③</li>
+</ol>
+<p>这个过程的happens-before关系图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_happens-before.png" alt=""></p>
+<p>分别遵守程序次序规则、volatile变量规则和传递规则：</p>
+<ul>
+<li>程序次序规则：一个线程内，按照代码顺序，书写在前面的操作先行发生于书写在后面的操作</li>
+<li>volatile变量规则：对一个变量的写操作先行发生于后面对这个变量的读操作</li>
+<li>传递规则：如果操作A先行发生于操作B，而操作B又先行发生于操作C，则可以得出操作A先行发生于操作C</li>
+</ul>
+<h2 id="volatile的内存语义"><a href="#volatile的内存语义" class="headerlink" title="volatile的内存语义"></a>volatile的内存语义</h2><p><strong>JMM针对编译器制定</strong>的volatile的重排序规则<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png" alt=""></p>
+<ul>
+<li>第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被<strong>编译器重排序</strong>到volatile写之后。</li>
+<li>当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被<strong>编译器重排序</strong>到volatile读之前。</li>
+<li>当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。</li>
+</ul>
+<h3 id="volatile的写内存语义"><a href="#volatile的写内存语义" class="headerlink" title="volatile的写内存语义"></a>volatile的写内存语义</h3><p>当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_concept.png" alt=""></p>
+<p>线程A写入flag变量后，本地内存将<strong>更新的共享变量</strong>（更新了几个就刷新几个）刷新至主内存，此时A线程的本地内存和主内存的共享变量相同。</p>
+<h3 id="volatile的读内存语义"><a href="#volatile的读内存语义" class="headerlink" title="volatile的读内存语义"></a>volatile的读内存语义</h3><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_memory_concept.png" alt=""></p>
+<p>当B线程要读取flag变量时，本地内存B 中包含的共享变量已经被置为无效，B线程不得不去主内存读取共享变量。线程B的读取将导致本地内存B与主内存的共享变量的值变成一致。</p>
+<p>将两张图综合起来看，在读线程B读取一个volatile变量后，写线程A在写这个volatile变量之前所有可见的共享变量都将立即变得对读线程B可见。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_summary.png" alt=""></p>
+<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><ul>
+<li>当写线程写了一个volatile变量，实质是写线程向接下来要读取这个变量的线程发出了消息（对其共享变量所做的修改）</li>
+<li>读线程读对应的volatile变量，实质是收到写线程发来的消息（在volatile写之前的共享变量的修改）</li>
+<li>随后写线程写入volatile变量，读线程去读取volatile变量，这个过程实质是A线程通过主内存给B线程发送消息</li>
+</ul>
+<h2 id="volatile内存语义的实现"><a href="#volatile内存语义的实现" class="headerlink" title="volatile内存语义的实现"></a>volatile内存语义的实现</h2><p>volatile关键字实现原理主要还是通过内存屏障进行控制的。编译器在生成字节码时，会在指令序列里插入内存屏障来禁止特定的重排序。对于编译器来说，自行判断最小化插入屏障总数不太可能。为此，JMM采取保守策略：</p>
+<ul>
+<li>在每个volatile写操作的前面加入<em>StoreStore</em></li>
+<li>在每个volatile写操作的后面加入<em>StoreLoad</em></li>
+<li>在每个volatile读操作的后面加入<em>LoadLoad</em></li>
+<li>在每个volatile读操作的后面加入<em>LoadStore</em></li>
+</ul>
+<p>上面的插入策略十分保守，但它可以保证在任意处理器平台上（在X86里，写/写，读/读，读/写 是不会发生重排序的，而且只有StoreLoad一个内存屏障），任意的程序中都能实现正确的语义。</p>
+<h3 id="volatile写的内存语义实现"><a href="#volatile写的内存语义实现" class="headerlink" title="volatile写的内存语义实现"></a>volatile写的内存语义实现</h3><p>下面是保守策略下，volatile写插入内存屏障的指令序列示意图。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png" alt=""></p>
+<p>StoreStore保证在执行volatile写前，所有写操作的处理已经刷新至内存，保证对其他线程可见了。而StoreLoad的作用是避免后面还有其他的volatile读/写操作发生重排序。由于JMM无法准确判断StoreLoad所处的环境（比如结尾是return），所以有两种选择：</p>
+<ol>
+<li>在volatile读前加上StoreLoad</li>
+<li>在volatile写后加上StoreLoad</li>
+</ol>
+<p>但是因为StoreLoad相比其他内存屏障更加消耗性能，考虑更多场景下是少写多读，所以将StoreLoad加在volatile写后。</p>
+<p>讲到StoreLoad的性能问题，不得不提一下Unsafe里面的<em>putOrderedObject()</em>。 这个方法很有意思，乍一看命名是放一个有序的对象，但它是通过避免加上StoreLoad内存屏障来弥补volatile写的性能问题。这时可能会有朋友问，不加上volatile不会影响可见性吗？会影响可见性，但不会永远影响下去，最多就两三秒的延迟，就会将共享变量刷新至主内存。所以当延迟要求不高，性能要求高时，就可以采用这个方法（Unsafe不安全类，这个方法的实现在Atmoic***类里面）。</p>
+<h3 id="volatile读的内存语义实现"><a href="#volatile读的内存语义实现" class="headerlink" title="volatile读的内存语义实现"></a>volatile读的内存语义实现</h3><p>下面是保守策略下，volatile读插入内存屏障的指令序列示意图。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_semantic.png" alt=""></p>
+<p>LoadLoad保证先执行volatile读再执行后续的读操作（禁止volatile读和后续的读发生重排序），而后的LoadStore保证先执行volatile读再执行写操作（禁止volatile读和后续的写发生重排序）。两者联合起来就是无论如何volatile读必须和程序顺序保持一致。</p>
+<h3 id="volatile执行时的优化"><a href="#volatile执行时的优化" class="headerlink" title="volatile执行时的优化"></a>volatile执行时的优化</h3><p>上面的volatile读/写的内存屏障插入策略都十分保守，但是在实际过程中，只要不改变volatile写/读的内存语义，编译器可以根据实际情况省略不必要的屏障。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> v1 = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> v2 = <span class="number">2</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">readAndWrite</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = v1;</span><br><span class="line">    <span class="keyword">int</span> j = v2;</span><br><span class="line">    a = i + j;</span><br><span class="line">    v1 = i + <span class="number">1</span>;</span><br><span class="line">    v2 = j + <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>针对readAndWrite()方法，编译器在生成字节码时会做如下优化。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png" alt=""></p>
+<p>按顺序下来，第一个volatile读先于第二个volatile，第二个volatile先于所有后续的写，故第一个volatile读一定不会被重排序；StoreStore保证普通写先于第一个volatile写，StoreStore又保证第一个volatile写先于第二个volatile写，最后安全起见插入StoreLoad。</p>
+<p>上面的优化针对任意处理器平台，由于不同的处理器有不同“松紧度”的处理器内存模型，内存屏障的插入还可以根据具体的处理器内存模型继续优化。比如X86处理器，由于X86不会对读/读，读/写，写/写做重排序，所以面对X86处理器时，JMM会省略掉三种类型对应的内存屏障，保留StoreLoad内存屏障。</p>
+<h2 id="JSR-133为什么增强volatile的内存语义"><a href="#JSR-133为什么增强volatile的内存语义" class="headerlink" title="JSR-133为什么增强volatile的内存语义"></a>JSR-133为什么增强volatile的内存语义</h2><p>在之前的版本，虽然不允许<strong>volatile变量间</strong> 的重排序，但是允许<strong>volatile和普通变量</strong>间的重排序。为了提供一种比锁更轻量级的线程间通信机制，专家组决定增强volatile的内存语义，严格限制volatile变量与普通变量的重排序，确保volatile的写-读和锁的释放-获取具有相同的内存语义。</p>
+<p>由于volatile仅仅保证对单个volatile变量的读/写具有原子性，而锁的互斥执行的特性可以确保对整个临界区代码的执行具有原子性。在功能上，锁比volatile更强大；在可伸缩性和性能上，volatile更有优势。具体看《Java理论与实践：正确使用volatile变量》</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhn204cw000v0gvj5ogtghwb" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" class="article-date">
+  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png" alt=""></p>
+<p>整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 <strong>重排序</strong> 和 <strong>写缓冲区</strong> 引发的，重排序又分为 <strong>处理器重排序</strong> 和 <strong>编译器重排序</strong>。面对 <strong>写缓冲区</strong>的问题，像Java这样的高级语言一般无能为力，所以从<strong>重排序</strong> 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。</p>
+<hr>
+<p>相信许多在<strong>多线程</strong>前线作战的伙伴们经常会遇到一种叫做<strong>内存可见性</strong>的大麻烦。这个麻烦可以简单粗暴的用<em>synchronized</em>解决，也可以很巧妙的用一些轻量级的同步原语解决。虽然能解决问题的都是好方案，但是在程序人生的旅途上，后者才是更为远见的选择。</p>
+<p>在面对<strong>内存可见性</strong>这个问题时，我们不得不先去学习一个叫做<strong>内存模型</strong>的东西。这个模型解释了 <strong>如何解决多线程间的通讯</strong> 和 <strong>如何实现多线程间的同步</strong> 两个问题。<br>传统上有两种模型，一种叫做<strong>内存共享模型</strong>，另外一种则时<strong>消息传递模型</strong>。而Java采用了<strong>内存共享模型</strong>，后文简称<strong>JMM</strong>。这个抽象概念主要描述了：</p>
+<pre><code>线程间的共享变量存储在主内存中，每个线程拥有自己的本地内存，每个本地内存上都有该线程读/写变量的副本。
+</code></pre><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png" alt="JMM概念图"></p>
+<p>然而了解这个模型还不够，我们还要知道在Java编译、运行阶段都会有一种优化手段——<strong>重排序</strong>。重排序分为以下三种类型：</p>
+<ul>
+<li>编译器优化的重排序。在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序</li>
+<li>指令集并行的重排序。现代处理器采用了指令级并行技术（Instruction-Level Parallelism）来将多条指令重叠执行，如果不存在数据以来，处理器可以改变语句对应机器指令的执行顺序。</li>
+<li>内存系统的重排序。由于处理器适用缓存和读/写缓冲区，这使得加载和存储操作看上去是乱序执行的。</li>
+</ul>
+<p>第1类属于<strong>编译器重排序</strong>，第2、3类型属于<strong>处理器重排序</strong>。而JMM作为语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保障。</p>
+<p>另外Java尽可能地满足处理器级别的重排序优化，又让程序员自己把握优化程度。正如我们前面所讲的，遇到<strong>内存可见性问题</strong>，可以简单的用<em>synchronized</em> 大范围的禁止重排序，也可以根据实际情况，选用<em>volatile、final等轻量级同步原语</em> 仅仅禁止关键部分的重排序。</p>
+<p>总而言之，发生<strong>内存可见性问题</strong>的原因不外乎两点：</p>
+<ol>
+<li>本地内存（在CPU那个层面理解为缓冲区）在作怪</li>
+<li>重排序</li>
+</ol>
+<p>第一点属于硬件架构问题，基本上是无法从语言层面进行解决。故通过<strong>解决重排序问题</strong>来解决<strong>内存可见性问题</strong>。</p>
+<h1 id="深入底层，了解本地内存"><a href="#深入底层，了解本地内存" class="headerlink" title="深入底层，了解本地内存"></a>深入底层，了解本地内存</h1><p>现代处理器都会配备一个写缓冲区，该缓冲区用来暂存写入的变量，保证指令流水线持续运行，避免CPU停下来等待向内存写入数据而产生的延迟；同时也能合并对同一地址的多次写。虽然写缓冲区好处多多，但是只对自己的CPU可见。这个特性在<strong>重排序</strong>的加持下，容易发生CPU对内存的读/写顺序 和实际内存发生的读/写顺序 不一致的情况。</p>
+<p>假设现在有这样一个情况，线程A和线程B并发执行：</p>
+<ul>
+<li>处理器A：<ul>
+<li>int a = 1;</li>
+<li>int a = b;</li>
+</ul>
+</li>
+<li>处理器B：<ul>
+<li>int b = 2;</li>
+<li>int b = a;</li>
+</ul>
+</li>
+</ul>
+<p>这样的程序偶尔会出现预料之外的结果，比如a和b均为0，或者a=1，b=1等等。具体原因如下图所示</p>
+<p>这里CPU0 和 CPU1 均往自己的缓冲区写入数据，然后从内存中读取共享变量，最后才把写缓冲区中的数据刷新至主内存。当以这种时许执行时，就会出现a = y = 0的情况。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow2.png" alt=""></p>
+<p>从内存理想执行角度看，下面的图例可能更符合直观感受：先写入缓冲区，缓冲区刷新到主内存，最后CPU从主内存中读取。对处理器来说，它认为执行顺序是①、②、③，但是实际操作情况却是①、③、②。此时CPU0的内存操作顺序被重排序了。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow.png" alt=""></p>
+<p>为了解决一些重要操作被重排序导致的问题，处理器提供了一种被称作<strong>内存屏障（Memory Fence）</strong> 的CPU指令，该指令可以处理重排序和可见性问题。Java编译器在生成指令序列时，会在适当位置中插入内存屏障来禁止特定类型的处理器重排序（所以那些同步原语本质都是<strong>内存屏障</strong>在其作用）。JVM把内存屏障分为4类，如下所示：</p>
+<table>
+<thead>
+<tr>
+<th>屏障类型</th>
+<th style="text-align:center">指令示例</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoadLoad</td>
+<td style="text-align:center">Load1;LoadLoad;Load2</td>
+<td style="text-align:center">在Load2及所有后续读取指令之前，Load1读取数据完毕</td>
+<td></td>
+</tr>
+<tr>
+<td>StoreStore</td>
+<td style="text-align:center">Store1;StoreStore;Store2</td>
+<td style="text-align:center">在Store2及所有后续写入指令执行前，Store1写入的数据对其他处理器可见(将修改的变量都刷新到主内存中，毕竟刷新不可能只刷新Store1这一个数据，而是Store1及前面所有的修改后的共享变量)</td>
+<td></td>
+</tr>
+<tr>
+<td>LoadStore</td>
+<td style="text-align:center">Load1;LoadStore;Store2</td>
+<td style="text-align:center">在Store2及所有后续写入指令刷新到主内存前，Load1读取数据完毕</td>
+<td></td>
+</tr>
+<tr>
+<td>StoreLoad</td>
+<td style="text-align:center">Store1;StoreLoad;Load2</td>
+<td style="text-align:center">在Load2及后续所有读取操作执行前，保证Store1的写入对所有处理器可见(将修改的变量都刷新到主内存中)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>最后一个StoreLoad指令是万能指令（有些处理器不支持前三种指令），兼具前三种指令的功能，且开销最大。<br>内存屏障在禁止重排序、保证内存可见性方面作用极大，为后续JMM的规则打下了基础。</p>
+<h1 id="解决内存可见性问题"><a href="#解决内存可见性问题" class="headerlink" title="解决内存可见性问题"></a>解决内存可见性问题</h1><p>为了能让JVM在一定程度上(因为重排序就是优化)保持<strong>重排序</strong>，又能解决<strong>内存可见性问题</strong>。Java 在 JSR-133 里推出了Happens-Before规则，修改了<strong>volatile、final等同步原语</strong>。</p>
+<h2 id="程序顺序规则-as-if-serial"><a href="#程序顺序规则-as-if-serial" class="headerlink" title="程序顺序规则(as-if-serial)"></a>程序顺序规则(as-if-serial)</h2><p>上面我们都了解到了<strong>处理器重排序</strong> 对 CPU的影响，现在我们看看<strong>编译器重排序</strong>对单线程的影响<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">// ①</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">3</span>; <span class="comment">// ②</span></span><br><span class="line"><span class="keyword">int</span> c = a * b; <span class="comment">// ③</span></span><br></pre></td></tr></table></figure></p>
+<p>在单线程的环境下运行这段代码，会和直观感受一样，它的结果是3，但是它的执行顺序是否和想象中一样就不得而知了。这就引出了一个这么概念——if as serial，这个概念主要描述了 <strong>不管如何重排序，单线程程序的执行结果不能被改变</strong>，编译器、runtime和处理器都必须遵守这个as-if-serial语义(处理器本身是不会遵守的，但是有JMM的控制)。</p>
+<p>因为③依赖①、②的数据，所以为了保证结果一致，无论如何③都不会被排到①或②之前。</p>
+<p>as-if-serial语义使单线程程序员无需担心重排序会干扰他们，也无需担心内存可见性问题。这是JMM对程序员作的第一个保证：在单线程下，你不用管重排不重排，结果肯定给你保证一样。</p>
+<p>但是面对多线程的情况下，这个语义显得有点单薄，无法保证 多线程的重排序不会对程序有影响。为了能让多线程也无需担心重排序和内存可见性问题，我们需要<strong>同步</strong>，</p>
+<h2 id="顺序一致性模型"><a href="#顺序一致性模型" class="headerlink" title="顺序一致性模型"></a>顺序一致性模型</h2><p>在讲同步之前，需要了解下<strong>顺序一致性模型</strong>，这个模型是一个理论参考模型，它为程序提供了极强的内存可见性，该模型有以下两个特点：</p>
+<ol>
+<li>一个线程中的所有操作必须按照程序的顺序来执行</li>
+<li>（不管程序是否同步）所有线程都只能看到一个单一的操作执行顺序。在顺序一致内存模型中，每个操作都必须原子执行且立刻对所有线程可见</li>
+</ol>
+<p>在顺序一致性内存模型中，假设现有A、B两个线程，A线程先获取锁再执行A1、A2、A3，B线程同上。它的执行顺序图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInSynchronized.png" alt="SequenceModelInSynchronized"><br>当线程A获取锁时，按顺序依次执行A1到A3；在A释放锁，B获取时，按顺序依次执行B1到B3。</p>
+<p>假设现在不用锁这些同步工具，它的执行顺序如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png" alt="SequenceModelInNormal"><br>虽然整体执行顺序发生了改变，但是再每个线程依然能看到一个一致的执行顺序，之所以能保证它一致就是因为上述的两个特点：必须按程序顺序执行、每个操作立即对所有线程可见。<br>但是在JMM上却没有这个保证，首先JMM不是顺序一致性模型，而且未同步程序的执行顺序是无需的，而且所有线程看到的执行顺序也可能不一样。就比如A线程先写入了一个数值，缓存在本地内存，A线程以为写进去了，但是本地内存只对A线程可见。其他线程仍然是原来的数值，只有等本地内存将数据刷新到主内存，其他线程才可见。这种情况下，当前线程看到的执行顺序和其他线程顺序将不一致。</p>
+<h3 id="JMM里正确同步地顺序"><a href="#JMM里正确同步地顺序" class="headerlink" title="JMM里正确同步地顺序"></a>JMM里正确同步地顺序</h3><p>讲完了理想的顺序一致性模型，我们回归到现实，看看JMM里的同步程序执行顺序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">int</span> result;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>;</span><br><span class="line">    flag = <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123;</span><br><span class="line">        result = a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在这个代码里，假设A线程执行init()方法，B线程执行doTask()方法。根据JMM规范，只要正确同步的程序，结果都会和顺序一致性内存模型的结果一致。下面是该程序在两个内存模型的时序图。<br>对于JMM来说，在临界区内的代码可任意重排序（但不允许临界区内的代码溢出到临界区外，那样会破坏监视器语言），JMM会在进入临界区和退出临界区时做一些特别的处理，使程序在这两个时间点具有和顺序一致性相同的内存视图。虽然线程A在临界区内进行了重排序，但是在监视器互斥执行的特性下，线程B根本不知道过程，只能观测到结果。这种重排序既提高了效率，又没改变程序的执行结果。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png" alt=""></p>
+<p>从这里我们可以看到JMM在不改变（正确同步）程序执行结果的前提下，尽可能地为编译器和处理器地优化打开了方便之门。</p>
+<h3 id="JMM里没有同步地执行顺序"><a href="#JMM里没有同步地执行顺序" class="headerlink" title="JMM里没有同步地执行顺序"></a>JMM里没有同步地执行顺序</h3><p>在JMM里，对没有正确同步地程序只提供了最小安全性：线程执行时读取到的值，要么时默认值（0，null，false），JMM保证线程读取到的值不会无中生有。为了实现最小安全性，JVM在堆上分配对象时，首先会对内存清零，然后才会在上面分配对象（JVM内部会同步该操作）。因此，在已清零的内存空间中分配对象时，域的默认初始化已经完成了。</p>
+<p>在JMM里，未同步的程序不能保证执行结果和顺序一致性模型的结果一样。因为JVM要这么做的话需要大量禁止重排序，极其影响性能。未同步程序在JMM中的执行顺序整体上是无序的，其执行结果也是不可预测的，在两个模型中的执行特性有如下几个差异。</p>
+<ul>
+<li>顺序一致性模型保证单线程内的操作会按程序的顺序执行，而JMM不保证单线程的操作会按程序顺序执行</li>
+<li>顺序一致性模型保证所有线程只能看到一致的操作顺序，而JMM不保证所有线程能看到一致的操作执行顺序</li>
+<li>JMM不保证对64位的long、double型变量的写操作具有原子性，而顺序一致性保证所有对内存的读写操作都是原子性</li>
+</ul>
+<p>第三点与处理器总线工作机制密切相关。这里放出书上的原话</p>
+<p>JVM在这点上也只是鼓励去做但不强求，因为在一些32位处理器上，要64位的写操作保持原子性是会需要大开销的。所以当JVM在这种处理器上运行时，会把64位long/double型变量拆做两个32位的写操作执行。此时，这种64位变量的写操作将不具有原子性。当单个内存操作不存在原子性时，可能会产生意想不到的后果。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Target</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">long</span> a;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Target target = <span class="keyword">new</span> Target();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = <span class="number">0l</span>).start();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = Long.MAX_VALUE).start();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">        String binary = toBinary(target.a);</span><br><span class="line">        <span class="comment">// 出现不是0，又不是MAX_VALUE的二进制字串是就输出</span></span><br><span class="line">        <span class="keyword">if</span>(!binary.equals(<span class="string">"00000000000000000000000000000000"</span>) &amp;&amp; </span><br><span class="line">        !binary.equals(<span class="string">"01111111111111111111111111111111"</span>))&#123;</span><br><span class="line">            System.out.println(<span class="string">"long不是原子性操作.."</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">toBinary</span><span class="params">(<span class="keyword">long</span> l)</span> </span>&#123;</span><br><span class="line">    StringBuilder sb = <span class="keyword">new</span> StringBuilder(Long.toBinaryString(l));</span><br><span class="line">    <span class="keyword">while</span> (sb.length() &lt; <span class="number">64</span>) &#123;</span><br><span class="line">        sb.insert(<span class="number">0</span>, <span class="string">"0"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>代码如上所示，假设处理器A写一个了long型变量，同时B处理器要读取这个long型变量。处理器A中的64位操作被拆分为两个32位的写操作，且这两个32位的写操作被分配到不同的事务中执行。同时处理器B 64位的读操作被分配到单个读事务中处理，执行顺序如下图所示时就会发生处理器A写到一半的数据被处理器B看见。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhn204cl000c0gvjdiwbitrp" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
@@ -98,7 +343,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhami4sa001ca8vjalbxduas" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhn204d6001j0gvjnh56fnug" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -239,10 +484,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhami4s1000wa8vj5p7mkm93" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhn204cq000j0gvj7qquvj9w" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
 
     </footer>
   </div>
@@ -278,7 +523,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhami4qy0004a8vjzdzto68f" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhn204cb00040gvjh5xalxyn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -321,7 +566,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhami4sd001ga8vjxn2h91pu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhn204d8001o0gvjsvuupduo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -386,7 +631,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhami4s60013a8vjgh151wal" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhn204d100160gvjqr5sllmu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -512,7 +757,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhami4s9001aa8vjz5qfcdba" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhn204d200180gvjja6imzxz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -588,7 +833,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjhami4se001ia8vj06es3hok" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjhn204d7001m0gvj6pkokanb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -647,123 +892,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjhami4sc001ea8vjskxnx67l" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-了解HashMap原理" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/" class="article-date">
-  <time datetime="2018-04-05T11:51:39.000Z" itemprop="datePublished">2018-04-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/05/了解HashMap原理/">了解HashMap原理</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>对于写了这么久的HashMap，对其知之甚少，趁大三有点闲时，打算深入了解下HashMap的原理。</p>
-<ol>
-<li>HashMap、HashTable之间有什么关系</li>
-<li>HashMap在put、remove的时候做了什么</li>
-<li>resize（再哈希）是什么</li>
-<li>为什么每次扩容，容量都是原来的二次方</li>
-</ol>
-<h2 id="HashMap和HashTable间的关系"><a href="#HashMap和HashTable间的关系" class="headerlink" title="HashMap和HashTable间的关系"></a>HashMap和HashTable间的关系</h2><p>HashMap和HashTable间的差异：</p>
-<ol>
-<li>HashMap是线程不安全的,HashTable几乎都加上了方法级别的Synchronize，所以同一时间最多只有一个线程可以对同个方法进行调用</li>
-<li><p>HashMap允许null键和null值,HashTable遇到null值会抛出NPE</p>
-<p> HashTable的源码分析戳这里</p>
-<h2 id="HashMap再put、remove的时候做了什么"><a href="#HashMap再put、remove的时候做了什么" class="headerlink" title="HashMap再put、remove的时候做了什么"></a>HashMap再put、remove的时候做了什么</h2></li>
-</ol>
-<h3 id="JDK6"><a href="#JDK6" class="headerlink" title="JDK6"></a>JDK6</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 第一次注意到put有返回值</span></span><br><span class="line"><span class="comment"> * 如果put之前key已经存在和值X的对应关系，则返回值X</span></span><br><span class="line"><span class="comment"> * 如果put之前key没有对应关系，则返回null</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 当key为null时，特殊处理，这是和HashTable不一样的地方</span></span><br><span class="line">    <span class="comment">// HashMap允许key、value为null</span></span><br><span class="line">    <span class="keyword">if</span> (key == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span> putForNullKey(value);</span><br><span class="line">    <span class="comment">// hash一下，这里用到的是扰动函数</span></span><br><span class="line">    <span class="keyword">int</span> hash = hash(key.hashCode());</span><br><span class="line">    <span class="comment">// 获取该hash值的bucketIndex</span></span><br><span class="line">    <span class="keyword">int</span> i = indexFor(hash, table.length);</span><br><span class="line">    <span class="comment">// 遍历对应bucktIndex位置的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[i]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        Object k;</span><br><span class="line">        <span class="comment">// 比较该bucktIndex下的所有Entry</span></span><br><span class="line">        <span class="comment">// 比较hash值、比较key是否相等（从值和地址两方面进行比较）</span></span><br><span class="line">        <span class="comment">// 为什么要再比较次hash值</span></span><br><span class="line">        <span class="keyword">if</span> (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// fail-fast的计数器</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 添加新值</span></span><br><span class="line">    addEntry(hash, key, value, i);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> V <span class="title">putForNullKey</span><span class="params">(V value)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 从Entry数组下标为0的位置开始一一遍历</span></span><br><span class="line">    <span class="keyword">for</span> (Entry&lt;K,V&gt; e = table[<span class="number">0</span>]; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        <span class="comment">// 是否存在这么一个entry，其key为null</span></span><br><span class="line">        <span class="comment">// 如果存在则替换新值</span></span><br><span class="line">        <span class="keyword">if</span> (e.key == <span class="keyword">null</span>) &#123;</span><br><span class="line">            V oldValue = e.value;</span><br><span class="line">            e.value = value;</span><br><span class="line">            <span class="comment">// 钩子函数</span></span><br><span class="line">            <span class="comment">// 可以看一下LinkedHashMap</span></span><br><span class="line">            e.recordAccess(<span class="keyword">this</span>);</span><br><span class="line">            <span class="keyword">return</span> oldValue;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 计数器加一</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// 新添加一个键值对</span></span><br><span class="line">    addEntry(<span class="number">0</span>, <span class="keyword">null</span>, value, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addEntry</span><span class="params">(<span class="keyword">int</span> hash, K key, V value, <span class="keyword">int</span> bucketIndex)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 获取下该bucketIndex下的Entry</span></span><br><span class="line">    Entry&lt;K,V&gt; e = table[bucketIndex];</span><br><span class="line">    <span class="comment">// 产生了hash冲突。将Old Entry连接到New Entry后面</span></span><br><span class="line">    table[bucketIndex] = <span class="keyword">new</span> Entry&lt;K,V&gt;(hash, key, value, e);</span><br><span class="line">    <span class="comment">// 判断是否要再hash</span></span><br><span class="line">    <span class="keyword">if</span> (size++ &gt;= threshold)</span><br><span class="line">        <span class="comment">// 因为capacity本身就是2的n次方，见HashMap的初始方法</span></span><br><span class="line">        <span class="comment">// 所以每次扩大，只需要*2</span></span><br><span class="line">        resize(<span class="number">2</span> * table.length);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">transfer</span><span class="params">(Entry[] newTable)</span> </span>&#123;</span><br><span class="line">    Entry[] src = table;</span><br><span class="line">    <span class="keyword">int</span> newCapacity = newTable.length;</span><br><span class="line">    <span class="comment">// 遍历全部的Entry</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; src.length; j++) &#123;</span><br><span class="line">        Entry&lt;K,V&gt; e = src[j];</span><br><span class="line">        <span class="comment">// 如果该BucketIndex存在数值</span></span><br><span class="line">        <span class="keyword">if</span> (e != <span class="keyword">null</span>) &#123;</span><br><span class="line">            src[j] = <span class="keyword">null</span>;</span><br><span class="line">            <span class="keyword">do</span> &#123;</span><br><span class="line">                <span class="comment">// 保存下一个Entry</span></span><br><span class="line">                Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">                <span class="comment">// 获取该e对象在新entry数组的index</span></span><br><span class="line">                <span class="keyword">int</span> i = indexFor(e.hash, newCapacity);</span><br><span class="line">                <span class="comment">// 是否发生hash冲突，如果有，就接到e对象的后面，没有就是null</span></span><br><span class="line">                e.next = newTable[i];</span><br><span class="line">                <span class="comment">// 将e设置到对应的位置</span></span><br><span class="line">                newTable[i] = e;</span><br><span class="line">                e = next;</span><br><span class="line">            &#125; <span class="keyword">while</span> (e != <span class="keyword">null</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="JDK7"><a href="#JDK7" class="headerlink" title="JDK7"></a>JDK7</h3><p>在JDK6的基础上，没有做特别的改变，倒是去除了modCount的volatile关键字(1.7取消了modCount的volatile)。</p>
-<p>移除volatile的原因:<br>对于单线程集合，没必要承担volatile的额外消耗；多线程情况下，也不应该使用单线程集合，所以在hashmap里面移除volatile</p>
-<p><a href="https://bugs.sun.com/bugdatabase/view_bug.do?bug_id=6625725" target="_blank" rel="noopener">移除Volatile的原文</a></p>
-<h3 id="JDK8"><a href="#JDK8" class="headerlink" title="JDK8"></a>JDK8</h3><p>需要红黑树的知识，待学习</p>
-<h2 id="再哈希"><a href="#再哈希" class="headerlink" title="再哈希"></a>再哈希</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 扩容，根据key的hash和数组总长度重新hash获取新的BucketIndex，然后存放</span></span><br><span class="line"><span class="comment"> * 因为不是线程安全的，再哈希可能会发生死循环</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">resize</span><span class="params">(<span class="keyword">int</span> newCapacity)</span> </span>&#123;</span><br><span class="line">    Entry[] oldTable = table;</span><br><span class="line">    <span class="keyword">int</span> oldCapacity = oldTable.length;</span><br><span class="line">    <span class="keyword">if</span> (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">        threshold = Integer.MAX_VALUE;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Entry[] newTable = <span class="keyword">new</span> Entry[newCapacity];</span><br><span class="line">    <span class="comment">// 移动数组</span></span><br><span class="line">    transfer(newTable);</span><br><span class="line">    table = newTable;</span><br><span class="line">    threshold = (<span class="keyword">int</span>)(newCapacity * loadFactor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h2 id="每次扩容，容量都是原来的二次方"><a href="#每次扩容，容量都是原来的二次方" class="headerlink" title="每次扩容，容量都是原来的二次方"></a>每次扩容，容量都是原来的二次方</h2><p>容量都是2的N次，主要是为了下面的<figure class="highlight plain"><figcaption><span>% length```，先保证不超过最大长度，其次保证hash坐落的位置。但是取模运算是所有运算符里较为繁杂的运算指令。大师们为了更高效，就不得不采用位运算符并让```hash```的每位都参与到运算中。这里放出式子```hash & (length - 1)```</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">```java</span><br><span class="line">/** </span><br><span class="line"> * Returns index for hash code h. </span><br><span class="line"> */  </span><br><span class="line">static int indexFor(int h, int length) &#123;  </span><br><span class="line">    return h &amp; (length-1);  </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>可以看一下，如果容量的长度不是2的幂次方<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">length: 1000 0000</span><br><span class="line">          &amp;</span><br><span class="line">hash:   0110 1111</span><br></pre></td></tr></table></figure></p>
-<p>上述例子实际可存放的位置就只有一个: <strong>1000 0000</strong> ，会有大量的空间被浪费，<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure></p>
-<p>length: 1111 1111<br>          &amp;<br>hash:   0110 1111<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">但是这样的容量很难通过一次移位获取，所以实际情况应该是2的N次方 - 1，尽可能的将1布满。如下所示</span><br></pre></td></tr></table></figure></p>
-<p>length: 0111 1111<br>          &amp;<br>hash:   0110 1111<br><code>`</code><br>通过移位获取最大的2的N次方，减去1，获得最可能的理想情况，允许存在128个位置。一个是256，一个是255，前者只能存放1个位置，后者可以存放128个位置，其高效可想而知。</p>
-<p>所以容量是2的幂次方是为了减少空间的浪费，降低hash冲突的几率</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjhami4s70015a8vjaq8cl14k" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-为什么Thread-suspend和resume被弃用" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/" class="article-date">
-  <time datetime="2018-04-04T01:13:24.000Z" itemprop="datePublished">2018-04-04</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/">为什么Thread.suspend和resume被弃用</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>笔者在学习JUC包的时候，了解到同样用于线程阻塞和恢复功能的类—— <em>LockSupport</em>，那么这个类和<em>Thread.suspend()</em> 和 <em>Thread.resume()</em> 有什么区别，为什么后者被弃用了？</p>
-<h2 id="阻塞小例子"><a href="#阻塞小例子" class="headerlink" title="阻塞小例子"></a>阻塞小例子</h2><p>该例子(来源于Bug Database)很好的验证了<em>Thread.suspend()/resume()</em>这对兄弟天生容易犯错，在输出几个i之后就会发生永久性阻塞（通过jstack看，只能判断其是阻塞，无法判断是死锁）。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* ---------Thread.suspend 和 resume发生“死锁”的示例--------- */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        TestTask mainThread = <span class="keyword">new</span> TestTask();</span><br><span class="line">        mainThread.start();</span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">            <span class="keyword">if</span>(!mainThread.isTalking)&#123;</span><br><span class="line">                <span class="comment">// LockSupport.unpark(mainThread);</span></span><br><span class="line">                mainThread.resume();</span><br><span class="line">                mainThread.isTalking = <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">TestTask</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">        <span class="keyword">volatile</span> <span class="keyword">boolean</span> isTalking = <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (isTalking) &#123;</span><br><span class="line">                    i++;</span><br><span class="line">                    isTalking = <span class="keyword">false</span>;</span><br><span class="line">                    <span class="comment">// LockSupport.park();</span></span><br><span class="line">                    suspend();</span><br><span class="line">                    System.out.println(i);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
-<h2 id="弃用原因"><a href="#弃用原因" class="headerlink" title="弃用原因"></a>弃用原因</h2><p>在这个方面，笔者上网了解过很多，许多人都是泛泛而谈，甚至是随手复制粘贴，质量低的可怕，完全无法了解到为什么它被弃用了。笔者最后在Bug Database上了解到了原因：</p>
-<ol>
-<li><em>Thread.suspend()和Thread.resume()</em> 发生阻塞的原因主要在于<strong>底层JVM在暂停时候的不安全</strong></li>
-<li>就算花大力气修复了<em>Thread.suspend()和Thread.resume()</em>,问题也会转移到应用层级别（这一点暂时无法理解） 。</li>
-</ol>
-<p><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4040218#" target="_blank" rel="noopener"><em>Thread.suspend()</em> 和 <em>Thread.resume()</em> 被弃用的原因</a></p>
-<p>有能力的朋友们可以直接看原文，可以一起交流一下看法。</p>
-<h2 id="替代方案"><a href="#替代方案" class="headerlink" title="替代方案"></a>替代方案</h2><ol>
-<li><em>Object.wait()</em>和<em>Object.notify()/notifyAll()</em>，该方法需要在<em>synchronized()</em>中使用，极其麻烦</li>
-<li><em>LockSupport</em> 粒度小，使用方便</li>
-</ol>
-<h2 id="小栗子"><a href="#小栗子" class="headerlink" title="小栗子"></a>小栗子</h2><p><del>暂时没想法，后续补上</del></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjhami4rx000ra8vjjadifwcy" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjhn204d5001h0gvj3vef3lp9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -778,7 +907,7 @@
 
 
   <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/codeleven.github.io/page/2/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><a class="page-number" href="/codeleven.github.io/page/2/">2</a><span class="page-number current">3</span>
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/page/2/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><a class="page-number" href="/codeleven.github.io/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/codeleven.github.io/page/4/">4</a><a class="extend next" rel="next" href="/codeleven.github.io/page/4/">__('next') &raquo;</a>
   </nav>
 </section>
         
@@ -791,7 +920,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -801,7 +930,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -823,6 +952,14 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/">队列之PriorityQueue</a>
           </li>
         
@@ -832,14 +969,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/">《Java并发编程的艺术》之同步工具</a>
           </li>
         
       </ul>

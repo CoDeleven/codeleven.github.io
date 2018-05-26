@@ -65,6 +65,193 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《七周七并发模型》第一章第一天" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/" class="article-date">
+  <time datetime="2018-05-26T07:08:10.453Z" itemprop="datePublished">2018-05-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言收获"><a href="#前言收获" class="headerlink" title="前言收获"></a>前言收获</h1><p>并行和并发的区别</p>
+<ul>
+<li>并发：面对多个任务同时存在的情况下，能够处理它，不用管如何执行（可以交替执行、可以并行执行）</li>
+<li>并行：面对多个任务同时存在的情况下，能够处理它，任务和任务间互不影响，一起执行</li>
+</ul>
+<p>并行概念是并发概念的一个子集，如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/Concurrency_Parallelism.jpg" alt=""></p>
+<p>并行架构：</p>
+<ul>
+<li>位级并行</li>
+<li>指令级并行</li>
+<li>数据集并行</li>
+<li>任务级并行</li>
+</ul>
+<p>全书要讲解的7个模型：</p>
+<ul>
+<li>线程与锁：其他模型的技术基础，虽然存在不足但仍是众多软件的首选</li>
+<li>函数式编程：消除了可变状态，根本上是线程安全的，易于并行执行</li>
+<li>Clojure之道——分离标识与状态：命令式编程和函数式编程混搭的方案，在两种编程方式中取得平衡来发挥两者的优势</li>
+<li>actor: 适用于共享内存模型和分布式内存模型，也适合解决地理分布型问题，能够提供强大的容错</li>
+<li>通信顺序进程（Communicating Sequential Processes ，CSP）: 该模型和actor很类似，两者都基于消息传递。不过CSP侧重于传递信息的通道，而actor模型侧重于通道两端的实体，使用CSP模型的代码会有明显不同的风格</li>
+<li>数据级并行：GPU，如果要进行有限元分析、流体力学计算或其他的大量数字计算，GPU的性能将是不二选择</li>
+<li>Lambda: 综合了MapReduce和流式处理的特点，是一种可以处理多种大数据问题的架构</li>
+</ul>
+<p>后续学习要带上以下几个问题：</p>
+<ul>
+<li>这个模型适用于解决并发问题、并行问题还是两者皆可？</li>
+<li>这个模型适合哪种并行架构</li>
+<li>这个模型是否有利于我们写出容错性强的代码，或用于解决分布式问题的代码？</li>
+</ul>
+<h1 id="互斥和内存模型"><a href="#互斥和内存模型" class="headerlink" title="互斥和内存模型"></a>互斥和内存模型</h1><p>因为该部分讲的不深，而且经过两本并发书籍的洗礼，理解起来较为简单，就将总结的话记一下：</p>
+<ul>
+<li>对共享变量的所有访问都需要被同步化</li>
+<li>读线程和写线程都需要同步化</li>
+<li>按照约定的全局顺序来获取多吧锁</li>
+<li>当持有锁时不要访问外星方法（不了解的方法，里面可能会对部分资源加锁）</li>
+<li>持有锁的时间尽可能短</li>
+</ul>
+<h1 id="自学篇之JMM"><a href="#自学篇之JMM" class="headerlink" title="自学篇之JMM"></a>自学篇之JMM</h1><h1 id="自学篇之JSR-133的FAQ"><a href="#自学篇之JSR-133的FAQ" class="headerlink" title="自学篇之JSR-133的FAQ"></a>自学篇之JSR-133的FAQ</h1><p>原文出自(<a href="http://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html" target="_blank" rel="noopener">http://www.cs.umd.edu/~pugh/java/memoryModel/jsr-133-faq.html</a>)</p>
+<h2 id="究竟什么是内存模型？"><a href="#究竟什么是内存模型？" class="headerlink" title="究竟什么是内存模型？"></a>究竟什么是内存模型？</h2><p>在现代处理器系统里，通常会划分几个内存缓冲层。它们能够提高访问数据的速度并且降低共享内存总线的流量（因为缓存层就直接可以满足处理器需求），它们的结构示意图如下所示。那么两个处理器在同一时间查看同个内存地址时，什么情况下能看到一样的值。这就是内存可见性问题</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUcache_architecture.PNG" alt="处理器、缓存、共享内存总线间的关系"></p>
+<p>第一个影响可见性的原因是，强内存模型能直接保证 <strong>对同一个内存地址在任何时候都能看到相同的值</strong>；弱内存模型需要 <strong>内存屏障(memory barriers)</strong>，这些指令会要求处理器刷新或无效化本地缓冲区，所以就能看到其他处理器的写入。因为强内存模型对内存指令的需求较少（注意，不是不需要，只是需求少），所以强内存模型易于编程。然而近代处理器都是鼓励往弱内存模型发展，由于弱内存模型对缓存一致性比较放松，跨多处理器和大量内存会有更好的扩展性。</p>
+<p>第二个影响可见性的原因就是重排序，在内存模型给定的边界里任由编译器、内存、处理器优化。</p>
+<p>所以Java内存模型主要描述了程序中的变量和物理机中内存、寄存器间的关系，JMM尽可能让编译器、硬件可以执行优化。</p>
+<h2 id="其他语言有内存模型吗"><a href="#其他语言有内存模型吗" class="headerlink" title="其他语言有内存模型吗"></a>其他语言有内存模型吗</h2><p>很多编程语言，像C、C++，就没有直接支持多线程。如果想避免所有重排序发生在编译器里，整个架构都需要依赖线程库、依赖编译器、系统</p>
+<h2 id="JSR-133讲了什么"><a href="#JSR-133讲了什么" class="headerlink" title="JSR-133讲了什么"></a>JSR-133讲了什么</h2><p>JSR-133 为Java定义了一个新的内存模型，修复了早期的内存模型问题。为了实现它，final、volatile的语义均得到改变。通过<a href="http://www.cs.umd.edu/users/pugh/java/memoryModel" target="_blank" rel="noopener">完整的JSR-133语义</a>可以了解到JSR-133的全貌</p>
+<p>JSR-133的目的包含以下几点：</p>
+<ul>
+<li>保持已存在的安全保证，加强其他安全，比如变量值不能凭空出现，每个变量值的出现都应该有理有据</li>
+<li>正确同步的程序语义应该尽可能简单、直观</li>
+<li>对于不正确同步的程序语义，应尽可能的减小风险。</li>
+<li>对于每个程序员来说，都应该能正确推导多线程和内存间的交互关系</li>
+<li>JVM应该被设计为：能为大部分主流的硬件架构提供高性能</li>
+<li>应该保证初始化安全。如果一个对象被正确的构造（没有发生this逸出），就算没有同步，所有引用该对象的线程都将看到该构造器设置的final变量的值。</li>
+<li>对现有代码造成最小的影响</li>
+</ul>
+<h2 id="重排序意味着什么"><a href="#重排序意味着什么" class="headerlink" title="重排序意味着什么"></a>重排序意味着什么</h2><p>当访问某个变量时，可能出现它的值和预期指定的值不一样。编译器会重排序指令，处理器也可能会重排序指令。数据在寄存器、缓冲、内存间移动的顺序不按程序指定的来。<br>尽管如此，单线程程序是看不到重排序的影响的，即中途发生重排序，结果仍然不会改变。然而重排序会在多线程中起到作用：由于一个线程的修改可以被另外一个线程观察到，所以重排序中途修改的值会被另一个线程观测到。</p>
+<h2 id="旧的内存模型有什么问题"><a href="#旧的内存模型有什么问题" class="headerlink" title="旧的内存模型有什么问题"></a>旧的内存模型有什么问题</h2><p>难理解，出现范围广。具体表现在以下两个例子里：</p>
+<ul>
+<li>final变量被一个线程读时可能出现默认值，另一个线程读时可能出现构造值。这就意味着不可变对象发生变化了。</li>
+<li>volatile写会和普通读/写发生重排序。</li>
+</ul>
+<h2 id="什么是不正确的同步"><a href="#什么是不正确的同步" class="headerlink" title="什么是不正确的同步"></a>什么是不正确的同步</h2><ol>
+<li>一个线程对一个变量执行写入</li>
+<li>另一个线程对同一个变量执行读取</li>
+<li>写入和读取没有用同步排序<br>当发生这种情况时，都可以认为是发生了“数据竞争”</li>
+</ol>
+<h2 id="同步做了什么"><a href="#同步做了什么" class="headerlink" title="同步做了什么"></a>同步做了什么</h2><ul>
+<li>排斥：一个线程获取了管程，另一个线程只能等到第一个线程释放后才能获取</li>
+<li>可见性：在我们释放管程时，同步块会将本地内存刷新到主内存；获取管程之后，同步块会使本地缓存失效，重新去主内存中加载。</li>
+<li>happens-before：当一个操作happens-before另一个操作，那么就能向程序员保证JMM会让第一个先于第二个发生并对第二个可见</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/26/《七周七并发模型》第一章第一天/" data-id="cjhn204cz00120gvjbp9xg8bo" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《深入Java虚拟机》之虚拟机栈" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/" class="article-date">
+  <time datetime="2018-05-25T03:50:04.000Z" itemprop="datePublished">2018-05-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java内存区域图<br><img src="https://blog-1252749790.file.myqcloud.com/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.png" alt="Java内存区域"></p>
+<p>注意：深底色为共享内存区域</p>
+<p>先讲解虚拟机栈</p>
+<h2 id="虚拟机栈"><a href="#虚拟机栈" class="headerlink" title="虚拟机栈"></a>虚拟机栈</h2><p>虚拟机是线程私有的，<strong>它的生命周期与线程相同</strong>，每个方法在执行的时候都会创建一个栈帧用于存储局部变量表、操作数栈、动态链接、方法出口等信息。<strong>每一个方法从调用到执行完成的过程，就对应着一个栈帧再虚拟机栈中入栈到出栈的过程</strong>。</p>
+<h3 id="局部变量表"><a href="#局部变量表" class="headerlink" title="局部变量表"></a>局部变量表</h3><p>用于存放方法参数和方法内部定义的局部变量。在编译后，局部变量表的大小就确定了，具体见代码和对应的字节码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对应的java代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1000</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/jvm-locals.png" alt=""><br>其中<code>locals=2</code> 即代表本地局部变量有两个</p>
+<p>局部变量表的容量以变量槽（Slot）为最小单位，虚拟机规范表示 <strong>boolean、byte、char、short、int、float、reference或returnAddress类型的数据都应该占用1个Slot</strong>。注意，只要保证slot实现的效果和32位虚拟机中的一致即可，比如，在64位虚拟机中，使用了64位物理内存空间去实现一个Slot，虚拟机上仍要使用对齐和补白让Slot看起来和32位虚拟机中的一样。</p>
+<p>其中介绍一下<code>reference</code> 这个数据类型：</p>
+<ul>
+<li>此引用应该直接或间接地查找到对象在Java堆中的数据存放的起始地址索引</li>
+<li>此引用应该直接或间接地查找到对象所属数据类型在方法区中地存储类型信息</li>
+</ul>
+<p>对于64位的数据类型（double、long），虚拟机会以高位对齐的方式为其分配两个连续的Slot空间。注意，在局部变量表里，无论是否分两次读32位数据，都不会引起数据安全问题。</p>
+<p>局部变量表的索引值范围是从0开始直最大的Slot数量，如果是 <strong>非static</strong> 方法，下标为0的位置默认是this引用。因为方法局部变量表在编译时就确定了，所以调用方法传入数据时，其实是传入了一个引用（待确定。</p>
+<p>同时为了尽可能节省 <strong>栈帧空间</strong>，局部变量表中的Slot是可以重用的，方法体中定义的变量，其作用域不一定会覆盖整个方法，如果该变量超出作用范围，那个变量的slot就会交给其他变量使用。这个规则也会带来一定副作用，因为超出范围后，局部变量表不会主动断开和引用的联系，就导致某个对象一直被局部变量表持有着，可以参考下面的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 共享变量 */</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> K = <span class="number">1024</span>;</span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> M = <span class="number">1024</span> * K;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况一，回收失败 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M]</span><br><span class="line">&#125;</span><br><span class="line">System.gc();</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况二，回收成功 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">0</span>;</span><br><span class="line">System.gc();</span><br></pre></td></tr></table></figure>
+<p>《Practical Java》里面讲到“把不使用的对象设置为null” 是有一定道理的，但是不推荐这样做，理由如下：</p>
+<ul>
+<li>代码不整洁，应该以恰当的变量作用域来控制回收才是最优雅的</li>
+<li>JIT会堆null赋值进行优化</li>
+</ul>
+<p>但是遇到这样的极端条件，还是可以一试的：对象占用内存大，此方法执行时间长，方法调用次数达不到JIT优化的的编译条件</p>
+<h3 id="操作数栈"><a href="#操作数栈" class="headerlink" title="操作数栈"></a>操作数栈</h3><p><img src="https://blog-1252749790.file.myqcloud.com/jvm/operator_stack.png" alt=""></p>
+<p>就是一个处理运算的中转站，如果有做过逆波兰序数的应该可以理解，将操作数压入栈，然后遇到操作符时，弹出两个操作数进行运算。</p>
+<h3 id="动态连接"><a href="#动态连接" class="headerlink" title="动态连接"></a>动态连接</h3><p>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，持有这个引用是为了支持方法调用过程中的动态连接。在类加载阶段或者第一次使用就转换为引用，这种转换被称为静态解析。另一部分要等到每一次运行期间转换为直接引用，这部分称为动态连接。</p>
+<p>方法调用不等同于方法执行，方法调用唯一的作用就是确定被调用方法的版本（调用哪个方法），不涉及具体运行过程。Class文件的编译过程不包含传统的连接步骤，一切方法调用在Class文件里都是符号引用，而不是方法在实际运行时内存布局中的入口地址（直接引用）。</p>
+<p>在把符号引用转换成直接引用的过程有两种：</p>
+<ol>
+<li>解析，调用的方法版本一定是在编译期就确定下来的，比如静态方法、私有方法、实例构造器、父类方法四种</li>
+<li>分派，可能是静态也可能是动态，主要是重载和重写</li>
+</ol>
+<h3 id="方法返回地址"><a href="#方法返回地址" class="headerlink" title="方法返回地址"></a>方法返回地址</h3><ul>
+<li>正常返回，将返回值传递给上层的方法调用者</li>
+<li>异常完成出口，在方法执行过程中遇到了异常，并且这个异常没有在方法内得到处理</li>
+</ul>
+<p>无论采用哪种方式退出，都需要返回到方法被调用的位置，程序才能继续执行，方法返回时可能需要在栈帧中保存一些信息，用来帮助恢复它的上层方法的执行状态。一般来说，方法正常退出时，调用者的PC计数器的值可以作为返回地址；方法异常退出时，返回地址是要通过异常处理器表来确定的</p>
+<p>方法退出的过程实际上就等同于把栈帧出栈，因此退出时可能执行的操作有：恢复上层方法的局部变量表和操作数栈，把返回值（如果有的话）压入调用者栈帧的操作数栈中，调整PC计数器的值来指向方法调用指令后的一条指令。</p>
+<h2 id="本地方法栈"><a href="#本地方法栈" class="headerlink" title="本地方法栈"></a>本地方法栈</h2><p>虚拟机栈执行java方法服务，而本地方法栈为虚拟机使用到的Native方法服务。当无法动态扩展栈大小时，会抛出<code>OutOfMemoryError</code></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjhn204d3001a0gvj1l7gl83i" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-(未埋)《算法》之堆排序" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/" class="article-date">
@@ -92,7 +279,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjhami4r20005a8vjav9d63r9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjhn204cd00050gvj65le6gxy" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
@@ -193,7 +380,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhami4sf001ka8vj43gfn777" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhn204d9001q0gvjfl2ifft0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -296,7 +483,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhami4s80017a8vjkt6kf5kh" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhn204cx000x0gvj1hti9jiy" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -380,7 +567,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhami4rz000ua8vju075xh3o" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhn204cv000s0gvjq452xc50" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -434,7 +621,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhami4rs000ma8vjdi1zyqo4" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhn204cs000n0gvjbcpuin64" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -477,7 +664,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhami4ra0008a8vj47wk46eb" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhn204ch00070gvjp7a8b1z7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -505,33 +692,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjhami4ps0003a8vjhn2bqwo0" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-(未埋)了解阻塞队列之LinkedTransferQueue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/" class="article-date">
-  <time datetime="2018-05-12T03:32:00.848Z" itemprop="datePublished">2018-05-12</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/" data-id="cjhami4pq0002a8vjmrakzamm" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjhn204ca00030gvjmvbfutjf" class="article-share-link">Share</a>
       
       
     </footer>
@@ -557,106 +718,9 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之DelayQueue/" data-id="cjhami4pn0001a8vjb2zhg1z5" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之DelayQueue/" data-id="cjhn204bs00020gvjw6h7fj53" class="article-share-link">Share</a>
       
       
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之阻塞队列" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/" class="article-date">
-  <time datetime="2018-05-12T01:48:01.000Z" itemprop="datePublished">2018-05-12</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/">《Java并发编程的艺术》之阻塞队列</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>阻塞队列是一个支持两个附加操作的队列。这两个附加的操作支持阻塞的插入和移除方法：</p>
-<p>1) 支持阻塞的插入方法：当队列满时，队列会阻塞执行插入的线程<br>2) 支持阻塞的移除方法：当队列空时，队列会阻塞执行移除的线程</p>
-<p>方法总结：</p>
-<table>
-<thead>
-<tr>
-<th>方法/处理方式</th>
-<th>抛出异常</th>
-<th>返回特殊值</th>
-<th>一直阻塞</th>
-<th>超时退出</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>插入方法</td>
-<td>add(e)</td>
-<td>offer(e)</td>
-<td>put(e)</td>
-<td>offer(e, time, unit)</td>
-</tr>
-<tr>
-<td>移除方法</td>
-<td>无</td>
-<td>poll()</td>
-<td>take()</td>
-<td>poll(time, unit)</td>
-</tr>
-<tr>
-<td>检测方法</td>
-<td>element()</td>
-<td>peek()</td>
-<td>无</td>
-<td>无</td>
-</tr>
-</tbody>
-</table>
-<ul>
-<li>抛出异常：当队列满时，插入元素会抛出<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">* 返回特殊值：offer()是入队方法，当插入成功时返回true，插入失败返回false；poll()是出队方法，当出队成功时返回元素的值，队列为空时返回null</span><br><span class="line">* 一直阻塞：当队列满时，阻塞执行插入方法的线程；当队列空时，阻塞执行出队方法的线程</span><br><span class="line">* 超时退出：顾名思义</span><br><span class="line"></span><br><span class="line">在JDK7里，Java的阻塞队列总共有七个，每个类都继承```AbstractQueue```：</span><br><span class="line"></span><br><span class="line">* ArrayBlockingQueue</span><br><span class="line">* LinkedTransferQueue</span><br><span class="line">* SynchronousQueue</span><br><span class="line">* DelayQueue</span><br><span class="line">* LinkedBlockingDeque</span><br><span class="line">* LinkedBlockingQueue</span><br><span class="line">* PriorityBlockingQueue</span><br><span class="line"></span><br><span class="line">## ArrayBlockingQueue</span><br><span class="line">该类是通过数组实现的有界阻塞队列，此队列按照FIFO的原则对元素进行排列。默认情况下不保证线程公平的访问队列，所谓公平访问是指阻塞的线程，可以按照阻塞的先后顺序访问队列，即先阻塞的先访问。公平访问是由ReentrantLock的公平锁实现的：</span><br><span class="line">```java</span><br><span class="line">public ArrayBlockingQueue(int capacity, boolean fair) &#123;</span><br><span class="line">    if (capacity &lt;= 0)</span><br><span class="line">        throw new IllegalArgumentException();</span><br><span class="line">    this.items = new Object[capacity];</span><br><span class="line">    lock = new ReentrantLock(fair);</span><br><span class="line">    notEmpty = lock.newCondition();</span><br><span class="line">    notFull =  lock.newCondition();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
-</ul>
-<ol>
-<li>因为直接创建的数组，ArrayBlockingQueue的长度无法更改，</li>
-<li>当ReentrantLock设置为公平锁后，后续所有Lock竞争中都会是公平竞争，没看过Condition原理的小伙伴会想，那和Condition有什么关系呢？答案是Condition在被唤醒时也要参与竞争Lock，那么在Lock竞争中都会遵守公平竞争。</li>
-</ol>
-<h2 id="LinkedBlockingQueue"><a href="#LinkedBlockingQueue" class="headerlink" title="LinkedBlockingQueue"></a>LinkedBlockingQueue</h2><p>该类是一个用链表实现的有界阻塞队列（也不算有界，只是因为计数器最多只能计Integer.MAX_VALUE)。此队列的默认和最大长度为Integer.MAX_VALUE。按照先进先出的原则对元素进行排列。</p>
-<h2 id="PriorityBlockingQueue"><a href="#PriorityBlockingQueue" class="headerlink" title="PriorityBlockingQueue"></a>PriorityBlockingQueue</h2><p>该类是一个支持优先级的无界阻塞队列。默认情况下元素采取自然升序的排序方式。也可以自定义类实现compareTo()来指定元素排序规则，或者初始化时指定Comparator来对元素排序。<br>详见：<a href="">坑还没填，迟点填</a></p>
-<h2 id="DelayQueue"><a href="#DelayQueue" class="headerlink" title="DelayQueue"></a>DelayQueue</h2><p>支持延时获取元素的无界阻塞队列。队列使用<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">运用场景：</span><br><span class="line">* 缓存系统的设计：可以用DelayQueue保存缓存元素的有效期，使用一个线程循环查询DelayQueue，一旦能从DelayQueue中获取元素，表示缓存有效期到了</span><br><span class="line">* 定时任务调度：使用DelayQueue保存当天将会执行的任务和执行时间，一旦从DelayQueue中获取到任务就开始执行，比如TimerQueue</span><br><span class="line"></span><br><span class="line">执行流程如下所示：</span><br><span class="line"></span><br><span class="line"> 首先实现```Delayed```接口：</span><br><span class="line"> ```java</span><br><span class="line"> @Override</span><br><span class="line"> public long getDelay(TimeUnit unit)&#123;</span><br><span class="line">     // 返回当前元素还需要等待多久，当返回&lt;0的值时，表示可以出队；&gt;0时，表示仍需要等待</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
-<p>第二步，每次offer()时，往<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第三步，每次获取时(调用take()，才能有阻塞的功能)，如果时间未满会先阻塞</span><br><span class="line">```java</span><br><span class="line">for (;;) &#123;</span><br><span class="line">    E first = q.peek();</span><br><span class="line">    if (first == null)</span><br><span class="line">        available.await();</span><br><span class="line">    else &#123;</span><br><span class="line">        long delay = first.getDelay(NANOSECONDS);</span><br><span class="line">        if (delay &lt;= 0)</span><br><span class="line">            return q.poll();</span><br><span class="line">        first = null; // don&apos;t retain ref while waiting</span><br><span class="line">        if (leader != null)</span><br><span class="line">            available.await();</span><br><span class="line">        else &#123;</span><br><span class="line">            Thread thisThread = Thread.currentThread();</span><br><span class="line">            leader = thisThread;</span><br><span class="line">            try &#123;</span><br><span class="line">                available.awaitNanos(delay);</span><br><span class="line">            &#125; finally &#123;</span><br><span class="line">                if (leader == thisThread)</span><br><span class="line">                    leader = null;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>具体的可以看： <a href="">了解之DelayQueue</a></p>
-<h2 id="SynchronousQueue"><a href="#SynchronousQueue" class="headerlink" title="SynchronousQueue"></a>SynchronousQueue</h2><p>一个不存储元素的队列，生产者生产一个，消费者消费一个，每一个put操作都需要等待一个take操作。该队列主要负责生产者线程处理的数据传递给消费者线程。比较适合传递性场景。其吞吐量高于ArrayBlockingQueue和LinkedBlockingQueue</p>
-<h2 id="LinkedTransferQueue"><a href="#LinkedTransferQueue" class="headerlink" title="LinkedTransferQueue"></a>LinkedTransferQueue</h2><p>该类主要添加了两个方法：<code>transfer()</code>和<code>tryTransfer()</code><br><code>transfer()</code> 主要是当消费者线程在等待的时候，生产者一产生元素，就立刻交给消费者，不需要再进行额外的入队操作；如果没有消费者在等待，就先进入队尾。<br><code>tryTransfer()</code> 用来试探生产者传入的元素是否能直接传给消费者。</p>
-<p>具体的可以看：<a href="">了解之LinkedTansferQueue</a></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
-<li>ArrayBlockingQueue</li>
-<li>LinkedBlockingQueue</li>
-<li>LinkedBlockingDeque</li>
-<li>SynchronousQueue<br>上面四个是较为简单的，数据结构和各个方法都较为简单就不一一阐述了。剩下三个则是比较大头的，而且比较新颖，打算单独拎出来讲解</li>
-</ul>
-<p>该章主要是粗略的了解一下其他阻塞队列的功能，对于一些不常见的类，后续会补上详细的分析（其实是先补充一波数据结构和算法）</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjhami4rv000pa8vjgew9lyo0" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
     </footer>
   </div>
   
@@ -667,7 +731,7 @@
 
 
   <nav id="page-nav">
-    <span class="page-number current">1</span><a class="page-number" href="/codeleven.github.io/page/2/">2</a><a class="page-number" href="/codeleven.github.io/page/3/">3</a><a class="extend next" rel="next" href="/codeleven.github.io/page/2/">__('next') &raquo;</a>
+    <span class="page-number current">1</span><a class="page-number" href="/codeleven.github.io/page/2/">2</a><a class="page-number" href="/codeleven.github.io/page/3/">3</a><a class="page-number" href="/codeleven.github.io/page/4/">4</a><a class="extend next" rel="next" href="/codeleven.github.io/page/2/">__('next') &raquo;</a>
   </nav>
 </section>
         
@@ -680,7 +744,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -690,7 +754,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -712,6 +776,14 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/">队列之PriorityQueue</a>
           </li>
         
@@ -721,14 +793,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/">《Java并发编程的艺术》之同步工具</a>
           </li>
         
       </ul>

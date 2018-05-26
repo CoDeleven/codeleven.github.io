@@ -3,20 +3,18 @@
 <head>
   <meta charset="utf-8">
   
-  <title>关于final插入StoreStore的疑惑 | CoDeleven的个人博客</title>
+  <title>Archives: 2018/5 | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="在学习volatile和final时，注意到写时的区别：  volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写 final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作  想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。 而在对final域和">
-<meta name="keywords" content="JVM">
-<meta property="og:type" content="article">
-<meta property="og:title" content="关于final插入StoreStore的疑惑">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/index.html">
+  <meta name="description" content="Codeleven的博客">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CoDeleven的个人博客">
+<meta property="og:url" content="http://yoursite.com/GithubPages/archives/2018/05/page/3/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="在学习volatile和final时，注意到写时的区别：  volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写 final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作  想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。 而在对final域和">
+<meta property="og:description" content="Codeleven的博客">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2018-05-03T14:13:44.217Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="关于final插入StoreStore的疑惑">
-<meta name="twitter:description" content="在学习volatile和final时，注意到写时的区别：  volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写 final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作  想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。 而在对final域和">
+<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:description" content="Codeleven的博客">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -65,70 +63,44 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
-  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
+        <section id="main">
   
-    <h1 class="article-title" itemprop="name">
-      关于final插入StoreStore的疑惑
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/codeleven.github.io/archives/2018" class="archive-year">2018</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="archive-article-date">
+  <time datetime="2018-05-01T02:52:35.000Z" itemprop="datePublished">May 1</time>
+</a>
+      
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
     </h1>
   
 
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在学习volatile和final时，注意到写时的区别：</p>
-<ol>
-<li>volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写</li>
-<li>final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作</li>
-</ol>
-<p>想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。</p>
-<p>而在<strong>对final域和普通域初始化的构造函数</strong>里，即使final写前面有StoreStore，前面的普通写/读仍然会发生重排序？？</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhn204d6001j0gvjnh56fnug" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
-
-    </footer>
+    </header>
   </div>
-  
-    
-<nav id="article-nav">
-  
-    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          《Java并发编程的艺术》之Java内存模型
-        
-      </div>
-    </a>
-  
-  
-    <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">《Java并发编程的艺术》之synchronized的底层实现原理</div>
-    </a>
-  
-</nav>
-
-  
 </article>
+  
+  
+    </div></section>
+  
 
+
+  <nav id="page-nav">
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/archives/2018/05/page/2/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/archives/2018/05/">1</a><a class="page-number" href="/codeleven.github.io/archives/2018/05/page/2/">2</a><span class="page-number current">3</span>
+  </nav>
 </section>
         
           <aside id="sidebar">

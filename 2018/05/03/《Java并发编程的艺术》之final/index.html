@@ -6,7 +6,7 @@
   <title>《Java并发编程的艺术》之final | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="final的重排序规则以下面的代码为例，讲解final写和final读的重排序规则12345678910111213141516171819public FinalExample&amp;#123;    int a;    final int b;    private static FinalExample self;    private FinalExample()&amp;#123;        th">
-<meta name="keywords" content="Java并发,JVM">
+<meta name="keywords" content="Java并发,JMM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="《Java并发编程的艺术》之final">
 <meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/index.html">
@@ -16,7 +16,7 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_read_sequence.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_escape_sequence.png">
-<meta property="og:updated_time" content="2018-05-03T14:12:00.628Z">
+<meta property="og:updated_time" content="2018-05-18T02:12:28.614Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Java并发编程的艺术》之final">
 <meta name="twitter:description" content="final的重排序规则以下面的代码为例，讲解final写和final读的重排序规则12345678910111213141516171819public FinalExample&amp;#123;    int a;    final int b;    private static FinalExample self;    private FinalExample()&amp;#123;        th">
@@ -94,7 +94,7 @@
         <h2 id="final的重排序规则"><a href="#final的重排序规则" class="headerlink" title="final的重排序规则"></a>final的重排序规则</h2><p>以下面的代码为例，讲解final写和final读的重排序规则<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> FinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> FinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">FinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> FinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        self = <span class="keyword">new</span> FinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        FinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h3 id="final写的重排序规则"><a href="#final写的重排序规则" class="headerlink" title="final写的重排序规则"></a>final写的重排序规则</h3><ul>
 <li>JMM保证写final变量时不被编译器重排序到构造函数外</li>
-<li>编译器会在写final域的前面插入StoreStore屏障</li>
+<li>编译器会在写final域后，构造函数返回前插入StoreStore屏障</li>
 </ul>
 <p>假设现在线程A执行init()，线程B执行read()时，可能的执行顺序如下所示：</p>
 <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png" alt=""></p>
@@ -118,10 +118,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjhami4rf000ca8vj2ir7a27o" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjhn204cn000e0gvjz119a647" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
 
     </footer>
   </div>
@@ -160,7 +160,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -170,7 +170,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -192,6 +192,14 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/">队列之PriorityQueue</a>
           </li>
         
@@ -201,14 +209,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/">《Java并发编程的艺术》之同步工具</a>
           </li>
         
       </ul>

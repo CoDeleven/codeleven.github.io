@@ -3,20 +3,18 @@
 <head>
   <meta charset="utf-8">
   
-  <title>了解HashMap原理 | CoDeleven的个人博客</title>
+  <title>CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="对于写了这么久的HashMap，对其知之甚少，趁大三有点闲时，打算深入了解下HashMap的原理。  HashMap、HashTable之间有什么关系 HashMap在put、remove的时候做了什么 resize（再哈希）是什么 为什么每次扩容，容量都是原来的二次方  HashMap和HashTable间的关系HashMap和HashTable间的差异：  HashMap是线程不安全的,Has">
-<meta name="keywords" content="Java集合">
-<meta property="og:type" content="article">
-<meta property="og:title" content="了解HashMap原理">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/index.html">
+  <meta name="description" content="Codeleven的博客">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CoDeleven的个人博客">
+<meta property="og:url" content="http://yoursite.com/GithubPages/page/4/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="对于写了这么久的HashMap，对其知之甚少，趁大三有点闲时，打算深入了解下HashMap的原理。  HashMap、HashTable之间有什么关系 HashMap在put、remove的时候做了什么 resize（再哈希）是什么 为什么每次扩容，容量都是原来的二次方  HashMap和HashTable间的关系HashMap和HashTable间的差异：  HashMap是线程不安全的,Has">
+<meta property="og:description" content="Codeleven的博客">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2018-05-10T07:17:48.494Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="了解HashMap原理">
-<meta name="twitter:description" content="对于写了这么久的HashMap，对其知之甚少，趁大三有点闲时，打算深入了解下HashMap的原理。  HashMap、HashTable之间有什么关系 HashMap在put、remove的时候做了什么 resize（再哈希）是什么 为什么每次扩容，容量都是原来的二次方  HashMap和HashTable间的关系HashMap和HashTable间的差异：  HashMap是线程不安全的,Has">
+<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:description" content="Codeleven的博客">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -65,7 +63,9 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-了解HashMap原理" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main">
+  
+    <article id="post-了解HashMap原理" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/04/05/了解HashMap原理/" class="article-date">
   <time datetime="2018-04-05T11:51:39.000Z" itemprop="datePublished">2018-04-05</time>
@@ -78,8 +78,8 @@
       <header class="article-header">
         
   
-    <h1 class="article-title" itemprop="name">
-      了解HashMap原理
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/05/了解HashMap原理/">了解HashMap原理</a>
     </h1>
   
 
@@ -125,29 +125,67 @@
     </footer>
   </div>
   
-    
-<nav id="article-nav">
-  
-    <a href="/codeleven.github.io/2018/04/05/了解LockSupport的原理/" id="article-nav-newer" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Newer</strong>
-      <div class="article-nav-title">
-        
-          了解LockSupport的原理
-        
-      </div>
-    </a>
-  
-  
-    <a href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">为什么Thread.suspend和resume被弃用</div>
-    </a>
-  
-</nav>
+</article>
 
+
+  
+    <article id="post-为什么Thread-suspend和resume被弃用" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/" class="article-date">
+  <time datetime="2018-04-04T01:13:24.000Z" itemprop="datePublished">2018-04-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/">为什么Thread.suspend和resume被弃用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>笔者在学习JUC包的时候，了解到同样用于线程阻塞和恢复功能的类—— <em>LockSupport</em>，那么这个类和<em>Thread.suspend()</em> 和 <em>Thread.resume()</em> 有什么区别，为什么后者被弃用了？</p>
+<h2 id="阻塞小例子"><a href="#阻塞小例子" class="headerlink" title="阻塞小例子"></a>阻塞小例子</h2><p>该例子(来源于Bug Database)很好的验证了<em>Thread.suspend()/resume()</em>这对兄弟天生容易犯错，在输出几个i之后就会发生永久性阻塞（通过jstack看，只能判断其是阻塞，无法判断是死锁）。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* ---------Thread.suspend 和 resume发生“死锁”的示例--------- */</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">        TestTask mainThread = <span class="keyword">new</span> TestTask();</span><br><span class="line">        mainThread.start();</span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">            <span class="keyword">if</span>(!mainThread.isTalking)&#123;</span><br><span class="line">                <span class="comment">// LockSupport.unpark(mainThread);</span></span><br><span class="line">                mainThread.resume();</span><br><span class="line">                mainThread.isTalking = <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">TestTask</span> <span class="keyword">extends</span> <span class="title">Thread</span> </span>&#123;</span><br><span class="line">        <span class="keyword">volatile</span> <span class="keyword">boolean</span> isTalking = <span class="keyword">true</span>;</span><br><span class="line">        <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="keyword">if</span> (isTalking) &#123;</span><br><span class="line">                    i++;</span><br><span class="line">                    isTalking = <span class="keyword">false</span>;</span><br><span class="line">                    <span class="comment">// LockSupport.park();</span></span><br><span class="line">                    suspend();</span><br><span class="line">                    System.out.println(i);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure></p>
+<h2 id="弃用原因"><a href="#弃用原因" class="headerlink" title="弃用原因"></a>弃用原因</h2><p>在这个方面，笔者上网了解过很多，许多人都是泛泛而谈，甚至是随手复制粘贴，质量低的可怕，完全无法了解到为什么它被弃用了。笔者最后在Bug Database上了解到了原因：</p>
+<ol>
+<li><em>Thread.suspend()和Thread.resume()</em> 发生阻塞的原因主要在于<strong>底层JVM在暂停时候的不安全</strong></li>
+<li>就算花大力气修复了<em>Thread.suspend()和Thread.resume()</em>,问题也会转移到应用层级别（这一点暂时无法理解） 。</li>
+</ol>
+<p><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=4040218#" target="_blank" rel="noopener"><em>Thread.suspend()</em> 和 <em>Thread.resume()</em> 被弃用的原因</a></p>
+<p>有能力的朋友们可以直接看原文，可以一起交流一下看法。</p>
+<h2 id="替代方案"><a href="#替代方案" class="headerlink" title="替代方案"></a>替代方案</h2><ol>
+<li><em>Object.wait()</em>和<em>Object.notify()/notifyAll()</em>，该方法需要在<em>synchronized()</em>中使用，极其麻烦</li>
+<li><em>LockSupport</em> 粒度小，使用方便</li>
+</ol>
+<h2 id="小栗子"><a href="#小栗子" class="headerlink" title="小栗子"></a>小栗子</h2><p><del>暂时没想法，后续补上</del></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjhn204d000140gvjww8xzuzl" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
   
 </article>
 
+
+  
+
+
+  <nav id="page-nav">
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/page/3/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><a class="page-number" href="/codeleven.github.io/page/2/">2</a><a class="page-number" href="/codeleven.github.io/page/3/">3</a><span class="page-number current">4</span>
+  </nav>
 </section>
         
           <aside id="sidebar">

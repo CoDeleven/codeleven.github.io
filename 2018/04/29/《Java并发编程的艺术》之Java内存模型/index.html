@@ -5,13 +5,13 @@
   
   <title>《Java并发编程的艺术》之Java内存模型 | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由重排序 和 写缓冲区 引发的，重排序又分为处理器重排序 和 编译器重排序。面对写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高">
-<meta name="keywords" content="JVM">
+  <meta name="description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 重排序 和 写缓冲区 引发的，重排序又分为 处理器重排序 和 编译器重排序。面对 写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需">
+<meta name="keywords" content="JMM">
 <meta property="og:type" content="article">
 <meta property="og:title" content="《Java并发编程的艺术》之Java内存模型">
 <meta property="og:url" content="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由重排序 和 写缓冲区 引发的，重排序又分为处理器重排序 和 编译器重排序。面对写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高">
+<meta property="og:description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 重排序 和 写缓冲区 引发的，重排序又分为 处理器重排序 和 编译器重排序。面对 写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png">
@@ -21,10 +21,10 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png">
-<meta property="og:updated_time" content="2018-05-01T14:40:25.208Z">
+<meta property="og:updated_time" content="2018-05-18T02:12:37.646Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《Java并发编程的艺术》之Java内存模型">
-<meta name="twitter:description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由重排序 和 写缓冲区 引发的，重排序又分为处理器重排序 和 编译器重排序。面对写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高">
+<meta name="twitter:description" content="整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 重排序 和 写缓冲区 引发的，重排序又分为 处理器重排序 和 编译器重排序。面对 写缓冲区的问题，像Java这样的高级语言一般无能为力，所以从重排序 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需">
 <meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
@@ -97,10 +97,10 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png" alt=""></p>
-<p>整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由<strong>重排序</strong> 和 <strong>写缓冲区</strong> 引发的，重排序又分为<strong>处理器重排序</strong> 和 <strong>编译器重排序</strong>。面对<strong>写缓冲区</strong>的问题，像Java这样的高级语言一般无能为力，所以从<strong>重排序</strong> 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。</p>
+<p>整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 <strong>重排序</strong> 和 <strong>写缓冲区</strong> 引发的，重排序又分为 <strong>处理器重排序</strong> 和 <strong>编译器重排序</strong>。面对 <strong>写缓冲区</strong>的问题，像Java这样的高级语言一般无能为力，所以从<strong>重排序</strong> 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。</p>
 <hr>
 <p>相信许多在<strong>多线程</strong>前线作战的伙伴们经常会遇到一种叫做<strong>内存可见性</strong>的大麻烦。这个麻烦可以简单粗暴的用<em>synchronized</em>解决，也可以很巧妙的用一些轻量级的同步原语解决。虽然能解决问题的都是好方案，但是在程序人生的旅途上，后者才是更为远见的选择。</p>
-<p>在面对<strong>内存可见性</strong>这个问题时，我们不得不先去学习一个叫做<strong>内存模型</strong>的东西。这个模型解释了<strong>如何解决多线程间的通讯</strong> 和 <strong>如何实现多线程间的同步</strong> 两个问题。<br>传统上有两种模型，一种叫做<strong>内存共享模型</strong>，另外一种则时<strong>消息传递模型</strong>。而Java采用了<strong>内存共享模型</strong>，后文简称<strong>JMM</strong>。这个抽象概念主要描述了：</p>
+<p>在面对<strong>内存可见性</strong>这个问题时，我们不得不先去学习一个叫做<strong>内存模型</strong>的东西。这个模型解释了 <strong>如何解决多线程间的通讯</strong> 和 <strong>如何实现多线程间的同步</strong> 两个问题。<br>传统上有两种模型，一种叫做<strong>内存共享模型</strong>，另外一种则时<strong>消息传递模型</strong>。而Java采用了<strong>内存共享模型</strong>，后文简称<strong>JMM</strong>。这个抽象概念主要描述了：</p>
 <pre><code>线程间的共享变量存储在主内存中，每个线程拥有自己的本地内存，每个本地内存上都有该线程读/写变量的副本。
 </code></pre><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png" alt="JMM概念图"></p>
 <p>然而了解这个模型还不够，我们还要知道在Java编译、运行阶段都会有一种优化手段——<strong>重排序</strong>。重排序分为以下三种类型：</p>
@@ -198,19 +198,16 @@
 <li>JMM不保证对64位的long、double型变量的写操作具有原子性，而顺序一致性保证所有对内存的读写操作都是原子性</li>
 </ul>
 <p>第三点与处理器总线工作机制密切相关。这里放出书上的原话</p>
-<blockquote>
-<p>111</p>
-</blockquote>
 <p>JVM在这点上也只是鼓励去做但不强求，因为在一些32位处理器上，要64位的写操作保持原子性是会需要大开销的。所以当JVM在这种处理器上运行时，会把64位long/double型变量拆做两个32位的写操作执行。此时，这种64位变量的写操作将不具有原子性。当单个内存操作不存在原子性时，可能会产生意想不到的后果。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Target</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">long</span> a;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Target target = <span class="keyword">new</span> Target();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = <span class="number">0l</span>).start();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = Long.MAX_VALUE).start();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">        String binary = toBinary(target.a);</span><br><span class="line">        <span class="comment">// 出现不是0，又不是MAX_VALUE的二进制字串是就输出</span></span><br><span class="line">        <span class="keyword">if</span>(!binary.equals(<span class="string">"00000000000000000000000000000000"</span>) &amp;&amp; </span><br><span class="line">        !binary.equals(<span class="string">"01111111111111111111111111111111"</span>))&#123;</span><br><span class="line">            System.out.println(<span class="string">"long不是原子性操作.."</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">toBinary</span><span class="params">(<span class="keyword">long</span> l)</span> </span>&#123;</span><br><span class="line">    StringBuilder sb = <span class="keyword">new</span> StringBuilder(Long.toBinaryString(l));</span><br><span class="line">    <span class="keyword">while</span> (sb.length() &lt; <span class="number">64</span>) &#123;</span><br><span class="line">        sb.insert(<span class="number">0</span>, <span class="string">"0"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>代码如上所示，假设处理器A写一个了long型变量，同时B处理器要读取这个long型变量。处理器A中的64位操作被拆分为两个32位的写操作，且这两个32位的写操作被分配到不同的事务中执行。同时处理器B 64位的读操作被分配到单个读事务中处理，执行顺序如下图所示时就会发生处理器A写到一半的数据被处理器B看见。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png" alt=""></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhami4rd0009a8vj14h46x32" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhn204cl000c0gvjdiwbitrp" class="article-share-link">Share</a>
       
       
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
 
     </footer>
   </div>
@@ -249,7 +246,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -259,7 +256,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -281,6 +278,14 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/">队列之PriorityQueue</a>
           </li>
         
@@ -290,14 +295,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/">《Java并发编程的艺术》之同步工具</a>
           </li>
         
       </ul>
