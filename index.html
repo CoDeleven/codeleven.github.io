@@ -65,6 +65,86 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《深入Java虚拟机》之对象内存布局及使用" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/" class="article-date">
+  <time datetime="2018-05-27T02:22:13.000Z" itemprop="datePublished">2018-05-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/">《深入Java虚拟机》之对象内存布局及使用</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="Q1-对象什么时候创建"><a href="#Q1-对象什么时候创建" class="headerlink" title="Q1. 对象什么时候创建"></a>Q1. 对象什么时候创建</h2><p>当虚拟机遇到<code>new</code>关键字时，首先去检查这个指令的参数是否能在常量池中定位到一个类的符号引用，并且检查这个符号引用代表的类是否被加载。如果没有执行相应的加载过程，这部分内容可以看类的加载流程。</p>
+<h2 id="Q2-对象在哪里创建"><a href="#Q2-对象在哪里创建" class="headerlink" title="Q2. 对象在哪里创建"></a>Q2. 对象在哪里创建</h2><p>对象要创建时必须要为新对象分配内存空间，即在Java堆中划分出一块等大小的内存区域。根据内存区域是否完整、连续，将Java堆划分为两种情况：</p>
+<ul>
+<li>指针碰撞：该情况是指Java堆中内存是绝对规整的，所有用过的内存都放在一边，空闲的内存放在另一边，中间放着一个指针作为分界点的指示器，当分配内存时，就将指针向空闲内存空间移动一段和内存大小一样的距离即可</li>
+<li>空闲列表：如果Java堆中的内存是不规整的，已使用的内存和空闲内存相互交错，虚拟机就必须维护一个列表，记录上哪些内存是可用的，在分配时从列表中找到一块足够大的内存空间划分给对象实例</li>
+</ul>
+<p>选择哪种方式存放内存是由 <strong>java堆是否规整</strong> 决定的，而Java堆是否规整又是由 <strong>所采用的垃圾收集器是否带有压缩整理功能</strong> 决定的。因此，在使用Serial、ParNew等带Compact过程的收集器时，系统采用的分配算法是指针碰撞，而使用CMS这种基于Mark-Sweep算法的收集器时，通常采用空闲列表。</p>
+<h2 id="Q3-对象创建时指针的同步问题"><a href="#Q3-对象创建时指针的同步问题" class="headerlink" title="Q3. 对象创建时指针的同步问题"></a>Q3. 对象创建时指针的同步问题</h2><p>在并发情况中，可能正在为A分配内存空间，指针没来得及移动；对象B又同时使用了原来的指针来分配内存。虚拟机处理这种情况的方法也有两种：</p>
+<ul>
+<li>对分配内存空间的情况进行同步——采用CAS + 失败重试 的方式保证更新操作的原子性</li>
+<li>另一种是把内存分配的动作按照线程划分在不同的空间中，即每个线程在Java堆中预先分配一块内存，称为 <strong>本地线程分配缓存（TLAB）</strong> 。线程分配的对象放置在各自的TLAB中，等TLAB的空间用完后要分配新的内存空间时，才需要重新同步锁定。用 <code>-XX:+/-UseTLAB</code> 开启或关闭TLAB</li>
+</ul>
+<h2 id="Q4-内存分配完毕后做什么"><a href="#Q4-内存分配完毕后做什么" class="headerlink" title="Q4. 内存分配完毕后做什么"></a>Q4. 内存分配完毕后做什么</h2><ol>
+<li>初始化内存空间</li>
+<li>对象头的设置</li>
+<li>调用初始化方法</li>
+</ol>
+<p>内存分配完后的第一步就是先将分配到的内存空间初始化为默认值；如果使用TLAB，这一工作过程也可以 <strong>提前至TLAB分配时进行</strong></p>
+<p>对象头的设置包括元数据、对象的锁标志位、对象的分代年龄等等，而根据虚拟机的运行状态不同，还会有不同的设置</p>
+<p>最后执行<init>方法（构造函数），将所有字段按程序员的意愿进行初始化，此时，这个对象才算是真正可用</init></p>
+<h2 id="Q5-对象在内存里有什么"><a href="#Q5-对象在内存里有什么" class="headerlink" title="Q5.对象在内存里有什么"></a>Q5.对象在内存里有什么</h2><ul>
+<li>对象头<ul>
+<li>存储对象自身运行时的数据</li>
+<li>类型指针</li>
+<li>若对象为数组，还需保存数组的长度</li>
+</ul>
+</li>
+<li>实例数据</li>
+<li>对齐填充</li>
+</ul>
+<h3 id="对象头"><a href="#对象头" class="headerlink" title="对象头"></a>对象头</h3><p>对象头通常包含两个部分，<strong>第一个部分</strong> 用于保存对象运行时的数据，该部分又称 <strong>MarkWord</strong>，保存着如哈希码、GC分代年龄、锁状态标志、线程持有的锁等等信息，这部分在32位虚拟机里占32位，64位虚拟机里占64位（不开启指针压缩）。MarkWord被设计为不定长的数据结构，它会根据运行状态复用自己的存储空间(是未锁定、轻量级锁定等等)。</p>
+<p><strong>第二个部分</strong> 是类型指针，虚拟机通过这个指针确定 <strong>这个对象是哪个类的实例</strong><br><strong>第三个部分</strong> 是当对象为数组时才存在的，主要用于记录数组的长度</p>
+<h3 id="实例数据"><a href="#实例数据" class="headerlink" title="实例数据"></a>实例数据</h3><p>对象真正存储的有效数据</p>
+<h3 id="对齐填充"><a href="#对齐填充" class="headerlink" title="对齐填充"></a>对齐填充</h3><p>因为HotSpot VM的自动内存管理系统要求对象起始地址必须是8字节的整数倍，换句话说，就是对象的大小必须是8字节的整数倍，对象头部分正好是8字节的整数倍，因此当实例数据没有对齐时，就需要对齐填充。对齐填充是提高效率的一种方法，并且有些CPU如果不内存对齐，程序会直接崩溃；</p>
+<p><a href="https://stackoverflow.com/questions/381244/purpose-of-memory-alignment" target="_blank" rel="noopener">内存对齐的目的</a></p>
+<h2 id="Q6-创建完一个对象后，如何访问对象实例"><a href="#Q6-创建完一个对象后，如何访问对象实例" class="headerlink" title="Q6. 创建完一个对象后，如何访问对象实例"></a>Q6. 创建完一个对象后，如何访问对象实例</h2><p>使用对象的方法是，通过栈上的reference数据来操作堆上的具体对象。由于Java虚拟机规范中只规定了Reference类型是一个指向对象的引用，并没有定义这个引用通过何种方式去定位。目前主流的方式有两种：</p>
+<ul>
+<li>使用句柄，该方案会在Java堆中划分一块区域作为句柄池，reference中存储的就是对象的句柄地址，而句柄中包含了对象实例数据与类型数据各自的具体信息<br><img src="https://blog-1252749790.file.myqcloud.com/jvm/reference_by_handle.png" alt="句柄引用示意图"></li>
+<li>直接指针，reference存储的地址直接是对象地址，对象实例数据里会包含数据类型信息<br><img src="https://blog-1252749790.file.myqcloud.com/jvm/reference_by_direct.png" alt="直接引用示意图"></li>
+</ul>
+<p>句柄引用的优势是移动对象实例后（比如GC情况下），reference变量不需要改变指向的地址。<br>直接引用的优势是速度快，节省了一次定位的开销。积少成多后，提高的速度也是很客观的</p>
+<p>HotSpot是采用直接引用的方式。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/" data-id="cjhoh6dnk00142svj2pt7vopk" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《七周七并发模型》第一章第一天" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/" class="article-date">
@@ -163,7 +243,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/26/《七周七并发模型》第一章第一天/" data-id="cjhn204cz00120gvjbp9xg8bo" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/26/《七周七并发模型》第一章第一天/" data-id="cjhoh6dnc000s2svjxh1aqf78" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -240,7 +320,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjhn204d3001a0gvj1l7gl83i" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjhoh6dnj00122svj9lh6irgu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -279,7 +359,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjhn204cd00050gvj65le6gxy" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjhoh6dmg00042svjuyiusvwt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
@@ -380,7 +460,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhn204d9001q0gvjfl2ifft0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhoh6do1001t2svjnmgxnuss" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -483,7 +563,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhn204cx000x0gvj1hti9jiy" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhoh6dnh000z2svj3jnhnow7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -567,7 +647,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhn204cv000s0gvjq452xc50" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhoh6dne000u2svjii8t84mu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -621,7 +701,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhn204cs000n0gvjbcpuin64" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhoh6dng000x2svjxpmlhr3t" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -664,7 +744,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhn204ch00070gvjp7a8b1z7" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhoh6dmp00072svjt0o7l6jz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -692,33 +772,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjhn204ca00030gvjmvbfutjf" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-(未埋)了解阻塞队列之DelayQueue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之DelayQueue/" class="article-date">
-  <time datetime="2018-05-12T03:32:00.848Z" itemprop="datePublished">2018-05-12</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之DelayQueue/" data-id="cjhn204bs00020gvjw6h7fj53" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjhoh6dm000032svji25hm6rm" class="article-share-link">Share</a>
       
       
     </footer>
@@ -754,7 +808,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -776,6 +830,10 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/">《深入Java虚拟机》之对象内存布局及使用</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
@@ -789,10 +847,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/">队列之PriorityQueue</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
           </li>
         
       </ul>

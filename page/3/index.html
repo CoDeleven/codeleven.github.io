@@ -65,6 +65,99 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
+  <time datetime="2018-05-02T02:36:31.000Z" itemprop="datePublished">2018-05-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="synchrnoized的happens-before"><a href="#synchrnoized的happens-before" class="headerlink" title="synchrnoized的happens-before"></a>synchrnoized的happens-before</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;<span class="comment">// ①</span></span><br><span class="line">    a = <span class="number">100</span>; <span class="comment">// ②</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ③</span></span><br><span class="line">&#125;<span class="comment">// ④</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123; <span class="comment">// ⑤</span></span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ⑥</span></span><br><span class="line">        <span class="keyword">int</span> result = a; <span class="comment">// ⑦</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// ⑧</span></span><br></pre></td></tr></table></figure>
+<p>假设线程A执行init()，线程B执行doTask()，有如下的happens-before关系：</p>
+<ul>
+<li>根据程序次序规则：<ul>
+<li>① hb ②</li>
+<li>② hb ③</li>
+<li>③ hb ④</li>
+<li>⑤ hb ⑥</li>
+<li>⑥ hb ⑦</li>
+<li>⑦ hb ⑧</li>
+</ul>
+</li>
+<li>根据监视器规则：<ul>
+<li>① hb ④</li>
+<li>④ hb ⑤</li>
+<li>⑤ hb ⑧</li>
+</ul>
+</li>
+</ul>
+<p>根据传递规则，保证init()方法所有的修改对doTask()方法可见，happens-before关系如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png" alt=""></p>
+<p>1、2间的表示程序次序性规则，4、5间的表示监视器规则，由于3、4有happens-before关系，4、5有happens-before关系，所以根据传递性规则，2、6间有happens-before关系。</p>
+<p>线程A释放锁之前所有可见的共享变量，在线程B获取同个锁之后就变得可见了。</p>
+<h2 id="synchrnoized的内存语义"><a href="#synchrnoized的内存语义" class="headerlink" title="synchrnoized的内存语义"></a>synchrnoized的内存语义</h2><h3 id="synchrnoized获取锁内存语义"><a href="#synchrnoized获取锁内存语义" class="headerlink" title="synchrnoized获取锁内存语义"></a>synchrnoized获取锁内存语义</h3><p>当释放锁时，JMM会把线程对应的本地内存中的共享变量刷新到主内存。以上面的例子为例，共享数据的状态示意图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png" alt=""></p>
+<h3 id="synchrnoized释放锁内存语义"><a href="#synchrnoized释放锁内存语义" class="headerlink" title="synchrnoized释放锁内存语义"></a>synchrnoized释放锁内存语义</h3><p>当A线程获取到锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png" alt=""></p>
+<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><p>对比锁释放-获取的内存语义和volatile的写-读内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取和volatile读有相同的内存语义。</p>
+<ul>
+<li>线程A释放一个锁，实质上是告诉其他 要获取该共享变量 线程 一个消息（线程A所做的修改）</li>
+<li>线程B获取一个锁，实质上是接受到其他线程发出的消息（释放这个锁的线程对共享变量所做的修改）</li>
+<li>线程A释放，随后线程B获取，实质上是线程A通过主内存给线程B发送消息。</li>
+</ul>
+<p>这里判断语义是否相同是通过两个操作的流程是否相同，比如线程A的锁释放完时，刷新至主内存；volatile写完后，刷新至主内存，并通知其他线程本地内存的共享变量失效（在锁释放环节里是交给锁获取执行）；</p>
+<h2 id="CAS和JUC"><a href="#CAS和JUC" class="headerlink" title="CAS和JUC"></a>CAS和JUC</h2><p>synchronized是通过控制对象头来控制锁的升级，但是具体获取锁和释放锁的流程藏在JVM里，这里将通过ReentrantLock类比synchronized过程。</p>
+<p><a href="https://codeleven.cn/2018/04/05/%E4%BA%86%E8%A7%A3AQS%E4%B9%8BExclusiveLock/" target="_blank" rel="noopener">ReentrantLock的实现流程</a></p>
+<p>这里要学习的是CAS，JDK文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步设置为给定的更新值。此操作具有volatile读和写的语义。<br>前面讲到volatile写保证volatile写不会和前面的操作发生重排序，volatile读保证volatile读不会和后面的操作发生重排序。组合这两个条件就意味着同时实现了 禁止某一操作和操作前、操作后的重排序。CAS操作就是如此，它在是通过加上lock前缀来实现以下的功能：</p>
+<ul>
+<li>使用缓存锁定保证原子性</li>
+<li>禁止之前和之后的重排序</li>
+<li>把写缓冲区中的所有数据刷新到内存</li>
+</ul>
+<p>正是因为CAS同时具有volatile读和写的内存语义，因此Java线程之间的通信有下面四种方式。</p>
+<ol>
+<li>A线程写volatile变量，B线程读这个volatile变量</li>
+<li>A线程写volatile变量，B线程用CAS修改volatile变量</li>
+<li>A线程用CAS修改volatile变量，B线程用CAS修改这个变量</li>
+<li>A线程用CAS修改volatile变量，B线程用volatile读取该变量</li>
+</ol>
+<p>JUC包的通用化的实现模式：</p>
+<ul>
+<li>声明共享变量为volatile</li>
+<li>使用CAS的原子条件来实现线程间的同步</li>
+<li>配合volatile读/写和CAS 来实习线程间的通信</li>
+</ul>
+<p>AQS，非阻塞数据结构和原子变量类，这些JUC包中的基础都是使用上面的模式来实现的，而JUC包的高层类又是依赖这些基础类来实现的。从整体看，JUC包的实现示意图如下所示。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjhoh6dn4000h2svjmi6rcv6i" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="article-date">
@@ -156,7 +249,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhn204cw000v0gvj5ogtghwb" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhoh6dn7000m2svjlaveccca" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -298,7 +391,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhn204cl000c0gvjdiwbitrp" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhoh6dn2000f2svjditgqrhq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
@@ -343,7 +436,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhn204d6001j0gvjnh56fnug" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhoh6dny001o2svjwiw8fftw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -405,6 +498,7 @@
 </tr>
 </tbody>
 </table>
+<p>具体的对象内存布局看<a href="">这篇文章</a></p>
 <p>而根据JVM的设置<sup><a href="关于偏向锁的相关JVM设置:-XXBiasedLockingStartupDelay=0表示启动程序几秒钟后激活偏向锁-XXUseBiasedLocking=false表示关闭偏向锁（确定会发生竞争时可以这么设置）">^1</a></sup>，具体分配时又会有不同的情况，如下所示</p>
 <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg" alt="偏向锁到重量锁的过程"></p>
 <p>当关闭了偏向锁的设置，那么就会走左边的流程；反之则走右边的流程。</p>
@@ -484,7 +578,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhn204cq000j0gvj7qquvj9w" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhoh6dn9000o2svjqtyqy82x" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -523,7 +617,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhn204cb00040gvjh5xalxyn" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhoh6dms00082svj2a3nb425" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -566,7 +660,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhn204d8001o0gvjsvuupduo" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhoh6dnv001j2svjigpwnctb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -631,7 +725,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhn204d100160gvjqr5sllmu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhoh6dnp001c2svj5ck029j1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -757,7 +851,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhn204d200180gvjja6imzxz" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhoh6dnx001m2svj2imcnf9v" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -833,66 +927,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjhn204d7001m0gvj6pkokanb" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-了解LockSupport的原理" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/05/了解LockSupport的原理/" class="article-date">
-  <time datetime="2018-04-05T11:53:46.000Z" itemprop="datePublished">2018-04-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/05/了解LockSupport的原理/">了解LockSupport的原理</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在学习AQS的出现的LockSupport，秉着知根知底的想法，决定顺带着了解一下LockSupport。</p>
-<h2 id="LockSupport是什么"><a href="#LockSupport是什么" class="headerlink" title="LockSupport是什么"></a>LockSupport是什么</h2><p>一个可以创建锁、同步器的基础线程阻塞的底层工具。其工作方式和<strong>Semaphore</strong>十分相似：</p>
-<ol>
-<li>调用 <em>LockSupport.park()</em> ，将在调用线程中消耗<em>permit</em>。如果<em>permit</em>可用，那么就会立即返回；否则阻塞调用线程</li>
-<li>调用 <em>LockSupport.unpark()</em> ，将会使得<em>permit</em>可用（注意，这方面和<em>Semaphore</em>不同，<em>Semaphore.release()</em> 可以叠加<em>permit</em>，而<em>LockSupport.unpark()</em> 至多只有一个<em>permit</em>）</li>
-</ol>
-<h2 id="LockSpport的优势"><a href="#LockSpport的优势" class="headerlink" title="LockSpport的优势"></a>LockSpport的优势</h2><p>针对线程的阻塞和解除阻塞，我们很容易想到<em>Thread.suspend()</em> 和 <em>Thread.resume()</em> 两个方法，然而这两个方法因为天生容易发生<strong>死锁</strong>（suspend()方法原理是暂停JVM，而暂停JVM是不稳定不安全的，所以容易发生问题）从而被抛弃使用。</p>
-<p><a href="">具体可以看我的《为什么Thread.suspend和resume被弃用》一文</a></p>
-<p>而<em>Object.wait()</em> 和 <em>Object.notify()</em> 使用起来过于麻烦，因为要放在<em>synchronized</em> 块里</p>
-<p>所以 <em>LockSupport</em> 就成为了很好的替代品</p>
-<h2 id="使用参数注意事项"><a href="#使用参数注意事项" class="headerlink" title="使用参数注意事项"></a>使用参数注意事项</h2><ul>
-<li><em>blocker</em> <ul>
-<li><em>blocker</em>在这个类里面主要起到一个线索作用，告诉我们是哪个对象阻塞了当前的线程，方便dump日志进行分析</li>
-</ul>
-</li>
-<li><em>isAbsolute</em><ul>
-<li>如果<em>isAbsolute</em> 为true，就是使用Epoch（Unix时间戳），在<em>LockSupport</em> 里面对应的方法是parkUntil()；</li>
-<li>如果<em>isAbsolute</em> 为false，就是使用相对时间（单位纳秒），在<em>LockSupport</em>里面对应的方法是parkNanos()</li>
-</ul>
-</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjhn204d5001h0gvj3vef3lp9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjhoh6do0001r2svjgl314hfj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -930,7 +965,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 12.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -952,6 +987,10 @@
       <ul>
         
           <li>
+            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/">《深入Java虚拟机》之对象内存布局及使用</a>
+          </li>
+        
+          <li>
             <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
@@ -965,10 +1004,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/">队列之PriorityQueue</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
           </li>
         
       </ul>
