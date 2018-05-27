@@ -19,6 +19,8 @@ tags: [Java并发, JMM]
 - | :-: | :-: | :-: | :-:|
 无状态锁 | 对象的hashcode | 对象分代年龄 | 0 | 01 |
 
+具体的对象内存布局看[这篇文章]()
+
 而根据JVM的设置<sup>[^1]</sup>，具体分配时又会有不同的情况，如下所示
 
 ![偏向锁到重量锁的过程](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg)
