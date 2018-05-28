@@ -114,7 +114,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjhpvquxl000e3ovj0kloie7m" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjhpvvxwf000gy4vjdxxzecty" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -207,7 +207,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjhpvquxp000i3ovj1ldhauz8" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjhpvvxwc000ey4vjit80ej0e" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -310,10 +310,55 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhpvquxt000q3ovjzs3p0j8e" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhpvvxww001ey4vj6jhs79y0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
+  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在学习volatile和final时，注意到写时的区别：</p>
+<ol>
+<li>volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写</li>
+<li>final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作</li>
+</ol>
+<p>想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。</p>
+<p>而在<strong>对final域和普通域初始化的构造函数</strong>里，即使final写前面有StoreStore，前面的普通写/读仍然会发生重排序？？</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhpvvxwy001jy4vj9ocxtx08" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
 
     </footer>
   </div>
@@ -452,55 +497,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhpvquxj000c3ovjhrfxuxgq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhpvvxwg000iy4vj699f51wc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
-  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在学习volatile和final时，注意到写时的区别：</p>
-<ol>
-<li>volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写</li>
-<li>final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作</li>
-</ol>
-<p>想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。</p>
-<p>而在<strong>对final域和普通域初始化的构造函数</strong>里，即使final写前面有StoreStore，前面的普通写/读仍然会发生重排序？？</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhpvquyq00223ovjrlowszgq" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
 
     </footer>
   </div>
@@ -639,7 +639,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhpvquxq000l3ovjfogmmq9i" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhpvvxwa000cy4vjaufyz65g" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -678,7 +678,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhpvqux700043ovjhih4lmsn" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhpvvxvy0004y4vjhpefik92" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -721,7 +721,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhpvquyb001o3ovjxd0ntgsm" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhpvvxx0001oy4vjpe86v9l8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -786,7 +786,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhpvquy5001d3ovj4czy9iie" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhpvvxxi0027y4vjnv9i57xa" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -912,7 +912,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhpvquy9001j3ovjsxc959an" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhpvvxx1001qy4vjrkk3fnr8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
