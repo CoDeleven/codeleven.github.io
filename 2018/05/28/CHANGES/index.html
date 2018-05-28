@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="bunyan ChangelogKnown issues:  [issue #58] Can’t install to a dir with spaces. This is this node-gypbug.  not yet released(nothing yet) 1.8.10 Ensure that bunyan errors out if attempting to use -p PID">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CoDeleven的个人博客">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/28/CHANGES/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="bunyan ChangelogKnown issues:  [issue #58] Can’t install to a dir with spaces. This is this node-gypbug.  not yet released(nothing yet) 1.8.10 Ensure that bunyan errors out if attempting to use -p PID">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2017-07-24T18:43:13.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:description" content="bunyan ChangelogKnown issues:  [issue #58] Can’t install to a dir with spaces. This is this node-gypbug.  not yet released(nothing yet) 1.8.10 Ensure that bunyan errors out if attempting to use -p PID">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-CHANGES" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/28/CHANGES/" class="article-date">
+  <time datetime="2018-05-28T06:33:02.788Z" itemprop="datePublished">2018-05-28</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="bunyan-Changelog"><a href="#bunyan-Changelog" class="headerlink" title="bunyan Changelog"></a>bunyan Changelog</h1><p>Known issues:</p>
+<ul>
+<li>[issue #58] Can’t install to a dir with spaces. This is <a href="https://github.com/TooTallNate/node-gyp/issues/65" target="_blank" rel="noopener">this node-gyp<br>bug</a>.</li>
+</ul>
+<h2 id="not-yet-released"><a href="#not-yet-released" class="headerlink" title="not yet released"></a>not yet released</h2><p>(nothing yet)</p>
+<h2 id="1-8-10"><a href="#1-8-10" class="headerlink" title="1.8.10"></a>1.8.10</h2><ul>
+<li>Ensure that <code>bunyan</code> errors out if attempting to use <code>-p PID</code> and<br>file args at the same time.</li>
+</ul>
+<h2 id="1-8-9"><a href="#1-8-9" class="headerlink" title="1.8.9"></a>1.8.9</h2><ul>
+<li>[pull #409, issue #246] Revert a change added to the <code>bunyan</code> CLI version<br>1.0.1 where <code>SIGINT</code> was ignored, such that Ctrl+C could not be used to<br>terminate bunyan. (By @zbjornson and @davepacheco.)</li>
+<li>[pull #469] Fix a strict mode (<code>&quot;use strict;&quot;</code>) error in some versions of<br>Safari.</li>
+</ul>
+<h2 id="1-8-8"><a href="#1-8-8" class="headerlink" title="1.8.8"></a>1.8.8</h2><ul>
+<li>Fix breakage due to a silly last minute “fix ‘make check’”.</li>
+</ul>
+<h2 id="1-8-7"><a href="#1-8-7" class="headerlink" title="1.8.7"></a>1.8.7</h2><p>Note: <em>Bad release.</em> Use 1.8.8 or later.</p>
+<ul>
+<li>[issue #484] Fix breakage due to #474 in previous release.</li>
+</ul>
+<h2 id="1-8-6"><a href="#1-8-6" class="headerlink" title="1.8.6"></a>1.8.6</h2><p>Note: <em>Bad release.</em> Use 1.8.7 or later.</p>
+<ul>
+<li>[issue #474] Bunyan’s <code>safeCycles</code> is too slow when logging large objects.</li>
+</ul>
+<h2 id="1-8-5"><a href="#1-8-5" class="headerlink" title="1.8.5"></a>1.8.5</h2><ul>
+<li>[issue #401] Improved performance when using disabled log levels.</li>
+</ul>
+<h2 id="1-8-4"><a href="#1-8-4" class="headerlink" title="1.8.4"></a>1.8.4</h2><ul>
+<li>[issue #454] Fix <code>src</code> usage with node v7.</li>
+</ul>
+<h2 id="1-8-3"><a href="#1-8-3" class="headerlink" title="1.8.3"></a>1.8.3</h2><ul>
+<li>[issue #450] Fix <code>log.info(null)</code> crash that resulted from #426 in v1.8.2.</li>
+</ul>
+<h2 id="1-8-2"><a href="#1-8-2" class="headerlink" title="1.8.2"></a>1.8.2</h2><ul>
+<li>[issue #449] Bump dtrace-provider dep to 0.7.0 to help avoid deprecation<br>warnings with node v6 in some cases.</li>
+<li>[issue #426] Ensure <code>log.info({err: err})</code> results in a “msg” value, just<br>like <code>log.info(err)</code>.</li>
+</ul>
+<h2 id="1-8-1"><a href="#1-8-1" class="headerlink" title="1.8.1"></a>1.8.1</h2><ul>
+<li>[pull #386] Fix bad bug in rotation that could cause a crash with<br>error message “cannot start a rotation when already rotating”<br>(by Frankie O’Rourke). The bug was introduced in 1.8.0.</li>
+</ul>
+<h2 id="1-8-0"><a href="#1-8-0" class="headerlink" title="1.8.0"></a>1.8.0</h2><p>Note: <em>Bad release.</em> An addition in this release broke ‘rotating-file’ usage.<br>Use 1.8.1 or later.</p>
+<ul>
+<li>[issue #370] Fix <code>bunyan -p ...</code> (i.e. DTrace integration) on node<br>4.x and 5.x.</li>
+<li>[issue #329, pull #330] Update the ‘rotating-file’ stream to do a file<br>rotation on initialization if the mtime on the file path indicates the<br>last rotation time was missed – i.e. if the app wasn’t running at the<br>time. (by Paul Milham.)</li>
+</ul>
+<h2 id="1-7-1"><a href="#1-7-1" class="headerlink" title="1.7.1"></a>1.7.1</h2><ul>
+<li><p>[issue #332, pull #355] Ensure stream for type=’stream’ stream is a writable<br>stream. (By Michael Nisi.)</p>
+</li>
+<li><p>[issue #344] Fix “rotating-file” Bunyan streams to not miss rotations when configured<br>for a period greater than approximately 25 days. Before this there was an issue<br>where periods greater than node.js’s maximum <code>setTimeout</code> length would fail to rotate.<br>(By Martijn Schrage.)</p>
+</li>
+<li><p>[issue #234, pull #345] Improve <code>bunyan</code> CLI rendering of “res” field<br>HTTP responses to not show two blank lines for an empty body.<br>(By Michael Nisi.)</p>
+</li>
+</ul>
+<h2 id="1-7-0"><a href="#1-7-0" class="headerlink" title="1.7.0"></a>1.7.0</h2><ul>
+<li><p>[pull #311, #302, #310] Improve the runtime environment detection to fix<br>running under <a href="http://nwjs.io/" target="_blank" rel="noopener">NW.js</a>. Contributions by Adam Lynch, Jeremy<br>Ruppel, and Aleksey Timchenko.</p>
+</li>
+<li><p>[pull #318] Add <code>reemitErrorEvents</code> optional boolean for streams added to a<br>Bunyan logger to control whether an “error” event on the stream will be<br>re-emitted on the <code>Logger</code> instance.</p>
+<pre><code>var log = bunyan.createLogger({
+    name: &apos;foo&apos;,
+    streams: [
+        {
+            type: &apos;raw&apos;,
+            stream: new MyCustomStream(),
+            reemitErrorEvents: true
+        }
+    ]
+});
+</code></pre><p>Before this change, “error” events were re-emitted on <a href="https://github.com/trentm/node-bunyan#stream-type-file" target="_blank" rel="noopener"><code>file</code><br>streams</a> only. The new<br>behaviour is as follows:</p>
+<ul>
+<li><code>reemitErrorEvents</code> not specified: <code>file</code> streams will re-emit error events<br>on the Logger instance.</li>
+<li><code>reemitErrorEvents: true</code>: error events will be re-emitted on the Logger<br>for any stream with a <code>.on()</code> function – which includes file streams,<br>process.stdout/stderr, and any object that inherits from EventEmitter.</li>
+<li><code>reemitErrorEvents: false</code>: error events will not be re-emitted for any<br>streams.</li>
+</ul>
+<p>Dev Note: Bunyan <code>Logger</code> objects don’t currently have a <code>.close()</code> method<br>in which registered error event handlers can be <em>un</em>registered. That means<br>that a (presumably rare) situation where code adds dozens of Bunyan Logger<br>streams to, e.g. process.stdout, and with <code>reemitErrorEvents: true</code>, could<br>result in leaking Logger objects.</p>
+<p>Original work for allowing “error” re-emitting on non-file streams is<br>by Marc Udoff in pull #318.</p>
+</li>
+</ul>
+<h2 id="1-6-0"><a href="#1-6-0" class="headerlink" title="1.6.0"></a>1.6.0</h2><ul>
+<li><p>[pull #304, issue #245] Use [Moment.js][momentjs.com] library to handle<br><code>bunyan</code> CLI time formatting in some cases, especially to fix display of<br>local time. It is now required for local time formatting (i.e. <code>bunyan -L</code><br>or <code>bunyan --time local</code>). (By David M. Lee.)</p>
+</li>
+<li><p>[pull #252] Fix errant <code>client_res={}</code> in <code>bunyan</code> CLI rendering, and avoid<br>extra newlines in <code>client_req</code> rendering in some cases. (By Thomas Heymann.)</p>
+</li>
+<li><p>[pull #291, issue #303] Fix <code>LOG.child(...)</code> to <em>not</em> override the “hostname”<br>field of the parent. A use case is when one manually sets “hostname” to<br>something other than <code>os.hostname()</code>. (By github.com/Cactusbone.)</p>
+</li>
+<li><p>[issue #325] Allow one to set <code>level: 0</code> in <code>createLogger</code> to turn on<br>logging for all levels. (Adapted from #336 by github.com/sometimesalready.)</p>
+</li>
+<li><p>Add guards (to <code>resolveLevel</code>) so that all “level” values are validated.<br>Before this, a bogus level like “foo” or -12 or <code>[&#39;some&#39;, &#39;array&#39;]</code> would<br>silently be accepted – with undefined results.</p>
+</li>
+<li><p>Doc updates for #340 and #305.</p>
+</li>
+<li><p>Update <code>make test</code> to test against node 5, 4, 0.12 and 0.10.</p>
+</li>
+</ul>
+<h2 id="1-5-1"><a href="#1-5-1" class="headerlink" title="1.5.1"></a>1.5.1</h2><ul>
+<li>[issue #296] Fix <code>src: true</code>, which was broken in v1.5.0.</li>
+</ul>
+<h2 id="1-5-0"><a href="#1-5-0" class="headerlink" title="1.5.0"></a>1.5.0</h2><p>Note: <em>Bad release.</em> The addition of <code>&#39;use strict&#39;;</code> broke Bunyan’s <code>src: true</code><br>feature. Use 1.5.1 instead.</p>
+<ul>
+<li>[pull #236, issue #231, issue #223] Fix strict mode in the browser.</li>
+<li>[pull #282, issue #213] Fixes bunyan to work with webpack. By Denis Izmaylov.</li>
+<li>[pull #294] Update to dtrace-provider 0.6 to fix with node 4.0 and io.js 3.0.</li>
+<li>Dropped support for 0.8 (can’t install deps easily anymore for running<br>test suite). Bump to a recent iojs version for testing.</li>
+</ul>
+<h2 id="1-4-0"><a href="#1-4-0" class="headerlink" title="1.4.0"></a>1.4.0</h2><p>(Bumping minor ver b/c I’m wary of dtrace-provider changes. :)</p>
+<ul>
+<li>[issue #258, pull #259] Update to dtrace-provider 0.5 to fix<br>install and tests on recent io.js versions.</li>
+<li><a href="mailto:safe-json-stringify@1.0.3" target="_blank" rel="noopener">safe-json-stringify@1.0.3</a> changed output, breaking some tests. Fix those.</li>
+</ul>
+<h2 id="1-3-6"><a href="#1-3-6" class="headerlink" title="1.3.6"></a>1.3.6</h2><ul>
+<li>[issue #244] Make <code>bunyan</code> defensive on <code>res.header=null</code>.</li>
+</ul>
+<h2 id="1-3-5"><a href="#1-3-5" class="headerlink" title="1.3.5"></a>1.3.5</h2><ul>
+<li>[issue #233] Make <code>bunyan</code> defensive on res.header as a boolean.</li>
+<li>[issue #242] Make <code>bunyan</code> defensive on err.stack not being a string.</li>
+</ul>
+<h2 id="1-3-4"><a href="#1-3-4" class="headerlink" title="1.3.4"></a>1.3.4</h2><ul>
+<li>Allow <code>log.child(...)</code> to work even if the logger is a <em>sub-class</em><br>of Bunyan’s Logger class.</li>
+<li>[issue #219] Hide ‘source-map-support’ require from browserify.</li>
+<li>[issue #218] Reset <code>haveNonRawStreams</code> on <code>&lt;logger&gt;.addStream</code>.</li>
+</ul>
+<h2 id="1-3-3"><a href="#1-3-3" class="headerlink" title="1.3.3"></a>1.3.3</h2><ul>
+<li>[pull #127] Update to dtrace-provider 0.4.0, which gives io.js 1.x support<br>for dtrace-y parts of Bunyan.</li>
+</ul>
+<h2 id="1-3-2"><a href="#1-3-2" class="headerlink" title="1.3.2"></a>1.3.2</h2><ul>
+<li>[pull #182] Fallback to using the optional ‘safe-json-stringify’ module<br>if <code>JSON.stringify</code> throws – possibly with an enumerable property<br>getter than throws. By Martin Gausby.</li>
+</ul>
+<h2 id="1-3-1"><a href="#1-3-1" class="headerlink" title="1.3.1"></a>1.3.1</h2><ul>
+<li><p>Export <code>bunyan.RotatingFileStream</code> which is needed if one wants to<br>customize it. E.g. see issue #194.</p>
+</li>
+<li><p>[pull #122] Source Map support for caller line position for <a href="https://github.com/trentm/node-bunyan#src" target="_blank" rel="noopener">the “src”<br>field</a>. This could be interesting<br>for <a href="http://coffeescript.org/documentation/docs/sourcemap.html" target="_blank" rel="noopener">CoffeeScript</a><br>users of Bunyan. By Manuel Schneider.</p>
+</li>
+<li><p>[issue #164] Ensure a top-level <code>level</code> given in <code>bunyan.createLogger</code><br>is <em>used</em> for given <code>streams</code>. For example, ensure that the following<br>results in the stream having a DEBUG level:</p>
+<pre><code>var log = bunyan.createLogger({
+    name: &apos;foo&apos;,
+    level: &apos;debug&apos;,
+    streams: [
+        {
+            path: &apos;/var/tmp/foo.log&apos;
+        }
+    ]
+});
+</code></pre><p>This was broken in the 1.0.1 release. Between that release and 1.3.0<br>the “/var/tmp/foo.log” stream would be at the INFO level (Bunyan’s<br>default level).</p>
+</li>
+</ul>
+<h2 id="1-3-0"><a href="#1-3-0" class="headerlink" title="1.3.0"></a>1.3.0</h2><ul>
+<li><p>[issue #103] <code>bunyan -L</code> (or <code>bunyan --time local</code>) to show local time.<br>Bunyan log records store <code>time</code> in UTC time. Sometimes it is convenient<br>to display in local time.</p>
+</li>
+<li><p>[issue #205] Fix the “The Bunyan CLI crashed!” checking to properly warn of<br>the common failure case when <code>-c CONDITION</code> is being used.</p>
+</li>
+</ul>
+<h2 id="1-2-4"><a href="#1-2-4" class="headerlink" title="1.2.4"></a>1.2.4</h2><ul>
+<li><p>[issue #210] Export <code>bunyan.nameFromLevel</code> and <code>bunyan.levelFromName</code>. It can<br>be a pain for custom streams to have to reproduce that.</p>
+</li>
+<li><p>[issue #100] Gracefully handle the case of an unbound<br><code>Logger.{info,debug,...}</code> being used for logging, e.g.:</p>
+<pre><code>myEmittingThing.on(&apos;data&apos;, log.info)
+</code></pre><p>Before this change, bunyan would throw. Now it emits a warning to stderr<br><em>once</em>, and then silently ignores those log attempts, e.g.:</p>
+<pre><code>bunyan usage error: /Users/trentm/tm/node-bunyan/foo.js:12: attempt to log with an unbound log method: `this` is: { _events: { data: [Function] } }
+</code></pre></li>
+</ul>
+<h2 id="1-2-3"><a href="#1-2-3" class="headerlink" title="1.2.3"></a>1.2.3</h2><ul>
+<li>[issue #184] Fix log rotation for rotation periods &gt; ~25 days. Before this<br>change, a rotation period longer than this could hit <a href="https://github.com/joyent/node/issues/8656" target="_blank" rel="noopener">the maximum setTimeout<br>delay in node.js</a>. By Daniel Juhl.</li>
+</ul>
+<h2 id="1-2-2"><a href="#1-2-2" class="headerlink" title="1.2.2"></a>1.2.2</h2><ul>
+<li>Drop the guard that a bunyan Logger level must be between TRACE (10)<br>and FATAL (60), inclusive. This allows a trick of setting the level<br>to <code>FATAL + 1</code> to turn logging off. While the standard named log levels are<br>the golden path, then intention was not to get in the way of using<br>other level numbers.</li>
+</ul>
+<h2 id="1-2-1"><a href="#1-2-1" class="headerlink" title="1.2.1"></a>1.2.1</h2><ul>
+<li>[issue #178, #181] Get at least dtrace-provider 0.3.1 for<br>optionalDependencies to get a fix for install with decoupled npm (e.g. with<br>homebrew’s node and npm).</li>
+</ul>
+<h2 id="1-2-0"><a href="#1-2-0" class="headerlink" title="1.2.0"></a>1.2.0</h2><ul>
+<li><p>[issue #157] Restore dtrace-provider as a dependency (in<br>“optionalDependencies”).</p>
+<p>Dtrace-provider version 0.3.0 add build sugar that should eliminate the<br>problems from older versions:<br>The build is not attempted on Linux and Windows. The build spew is<br><em>not</em> emitted by default (use <code>V=1 npm install</code> to see it); instead a<br>short warning is emitted if the build fails.</p>
+<p>Also, importantly, the new dtrace-provider fixes working with node<br>v0.11/0.12.</p>
+</li>
+</ul>
+<h2 id="1-1-3"><a href="#1-1-3" class="headerlink" title="1.1.3"></a>1.1.3</h2><ul>
+<li>[issue #165] Include extra <code>err</code> fields in <code>bunyan</code> CLI output. Before<br>this change only the fields part of the typical node.js error stack<br>(err.stack, err.message, err.name) would be emitted, even though<br>the Bunyan <em>library</em> would typically include err.code and err.signal<br>in the raw JSON log record.</li>
+</ul>
+<h2 id="1-1-2"><a href="#1-1-2" class="headerlink" title="1.1.2"></a>1.1.2</h2><ul>
+<li>Fix a breakage in <code>log.info(err)</code> on a logger with no serializers.</li>
+</ul>
+<h2 id="1-1-1"><a href="#1-1-1" class="headerlink" title="1.1.1"></a>1.1.1</h2><p>Note: <em>Bad release.</em> It breaks <code>log.info(err)</code> on a logger with no serializers.<br>Use version 1.1.2.</p>
+<ul>
+<li>[pull #168] Fix handling of <code>log.info(err)</code> to use the <code>log</code> Logger’s <code>err</code><br>serializer if it has one, instead of always using the core Bunyan err<br>serializer. (By Mihai Tomescu.)</li>
+</ul>
+<h2 id="1-1-0"><a href="#1-1-0" class="headerlink" title="1.1.0"></a>1.1.0</h2><ul>
+<li>[issue #162] Preliminary support for <a href="http://browserify.org/" target="_blank" rel="noopener">browserify</a>.<br>See <a href="../README.md#browserify">the section in the README</a>.</li>
+</ul>
+<h2 id="1-0-1"><a href="#1-0-1" class="headerlink" title="1.0.1"></a>1.0.1</h2><ul>
+<li><p>[issues #105, #138, #151] Export <code>&lt;Logger&gt;.addStream(...)</code> and<br><code>&lt;Logger&gt;.addSerializers(...)</code> to be able to add them after Logger creation.<br>Thanks @andreineculau!</p>
+</li>
+<li><p>[issue #159] Fix bad handling in construtor guard intending to allow<br>creation without “new”: <code>var log = Logger(...)</code>. Thanks @rmg!</p>
+</li>
+<li><p>[issue #156] Smaller install size via .npmignore file.</p>
+</li>
+<li><p>[issue #126, #161] Ignore SIGINT (Ctrl+C) when processing stdin. <code>...| bunyan</code><br>should expect the preceding process in the pipeline to handle SIGINT. While<br>it is doing so, <code>bunyan</code> should continue to process any remaining output.<br>Thanks @timborodin and @jnordberg!</p>
+</li>
+<li><p>[issue #160] Stop using ANSI ‘grey’ in <code>bunyan</code> CLI output, because of the<br>problems that causes with Solarized Dark themes (see<br><a href="https://github.com/altercation/solarized/issues/220" target="_blank" rel="noopener">https://github.com/altercation/solarized/issues/220</a>).</p>
+</li>
+</ul>
+<h2 id="1-0-0"><a href="#1-0-0" class="headerlink" title="1.0.0"></a>1.0.0</h2><ul>
+<li><p>[issue #87] <strong>Backward incompatible change to <code>-c CODE</code></strong> improving<br>performance by over 10x (good!), with a backward incompatible change to<br>semantics (unfortunate), and adding some sugar (good!).</p>
+<p>The <code>-c CODE</code> implementation was changed to use a JS function for processing<br>rather than <code>vm.runInNewContext</code>. The latter was specatularly slow, so<br>won’t be missed. Unfortunately this does mean a few semantic differences in<br>the <code>CODE</code>, the most noticeable of which is that <strong><code>this</code> is required to<br>access the object fields:</strong></p>
+<pre><code># Bad. Works with bunyan 0.x but not 1.x.
+$ bunyan -c &apos;pid === 123&apos; foo.log
+...
+
+# Good. Works with all versions of bunyan
+$ bunyan -c &apos;this.pid === 123&apos; foo.log
+...
+</code></pre><p>The old behaviour of <code>-c</code> can be restored with the <code>BUNYAN_EXEC=vm</code><br>environment variable:</p>
+<pre><code>$ BUNYAN_EXEC=vm bunyan -c &apos;pid === 123&apos; foo.log
+...
+</code></pre><p>Some sugar was also added: the TRACE, DEBUG, … constants are defined, so<br>one can:</p>
+<pre><code>$ bunyan -c &apos;this.level &gt;= ERROR &amp;&amp; this.component === &quot;http&quot;&apos; foo.log
+...
+</code></pre><p>And example of the speed improvement on a 10 MiB log example:</p>
+<pre><code>$ time BUNYAN_EXEC=vm bunyan -c &apos;this.level === ERROR&apos; big.log | cat &gt;slow
+
+real    0m6.349s
+user    0m6.292s
+sys    0m0.110s
+
+$ time bunyan -c &apos;this.level === ERROR&apos; big.log | cat &gt;fast
+
+real    0m0.333s
+user    0m0.303s
+sys    0m0.028s
+</code></pre><p>The change was courtesy Patrick Mooney (<a href="https://github.com/pfmooney)" target="_blank" rel="noopener">https://github.com/pfmooney)</a>. Thanks!</p>
+</li>
+<li><p>Add <code>bunyan -0 ...</code> shortcut for <code>bunyan -o bunyan ...</code>.</p>
+</li>
+<li><p>[issue #135] <strong>Backward incompatible.</strong> Drop dtrace-provider even from<br><code>optionalDependencies</code>. Dtrace-provider has proven a consistent barrier to<br>installing bunyan, because it is a binary dep. Even as an <em>optional</em> dep it<br>still caused confusion and install noise.</p>
+<p>Users of Bunyan on dtrace-y platforms (SmartOS, Mac, Illumos, Solaris) will<br>need to manually <code>npm install dtrace-provider</code> themselves to get <a href="https://github.com/trentm/node-bunyan#runtime-log-snooping-via-dtrace" target="_blank" rel="noopener">Bunyan’s<br>dtrace support</a><br>to work. If not installed, bunyan should stub it out properly.</p>
+</li>
+</ul>
+<h2 id="0-23-1"><a href="#0-23-1" class="headerlink" title="0.23.1"></a>0.23.1</h2><ul>
+<li>[pull #125, pull #97, issue #73] Unref rotating-file timeout which was<br>preventing processes from exiting (by <a href="https://github.com/chakrit" target="_blank" rel="noopener">https://github.com/chakrit</a> and<br><a href="https://github.com/glenn-murray-bse)" target="_blank" rel="noopener">https://github.com/glenn-murray-bse)</a>. Note: this only fixes the issue<br>for node 0.10 and above.</li>
+</ul>
+<h2 id="0-23-0"><a href="#0-23-0" class="headerlink" title="0.23.0"></a>0.23.0</h2><ul>
+<li><p>[issue #139] Fix <code>bunyan</code> crash on a log record with <code>res.header</code> that is an<br>object. A side effect of this improvement is that a record with <code>res.statusCode</code><br>but no header info will render a response block, for example:</p>
+<pre><code>[2012-08-08T10:25:47.637Z]  INFO: my-service/12859 on my-host: some message (...)
+    ...
+    --
+    HTTP/1.1 200 OK
+    --
+    ...
+</code></pre></li>
+<li><p>[pull #42] Fix <code>bunyan</code> crash on a log record with <code>req.headers</code> that is a <em>string</em><br>(by <a href="https://github.com/aexmachina)" target="_blank" rel="noopener">https://github.com/aexmachina)</a>.</p>
+</li>
+<li><p>Drop node 0.6 support. I can’t effectively <code>npm install</code> with a node 0.6<br>anymore.</p>
+</li>
+<li><p>[issue #85] Ensure logging a non-object/non-string doesn’t throw (by<br><a href="https://github.com/mhart)" target="_blank" rel="noopener">https://github.com/mhart)</a>. This changes fixes:</p>
+<pre><code>log.info(&lt;bool&gt;)     # TypeError: Object.keys called on non-object
+log.info(&lt;function&gt;) # &quot;msg&quot;:&quot;&quot; (instead of wanted &quot;msg&quot;:&quot;[Function]&quot;)
+log.info(&lt;array&gt;)    # &quot;msg&quot;:&quot;&quot; (instead of wanted &quot;msg&quot;:util.format(&lt;array&gt;))
+</code></pre></li>
+</ul>
+<h2 id="0-22-3"><a href="#0-22-3" class="headerlink" title="0.22.3"></a>0.22.3</h2><ul>
+<li>Republish the same code to npm.</li>
+</ul>
+<h2 id="0-22-2"><a href="#0-22-2" class="headerlink" title="0.22.2"></a>0.22.2</h2><p>Note: Bad release. The published package in the npm registry got corrupted. Use 0.22.3 or later.</p>
+<ul>
+<li><p>[issue #131] Allow <code>log.info(&lt;number&gt;)</code> and, most importantly, don’t crash on that.</p>
+</li>
+<li><p>Update ‘mv’ optional dep to latest.</p>
+</li>
+</ul>
+<h2 id="0-22-1"><a href="#0-22-1" class="headerlink" title="0.22.1"></a>0.22.1</h2><ul>
+<li><p>[issue #111] Fix a crash when attempting to use <code>bunyan -p</code> on a platform without<br>dtrace.</p>
+</li>
+<li><p>[issue #101] Fix a crash in <code>bunyan</code> rendering a record with unexpected “res.headers”.</p>
+</li>
+</ul>
+<h2 id="0-22-0"><a href="#0-22-0" class="headerlink" title="0.22.0"></a>0.22.0</h2><ul>
+<li>[issue #104] <code>log.reopenFileStreams()</code> convenience method to be used with external log<br>rotation.</li>
+</ul>
+<h2 id="0-21-4"><a href="#0-21-4" class="headerlink" title="0.21.4"></a>0.21.4</h2><ul>
+<li>[issue #96] Fix <code>bunyan</code> to default to paging (with <code>less</code>) by default in node 0.10.0.<br>The intention has always been to default to paging for node &gt;=0.8.</li>
+</ul>
+<h2 id="0-21-3"><a href="#0-21-3" class="headerlink" title="0.21.3"></a>0.21.3</h2><ul>
+<li>[issue #90] Fix <code>bunyan -p &#39;*&#39;</code> breakage in version 0.21.2.</li>
+</ul>
+<h2 id="0-21-2"><a href="#0-21-2" class="headerlink" title="0.21.2"></a>0.21.2</h2><p><strong>Note: Bad release. The switchrate change below broke <code>bunyan -p &#39;*&#39;</code> usage<br>(see issue #90). Use 0.21.3 or later.</strong></p>
+<ul>
+<li><p>[issue #88] Should be able to efficiently combine “-l” with “-p *”.</p>
+</li>
+<li><p>Avoid DTrace buffer filling up, e.g. like this:</p>
+<pre><code>$ bunyan -p 42241 &gt; /tmp/all.log
+dtrace: error on enabled probe ID 3 (ID 75795: bunyan42241:mod-87ea640:log-trace:log-trace): out of scratch space in action #1 at DIF offset 12
+dtrace: error on enabled probe ID 3 (ID 75795: bunyan42241:mod-87ea640:log-trace:log-trace): out of scratch space in action #1 at DIF offset 12
+dtrace: 138 drops on CPU 4
+...
+</code></pre><p>From Bryan: “the DTrace buffer is filling up because the string size is so<br>large… by increasing the switchrate, you’re increasing the rate at<br>which that buffer is emptied.”</p>
+</li>
+</ul>
+<h2 id="0-21-1"><a href="#0-21-1" class="headerlink" title="0.21.1"></a>0.21.1</h2><ul>
+<li>[pull #83] Support rendering ‘client_res’ key in bunyan CLI (by<br>github.com/mcavage).</li>
+</ul>
+<h2 id="0-21-0"><a href="#0-21-0" class="headerlink" title="0.21.0"></a>0.21.0</h2><ul>
+<li>‘make check’ clean, 4-space indenting. No functional change here, just<br>lots of code change.</li>
+<li>[issue #80, #82] Drop assert that broke using ‘rotating-file’ with<br>a default <code>period</code> (by github.com/ricardograca).</li>
+</ul>
+<h2 id="0-20-0"><a href="#0-20-0" class="headerlink" title="0.20.0"></a>0.20.0</h2><ul>
+<li><p>[Slight backward incompatibility] Fix serializer bug introduced in 0.18.3<br>(see below) to only apply serializers to log records when appropriate.</p>
+<p>This also makes a semantic change to custom serializers. Before this change<br>a serializer function was called for a log record key when that value was<br>truth-y. The semantic change is to call the serializer function as long<br>as the value is not <code>undefined</code>. That means that a serializer function<br>should handle falsey values such as <code>false</code> and <code>null</code>.</p>
+</li>
+<li><p>Update to latest ‘mv’ dep (required for rotating-file support) to support<br>node v0.10.0.</p>
+</li>
+</ul>
+<h2 id="0-19-0"><a href="#0-19-0" class="headerlink" title="0.19.0"></a>0.19.0</h2><p><strong>WARNING</strong>: This release includes a bug introduced in bunyan 0.18.3 (see<br>below). Please upgrade to bunyan 0.20.0.</p>
+<ul>
+<li><p>[Slight backward incompatibility] Change the default error serialization<br>(a.k.a. <code>bunyan.stdSerializers.err</code>) to <em>not</em> serialize all additional<br>attributes of the given error object. This is an open door to unsafe logging<br>and logging should always be safe. With this change, error serialization<br>will log these attributes: message, name, stack, code, signal. The latter<br>two are added because some core node APIs include those fields (e.g.<br><code>child_process.exec</code>).</p>
+<p>Concrete examples where this has hurt have been the “domain” change<br>necessitating 0.18.3 and a case where<br><a href="https://github.com/mcavage/node-restify" target="_blank" rel="noopener">node-restify</a> uses an error object<br>as the response object. When logging the <code>err</code> and <code>res</code> in the same log<br>statement (common for restify audit logging), the <code>res.body</code> would be JSON<br>stringified as ‘[Circular]’ as it had already been emitted for the <code>err</code> key.<br>This results in a WTF with the bunyan CLI because the <code>err.body</code> is not<br>rendered.</p>
+<p>If you need the old behaviour back you will need to do this:</p>
+<pre><code>var bunyan = require(&apos;bunyan&apos;);
+var errSkips = {
+    // Skip domain keys. `domain` especially can have huge objects that can
+    // OOM your app when trying to JSON.stringify.
+    domain: true,
+    domain_emitter: true,
+    domain_bound: true,
+    domain_thrown: true
+};
+bunyan.stdSerializers.err = function err(err) {
+   if (!err || !err.stack)
+       return err;
+   var obj = {
+       message: err.message,
+       name: err.name,
+       stack: getFullErrorStack(err)
+   }
+   Object.keys(err).forEach(function (k) {
+       if (err[k] !== undefined &amp;&amp; !errSkips[k]) {
+           obj[k] = err[k];
+       }
+   });
+   return obj;
+ };
+</code></pre></li>
+<li><p>“long” and “bunyan” output formats for the CLI. <code>bunyan -o long</code> is the default<br>format, the same as before, just called “long” now instead of the cheesy “paul”<br>name. The “bunyan” output format is the same as “json-0”, just with a more<br>convenient name.</p>
+</li>
+</ul>
+<h2 id="0-18-3"><a href="#0-18-3" class="headerlink" title="0.18.3"></a>0.18.3</h2><p><strong>WARNING</strong>: This release introduced a bug such that all serializers are<br>applied to all log records even if the log record did not contain the key<br>for that serializer. If a logger serializer function does not handle<br>being given <code>undefined</code>, then you’ll get warnings like this on stderr:</p>
+<pre><code>bunyan: ERROR: This should never happen. This is a bug in &lt;https://github.com/trentm/node-bunyan&gt; or in this application. Exception from &quot;foo&quot; Logger serializer: Error: ...
+    at Object.bunyan.createLogger.serializers.foo (.../myapp.js:20:15)
+    at Logger._applySerializers (.../lib/bunyan.js:644:46)
+    at Array.forEach (native)
+    at Logger._applySerializers (.../lib/bunyan.js:640:33)
+    ...
+</code></pre><p>and the following junk in written log records:</p>
+<pre><code>&quot;foo&quot;:&quot;(Error in Bunyan log &quot;foo&quot; serializer broke field. See stderr for details.)&quot;
+</code></pre><p>Please upgrade to bunyan 0.20.0.</p>
+<ul>
+<li><p>Change the <code>bunyan.stdSerializers.err</code> serializer for errors to <em>exclude</em><br><a href="http://nodejs.org/docs/latest/api/all.html#all_additions_to_error_objects" target="_blank" rel="noopener">the “domain*” keys</a>.<br><code>err.domain</code> will include its assigned members which can arbitrarily large<br>objects that are not intended for logging.</p>
+</li>
+<li><p>Make the “dtrace-provider” dependency optional. I hate to do this, but<br>installing bunyan on Windows is made very difficult with this as a required<br>dep.  Even though “dtrace-provider” stubs out for non-dtrace-y platforms,<br>without a compiler and Python around, node-gyp just falls over.</p>
+</li>
+</ul>
+<h2 id="0-18-2"><a href="#0-18-2" class="headerlink" title="0.18.2"></a>0.18.2</h2><ul>
+<li>[pull #67] Remove debugging prints in rotating-file support.<br>(by github.com/chad3814).</li>
+<li>Update to <a href="mailto:dtrace-provider@0.2.7" target="_blank" rel="noopener">dtrace-provider@0.2.7</a>.</li>
+</ul>
+<h2 id="0-18-1"><a href="#0-18-1" class="headerlink" title="0.18.1"></a>0.18.1</h2><ul>
+<li>Get the <code>bunyan</code> CLI to <strong>not</strong> automatically page (i.e. pipe to <code>less</code>)<br>if stdin isn’t a TTY, or if following dtrace probe output (via <code>-p PID</code>),<br>or if not given log file arguments.</li>
+</ul>
+<h2 id="0-18-0"><a href="#0-18-0" class="headerlink" title="0.18.0"></a>0.18.0</h2><ul>
+<li><p>Automatic paging support in the <code>bunyan</code> CLI (similar to <code>git log</code> et al).<br>IOW, <code>bunyan</code> will open your pager (by default <code>less</code>) and pipe rendered<br>log output through it. A main benefit of this is getting colored logs with<br>a pager without the pain. Before you had to explicit use <code>--color</code> to tell<br>bunyan to color output when the output was not a TTY:</p>
+<pre><code>bunyan foo.log --color | less -R        # before
+bunyan foo.log                          # now
+</code></pre><p>Disable with the <code>--no-pager</code> option or the <code>BUNYAN_NO_PAGER=1</code> environment<br>variable.</p>
+<p>Limitations: Only supported for node &gt;=0.8. Windows is not supported (at<br>least not yet).</p>
+</li>
+<li><p>Switch test suite to nodeunit (still using a node-tap’ish API via<br>a helper).</p>
+</li>
+</ul>
+<h2 id="0-17-0"><a href="#0-17-0" class="headerlink" title="0.17.0"></a>0.17.0</h2><ul>
+<li><p>[issue #33] Log rotation support:</p>
+<pre><code>var bunyan = require(&apos;bunyan&apos;);
+var log = bunyan.createLogger({
+    name: &apos;myapp&apos;,
+    streams: [{
+        type: &apos;rotating-file&apos;,
+        path: &apos;/var/log/myapp.log&apos;,
+        count: 7,
+        period: &apos;daily&apos;
+    }]
+});
+</code></pre></li>
+</ul>
+<ul>
+<li><p>Tweak to CLI default pretty output: don’t special case “latency” field.<br>The special casing was perhaps nice, but less self-explanatory.<br>Before:</p>
+<pre><code>[2012-12-27T21:17:38.218Z]  INFO: audit/45769 on myserver: handled: 200 (15ms, audit=true, bar=baz)
+  GET /foo
+  ...
+</code></pre><p>After:</p>
+<pre><code>[2012-12-27T21:17:38.218Z]  INFO: audit/45769 on myserver: handled: 200 (audit=true, bar=baz, latency=15)
+  GET /foo
+  ...
+</code></pre></li>
+<li><p><em>Exit</em> CLI on EPIPE, otherwise we sit there useless processing a huge log<br>file with, e.g.  <code>bunyan huge.log | head</code>.</p>
+</li>
+</ul>
+<h2 id="0-16-8"><a href="#0-16-8" class="headerlink" title="0.16.8"></a>0.16.8</h2><ul>
+<li><p>Guards on <code>-c CONDITION</code> usage to attempt to be more user friendly.<br>Bogus JS code will result in this:</p>
+<pre><code>$ bunyan portal.log -c &apos;this.req.username==boo@foo&apos;
+bunyan: error: illegal CONDITION code: SyntaxError: Unexpected token ILLEGAL
+  CONDITION script:
+    Object.prototype.TRACE = 10;
+    Object.prototype.DEBUG = 20;
+    Object.prototype.INFO = 30;
+    Object.prototype.WARN = 40;
+    Object.prototype.ERROR = 50;
+    Object.prototype.FATAL = 60;
+    this.req.username==boo@foo
+  Error:
+    SyntaxError: Unexpected token ILLEGAL
+        at new Script (vm.js:32:12)
+        at Function.Script.createScript (vm.js:48:10)
+        at parseArgv (/Users/trentm/tm/node-bunyan-0.x/bin/bunyan:465:27)
+        at main (/Users/trentm/tm/node-bunyan-0.x/bin/bunyan:1252:16)
+        at Object.&lt;anonymous&gt; (/Users/trentm/tm/node-bunyan-0.x/bin/bunyan:1330:3)
+        at Module._compile (module.js:449:26)
+        at Object.Module._extensions..js (module.js:467:10)
+        at Module.load (module.js:356:32)
+        at Function.Module._load (module.js:312:12)
+        at Module.runMain (module.js:492:10)
+</code></pre><p>And all CONDITION scripts will be run against a minimal valid Bunyan<br>log record to ensure they properly guard against undefined values<br>(at least as much as can reasonably be checked). For example:</p>
+<pre><code>$ bunyan portal.log -c &apos;this.req.username==&quot;bob&quot;&apos;
+bunyan: error: CONDITION code cannot safely filter a minimal Bunyan log record
+  CONDITION script:
+    Object.prototype.TRACE = 10;
+    Object.prototype.DEBUG = 20;
+    Object.prototype.INFO = 30;
+    Object.prototype.WARN = 40;
+    Object.prototype.ERROR = 50;
+    Object.prototype.FATAL = 60;
+    this.req.username==&quot;bob&quot;
+  Minimal Bunyan log record:
+    {
+      &quot;v&quot;: 0,
+      &quot;level&quot;: 30,
+      &quot;name&quot;: &quot;name&quot;,
+      &quot;hostname&quot;: &quot;hostname&quot;,
+      &quot;pid&quot;: 123,
+      &quot;time&quot;: 1355514346206,
+      &quot;msg&quot;: &quot;msg&quot;
+    }
+  Filter error:
+    TypeError: Cannot read property &apos;username&apos; of undefined
+        at bunyan-condition-0:7:9
+        at Script.Object.keys.forEach.(anonymous function) [as runInNewContext] (vm.js:41:22)
+        at parseArgv (/Users/trentm/tm/node-bunyan-0.x/bin/bunyan:477:18)
+        at main (/Users/trentm/tm/node-bunyan-0.x/bin/bunyan:1252:16)
+        at Object.&lt;anonymous&gt; (/Users/trentm/tm/node-bunyan-0.x/bin/bunyan:1330:3)
+        at Module._compile (module.js:449:26)
+        at Object.Module._extensions..js (module.js:467:10)
+        at Module.load (module.js:356:32)
+        at Function.Module._load (module.js:312:12)
+        at Module.runMain (module.js:492:10)
+</code></pre><p>A proper way to do that condition would be:</p>
+<pre><code>$ bunyan portal.log -c &apos;this.req &amp;&amp; this.req.username==&quot;bob&quot;&apos;
+</code></pre></li>
+</ul>
+<h2 id="0-16-7"><a href="#0-16-7" class="headerlink" title="0.16.7"></a>0.16.7</h2><ul>
+<li>[issue #59] Clear a possibly interrupted ANSI color code on signal<br>termination.</li>
+</ul>
+<h2 id="0-16-6"><a href="#0-16-6" class="headerlink" title="0.16.6"></a>0.16.6</h2><ul>
+<li><p>[issue #56] Support <code>bunyan -p NAME</code> to dtrace all PIDs matching ‘NAME’ in<br>their command and args (using <code>ps -A -o pid,command | grep NAME</code> or, on SunOS<br><code>pgrep -lf NAME</code>). E.g.:</p>
+<pre><code>bunyan -p myappname
+</code></pre><p>This is useful for usage of node’s <a href="http://nodejs.org/docs/latest/api/all.html#all_cluster" target="_blank" rel="noopener">cluster<br>module</a> where you’ll<br>have multiple worker processes.</p>
+</li>
+</ul>
+<h2 id="0-16-5"><a href="#0-16-5" class="headerlink" title="0.16.5"></a>0.16.5</h2><ul>
+<li>Allow <code>bunyan -p &#39;*&#39;</code> to capture bunyan dtrace probes from <strong>all</strong> processes.</li>
+<li>issue #55: Add support for <code>BUNYAN_NO_COLOR</code> environment variable to<br>turn off all output coloring. This is still overridden by the <code>--color</code><br>and <code>--no-color</code> options.</li>
+</ul>
+<h2 id="0-16-4"><a href="#0-16-4" class="headerlink" title="0.16.4"></a>0.16.4</h2><ul>
+<li>issue #54: Ensure (again, see 0.16.2) that stderr from the dtrace child<br>process (when using <code>bunyan -p PID</code>) gets through. There had been a race<br>between exiting bunyan and the flushing of the dtrace process’ stderr.</li>
+</ul>
+<h2 id="0-16-3"><a href="#0-16-3" class="headerlink" title="0.16.3"></a>0.16.3</h2><ul>
+<li>Drop ‘trentm-dtrace-provider’ fork dep now that<br><a href="https://github.com/chrisa/node-dtrace-provider/pull/24" target="_blank" rel="noopener">https://github.com/chrisa/node-dtrace-provider/pull/24</a> has been resolved.<br>Back to dtrace-provider.</li>
+</ul>
+<h2 id="0-16-2"><a href="#0-16-2" class="headerlink" title="0.16.2"></a>0.16.2</h2><ul>
+<li>Ensure that stderr from the dtrace child process (when using <code>bunyan -p PID</code>)<br>gets through. The <code>pipe</code> usage wasn’t working on SmartOS. This is important<br>to show the user if they need to ‘sudo’.</li>
+</ul>
+<h2 id="0-16-1"><a href="#0-16-1" class="headerlink" title="0.16.1"></a>0.16.1</h2><ul>
+<li>Ensure that a possible dtrace child process (with using <code>bunyan -p PID</code>) is<br>terminated on signal termination of the bunyan CLI (at least for SIGINT,<br>SIGQUIT, SIGTERM, SIGHUP).</li>
+</ul>
+<h2 id="0-16-0"><a href="#0-16-0" class="headerlink" title="0.16.0"></a>0.16.0</h2><ul>
+<li><p>Add <code>bunyan -p PID</code> support. This is a convenience wrapper that effectively<br>calls:</p>
+<pre><code>dtrace -x strsize=4k -qn &apos;bunyan$PID:::log-*{printf(&quot;%s&quot;, copyinstr(arg0))}&apos; | bunyan
+</code></pre></li>
+</ul>
+<h2 id="0-15-0"><a href="#0-15-0" class="headerlink" title="0.15.0"></a>0.15.0</h2><ul>
+<li><p>issue #48: Dtrace support! The elevator pitch is you can watch all logging<br>from all Bunyan-using process with something like this:</p>
+<pre><code>dtrace -x strsize=4k -qn &apos;bunyan*:::log-*{printf(&quot;%d: %s: %s&quot;, pid, probefunc, copyinstr(arg0))}&apos;
+</code></pre><p>And this can include log levels <em>below</em> what the service is actually configured<br>to log. E.g. if the service is only logging at INFO level and you need to see<br>DEBUG log messages, with this you can. Obviously this only works on dtrace-y<br>platforms: Illumos derivatives of SunOS (e.g. SmartOS, OmniOS), Mac, FreeBSD.</p>
+<p>Or get the bunyan CLI to render logs nicely:</p>
+<pre><code>dtrace -x strsize=4k -qn &apos;bunyan*:::log-*{printf(&quot;%s&quot;, copyinstr(arg0))}&apos; | bunyan
+</code></pre><p>See <a href="https://github.com/trentm/node-bunyan#dtrace-support" target="_blank" rel="noopener">https://github.com/trentm/node-bunyan#dtrace-support</a> for details. By<br>Bryan Cantrill.</p>
+</li>
+</ul>
+<h2 id="0-14-6"><a href="#0-14-6" class="headerlink" title="0.14.6"></a>0.14.6</h2><ul>
+<li><p>Export <code>bunyan.safeCycles()</code>. This may be useful for custom <code>type == &quot;raw&quot;</code><br>streams that may do JSON stringification of log records themselves. Usage:</p>
+<pre><code>var str = JSON.stringify(rec, bunyan.safeCycles());
+</code></pre></li>
+<li><p>[issue #49] Allow a <code>log.child()</code> to specify the level of inherited streams.<br>For example:</p>
+<pre><code># Before
+var childLog = log.child({...});
+childLog.level(&apos;debug&apos;);
+
+# After
+var childLog = log.child({..., level: &apos;debug&apos;});
+</code></pre></li>
+<li><p>Improve the Bunyan CLI crash message to make it easier to provide relevant<br>details in a bug report.</p>
+</li>
+</ul>
+<h2 id="0-14-5"><a href="#0-14-5" class="headerlink" title="0.14.5"></a>0.14.5</h2><ul>
+<li><p>Fix a bug in the long-stack-trace error serialization added in 0.14.4. The<br>symptom:</p>
+<pre><code>bunyan@0.14.4: .../node_modules/bunyan/lib/bunyan.js:1002
+  var ret = ex.stack || ex.toString();
+              ^
+TypeError: Cannot read property &apos;stack&apos; of undefined
+    at getFullErrorStack (.../node_modules/bunyan/lib/bunyan.js:1002:15)
+    ...
+</code></pre></li>
+</ul>
+<h2 id="0-14-4"><a href="#0-14-4" class="headerlink" title="0.14.4"></a>0.14.4</h2><ul>
+<li><strong>Bad release. Use 0.14.5 instead.</strong></li>
+<li><p>Improve error serialization to walk the chain of <code>.cause()</code> errors<br>from the likes of <code>WError</code> or <code>VError</code> error classes from<br><a href="https://github.com/davepacheco/node-verror" target="_blank" rel="noopener">verror</a> and<br><a href="https://github.com/mcavage/node-restify" target="_blank" rel="noopener">restify v2.0</a>. Example:</p>
+<pre><code>[2012-10-11T00:30:21.871Z] ERROR: imgapi/99612 on 0525989e-2086-4270-b960-41dd661ebd7d: my-message
+    ValidationFailedError: my-message; caused by TypeError: cause-error-message
+        at Server.apiPing (/opt/smartdc/imgapi/lib/app.js:45:23)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server.setupReq (/opt/smartdc/imgapi/lib/app.js:178:9)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server.parseBody (/opt/smartdc/imgapi/node_modules/restify/lib/plugins/body_parser.js:15:33)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server.parseQueryString (/opt/smartdc/imgapi/node_modules/restify/lib/plugins/query.js:40:25)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server._run (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:579:17)
+        at Server._handle.log.trace.req (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:480:38)
+    Caused by: TypeError: cause-error-message
+        at Server.apiPing (/opt/smartdc/imgapi/lib/app.js:40:25)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server.setupReq (/opt/smartdc/imgapi/lib/app.js:178:9)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server.parseBody (/opt/smartdc/imgapi/node_modules/restify/lib/plugins/body_parser.js:15:33)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server.parseQueryString (/opt/smartdc/imgapi/node_modules/restify/lib/plugins/query.js:40:25)
+        at next (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:550:50)
+        at Server._run (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:579:17)
+        at Server._handle.log.trace.req (/opt/smartdc/imgapi/node_modules/restify/lib/server.js:480:38)
+</code></pre></li>
+</ul>
+<h2 id="0-14-2"><a href="#0-14-2" class="headerlink" title="0.14.2"></a>0.14.2</h2><ul>
+<li>[issue #45] Fix bunyan CLI (default output mode) to not crash on a ‘res’<br>field that isn’t a response object, but a string.</li>
+</ul>
+<h2 id="0-14-1"><a href="#0-14-1" class="headerlink" title="0.14.1"></a>0.14.1</h2><ul>
+<li>[issue #44] Fix the default <code>bunyan</code> CLI output of a <code>res.body</code> that is an<br>object instead of a string. See issue#38 for the same with <code>req.body</code>.</li>
+</ul>
+<h2 id="0-14-0"><a href="#0-14-0" class="headerlink" title="0.14.0"></a>0.14.0</h2><ul>
+<li>[pull #41] Safe <code>JSON.stringify</code>ing of emitted log records to avoid blowing<br>up on circular objects (by Isaac Schlueter).</li>
+</ul>
+<h2 id="0-13-5"><a href="#0-13-5" class="headerlink" title="0.13.5"></a>0.13.5</h2><ul>
+<li>[issue #39] Fix a bug with <code>client_req</code> handling in the default output<br>of the <code>bunyan</code> CLI.</li>
+</ul>
+<h2 id="0-13-4"><a href="#0-13-4" class="headerlink" title="0.13.4"></a>0.13.4</h2><ul>
+<li>[issue #38] Fix the default <code>bunyan</code> CLI output of a <code>req.body</code> that is an<br>object instead of a string.</li>
+</ul>
+<h2 id="0-13-3"><a href="#0-13-3" class="headerlink" title="0.13.3"></a>0.13.3</h2><ul>
+<li><p>Export <code>bunyan.resolveLevel(NAME-OR-NUM)</code> to resolve a level name or number<br>to its log level number value:</p>
+<pre><code>&gt; bunyan.resolveLevel(&apos;INFO&apos;)
+30
+&gt; bunyan.resolveLevel(&apos;debug&apos;)
+20
+</code></pre><p>A side-effect of this change is that the uppercase level name is now allowed<br>in the logger constructor.</p>
+</li>
+</ul>
+<h2 id="0-13-2"><a href="#0-13-2" class="headerlink" title="0.13.2"></a>0.13.2</h2><ul>
+<li>[issue #35] Ensure that an accidental <code>log.info(BUFFER)</code>, where BUFFER is<br>a node.js Buffer object, doesn’t blow up.</li>
+</ul>
+<h2 id="0-13-1"><a href="#0-13-1" class="headerlink" title="0.13.1"></a>0.13.1</h2><ul>
+<li>[issue #34] Ensure <code>req.body</code>, <code>res.body</code> and other request/response fields<br>are emitted by the <code>bunyan</code> CLI (mostly by Rob Gulewich).</li>
+</ul>
+<h2 id="0-13-0"><a href="#0-13-0" class="headerlink" title="0.13.0"></a>0.13.0</h2><ul>
+<li><p>[issue #31] Re-instate defines for the (uppercase) log level names (TRACE,<br>DEBUG, etc.) in <code>bunyan -c &quot;...&quot;</code> filtering condition code. E.g.:</p>
+<pre><code>$ ... | bunyan -c &apos;level &gt;= ERROR&apos;
+</code></pre></li>
+</ul>
+<h2 id="0-12-0"><a href="#0-12-0" class="headerlink" title="0.12.0"></a>0.12.0</h2><ul>
+<li><p>[pull #32] <code>bunyan -o short</code> for more concise output (by Dave Pacheco). E.g.:</p>
+<pre><code>22:56:52.856Z  INFO myservice: My message
+</code></pre><p>instead of:</p>
+<pre><code>[2012-02-08T22:56:52.856Z]  INFO: myservice/123 on example.com: My message
+</code></pre></li>
+</ul>
+<h2 id="0-11-3"><a href="#0-11-3" class="headerlink" title="0.11.3"></a>0.11.3</h2><ul>
+<li>Add ‘–strict’ option to <code>bunyan</code> CLI to suppress all but legal Bunyan JSON<br>log lines. By default non-JSON, and non-Bunyan lines are passed through.</li>
+</ul>
+<h2 id="0-11-2"><a href="#0-11-2" class="headerlink" title="0.11.2"></a>0.11.2</h2><ul>
+<li>[issue #30] Robust handling of ‘req’ field without a ‘headers’ subfield<br>in <code>bunyan</code> CLI.</li>
+<li>[issue #31] Pull the TRACE, DEBUG, et al defines from <code>bunyan -c &quot;...&quot;</code><br>filtering code. This was added in v0.11.1, but has a significant adverse<br>affect.</li>
+</ul>
+<h2 id="0-11-1"><a href="#0-11-1" class="headerlink" title="0.11.1"></a>0.11.1</h2><ul>
+<li><strong>Bad release. The TRACE et al names are bleeding into the log records<br>when using ‘-c’.</strong></li>
+<li><p>Add defines for the (uppercase) log level names (TRACE, DEBUG, etc.) in<br><code>bunyan -c &quot;...&quot;</code> filtering condition code. E.g.:</p>
+<pre><code>$ ... | bunyan -c &apos;level &gt;= ERROR&apos;
+</code></pre></li>
+</ul>
+<h2 id="0-11-0"><a href="#0-11-0" class="headerlink" title="0.11.0"></a>0.11.0</h2><ul>
+<li><p>[pull #29] Add -l/–level for level filtering, and -c/–condition for<br>arbitrary conditional filtering (by github.com/isaacs):</p>
+<pre><code>$ ... | bunyan -l error   # filter out log records below error
+$ ... | bunyan -l 50      # numeric value works too
+$ ... | bunyan -c &apos;level===50&apos;              # equiv with -c filtering
+$ ... | bunyan -c &apos;pid===123&apos;               # filter on any field
+$ ... | bunyan -c &apos;pid===123&apos; -c &apos;_audit&apos;   # multiple filters
+</code></pre></li>
+</ul>
+<h2 id="0-10-0"><a href="#0-10-0" class="headerlink" title="0.10.0"></a>0.10.0</h2><ul>
+<li><p>[pull #24] Support for gzip’ed log files in the bunyan CLI (by<br>github.com/mhart):</p>
+<pre><code>$ bunyan foo.log.gz
+...
+</code></pre></li>
+</ul>
+<h2 id="0-9-0"><a href="#0-9-0" class="headerlink" title="0.9.0"></a>0.9.0</h2><ul>
+<li><p>[pull #16] Bullet proof the <code>bunyan.stdSerializers</code> (by github.com/rlidwka).</p>
+</li>
+<li><p>[pull #15] The <code>bunyan</code> CLI will now chronologically merge multiple log<br>streams when it is given multiple file arguments. (by github.com/davepacheco)</p>
+<pre><code>$ bunyan foo.log bar.log
+... merged log records ...
+</code></pre></li>
+<li><p>[pull #15] A new <code>bunyan.RingBuffer</code> stream class that is useful for<br>keeping the last N log messages in memory. This can be a fast way to keep<br>recent, and thus hopefully relevant, log messages. (by @dapsays,<br>github.com/davepacheco)</p>
+<p>Potential uses: Live debugging if a running process could inspect those<br>messages. One could dump recent log messages at a finer log level than is<br>typically logged on<br><a href="http://nodejs.org/docs/latest/api/all.html#all_event_uncaughtexception" target="_blank" rel="noopener"><code>uncaughtException</code></a>.</p>
+<pre><code>var ringbuffer = new bunyan.RingBuffer({ limit: 100 });
+var log = new bunyan({
+    name: &apos;foo&apos;,
+    streams: [{
+        type: &apos;raw&apos;,
+        stream: ringbuffer,
+        level: &apos;debug&apos;
+    }]
+});
+
+log.info(&apos;hello world&apos;);
+console.log(ringbuffer.records);
+</code></pre></li>
+<li><p>Add support for “raw” streams. This is a logging stream that is given<br>raw log record objects instead of a JSON-stringified string.</p>
+<pre><code>function Collector() {
+    this.records = [];
+}
+Collector.prototype.write = function (rec) {
+    this.records.push(rec);
+}
+var log = new Logger({
+    name: &apos;mylog&apos;,
+    streams: [{
+        type: &apos;raw&apos;,
+        stream: new Collector()
+    }]
+});
+</code></pre><p>See “examples/raw-stream.js”. I expect raw streams to be useful for<br>piping Bunyan logging to separate services (e.g. <a href="http://www.loggly.com/" target="_blank" rel="noopener">http://www.loggly.com/</a>,<br><a href="https://github.com/etsy/statsd" target="_blank" rel="noopener">https://github.com/etsy/statsd</a>) or to separate in-process handling.</p>
+</li>
+<li><p>Add test/corpus/*.log files (accidentally excluded) so the test suite<br>actually works(!).</p>
+</li>
+</ul>
+<h2 id="0-8-0"><a href="#0-8-0" class="headerlink" title="0.8.0"></a>0.8.0</h2><ul>
+<li><p>[pull #21] Bunyan loggers now re-emit <code>fs.createWriteStream</code> error events.<br>By github.com/EvanOxfeld. See “examples/handle-fs-error.js” and<br>“test/error-event.js” for details.</p>
+<pre><code>var log = new Logger({name: &apos;mylog&apos;, streams: [{path: FILENAME}]});
+log.on(&apos;error&apos;, function (err, stream) {
+    // Handle error writing to or creating FILENAME.
+});
+</code></pre></li>
+<li><p>jsstyle’ing (via <code>make check</code>)</p>
+</li>
+</ul>
+<h2 id="0-7-0"><a href="#0-7-0" class="headerlink" title="0.7.0"></a>0.7.0</h2><ul>
+<li>[issue #12] Add <code>bunyan.createLogger(OPTIONS)</code> form, as is more typical in<br>node.js APIs.  This’ll eventually become the preferred form.</li>
+</ul>
+<h2 id="0-6-9"><a href="#0-6-9" class="headerlink" title="0.6.9"></a>0.6.9</h2><ul>
+<li><p>Change <code>bunyan</code> CLI default output to color “src” info red. Before the “src”<br>information was uncolored. The “src” info is the filename, line number and<br>function name resulting from using <code>src: true</code> in <code>Logger</code> creation. I.e.,<br>the <code>(/Users/trentm/tm/node-bunyan/examples/hi.js:10)</code> in:</p>
+<pre><code>[2012-04-10T22:28:58.237Z]  INFO: myapp/39339 on banana.local (/Users/trentm/tm/node-bunyan/examples/hi.js:10): hi
+</code></pre></li>
+<li><p>Tweak <code>bunyan</code> CLI default output to still show an “err” field if it doesn’t<br>have a “stack” attribute.</p>
+</li>
+</ul>
+<h2 id="0-6-8"><a href="#0-6-8" class="headerlink" title="0.6.8"></a>0.6.8</h2><ul>
+<li>Fix bad bug in <code>log.child({...}, true);</code> where the added child fields <strong>would<br>be added to the parent’s fields</strong>. This bug only existed for the “fast child”<br>path (that second <code>true</code> argument). A side-effect of fixing this is that<br>the “fast child” path is only 5 times as fast as the regular <code>log.child</code>,<br>instead of 10 times faster.</li>
+</ul>
+<h2 id="0-6-7"><a href="#0-6-7" class="headerlink" title="0.6.7"></a>0.6.7</h2><ul>
+<li>[issue #6] Fix bleeding ‘type’ var to global namespace. (Thanks Mike!)</li>
+</ul>
+<h2 id="0-6-6"><a href="#0-6-6" class="headerlink" title="0.6.6"></a>0.6.6</h2><ul>
+<li>Add support to the <code>bunyan</code> CLI taking log file path args, <code>bunyan foo.log</code>,<br>in addition to the usual <code>cat foo.log | bunyan</code>.</li>
+<li>Improve reliability of the default output formatting of the <code>bunyan</code> CLI.<br>Before it could blow up processing log records missing some expected<br>fields.</li>
+</ul>
+<h2 id="0-6-5"><a href="#0-6-5" class="headerlink" title="0.6.5"></a>0.6.5</h2><ul>
+<li>ANSI coloring output from <code>bunyan</code> CLI tool (for the default output mode/style).<br>Also add the ‘–color’ option to force coloring if the output stream is not<br>a TTY, e.g. <code>cat my.log | bunyan --color | less -R</code>. Use <code>--no-color</code> to<br>disable coloring, e.g. if your terminal doesn’t support ANSI codes.</li>
+<li>Add ‘level’ field to log record before custom fields for that record. This<br>just means that the raw record JSON will show the ‘level’ field earlier,<br>which is a bit nicer for raw reading.</li>
+</ul>
+<h2 id="0-6-4"><a href="#0-6-4" class="headerlink" title="0.6.4"></a>0.6.4</h2><ul>
+<li>[issue #5] Fix <code>log.info() -&gt; boolean</code> to work properly. Previous all were<br>returning false. Ditto all trace/debug/…/fatal methods.</li>
+</ul>
+<h2 id="0-6-3"><a href="#0-6-3" class="headerlink" title="0.6.3"></a>0.6.3</h2><ul>
+<li><p>Allow an optional <code>msg</code> and arguments to the <code>log.info(&lt;Error&gt; err)</code> logging<br>form. For example, before:</p>
+<pre><code>log.debug(my_error_instance)            // good
+log.debug(my_error_instance, &quot;boom!&quot;)   // wasn&apos;t allowed
+</code></pre><p>Now the latter is allowed if you want to expliciting set the log msg. Of course<br>this applies to all the <code>log.{trace|debug|info...}()</code> methods.</p>
+</li>
+<li><p><code>bunyan</code> cli output: clarify extra fields with quoting if empty or have<br>spaces. E.g. ‘cmd’ and ‘stderr’ in the following:</p>
+<pre><code>[2012-02-12T00:30:43.736Z] INFO: mo-docs/43194 on banana.local: buildDocs results (req_id=185edca2-2886-43dc-911c-fe41c09ec0f5, route=PutDocset, error=null, stderr=&quot;&quot;, cmd=&quot;make docs&quot;)
+</code></pre></li>
+</ul>
+<h2 id="0-6-2"><a href="#0-6-2" class="headerlink" title="0.6.2"></a>0.6.2</h2><ul>
+<li>Fix/guard against unintended inclusion of some files in npm published package<br>due to <a href="https://github.com/isaacs/npm/issues/2144" target="_blank" rel="noopener">https://github.com/isaacs/npm/issues/2144</a></li>
+</ul>
+<h2 id="0-6-1"><a href="#0-6-1" class="headerlink" title="0.6.1"></a>0.6.1</h2><ul>
+<li>Internal: starting jsstyle usage.</li>
+<li>Internal: add .npmignore. Previous packages had reams of bunyan crud in them.</li>
+</ul>
+<h2 id="0-6-0"><a href="#0-6-0" class="headerlink" title="0.6.0"></a>0.6.0</h2><ul>
+<li>Add ‘pid’ automatic log record field.</li>
+</ul>
+<h2 id="0-5-3"><a href="#0-5-3" class="headerlink" title="0.5.3"></a>0.5.3</h2><ul>
+<li>Add ‘client_req’ (HTTP client request) standard formatting in <code>bunyan</code> CLI<br>default output.</li>
+<li>Improve <code>bunyan</code> CLI default output to include <em>all</em> log record keys. Unknown keys<br>are either included in the first line parenthetical (if short) or in the indented<br>subsequent block (if long or multiline).</li>
+</ul>
+<h2 id="0-5-2"><a href="#0-5-2" class="headerlink" title="0.5.2"></a>0.5.2</h2><ul>
+<li>[issue #3] More type checking of <code>new Logger(...)</code> and <code>log.child(...)</code><br>options.</li>
+<li>Start a test suite.</li>
+</ul>
+<h2 id="0-5-1"><a href="#0-5-1" class="headerlink" title="0.5.1"></a>0.5.1</h2><ul>
+<li><p>[issue #2] Add guard on <code>JSON.stringify</code>ing of log records before emission.<br>This will prevent <code>log.info</code> et al throwing on record fields that cannot be<br>represented as JSON. An error will be printed on stderr and a clipped log<br>record emitted with a ‘bunyanMsg’ key including error details. E.g.:</p>
+<pre><code>bunyan: ERROR: could not stringify log record from /Users/trentm/tm/node-bunyan/examples/unstringifyable.js:12: TypeError: Converting circular structure to JSON
+{
+  &quot;name&quot;: &quot;foo&quot;,
+  &quot;hostname&quot;: &quot;banana.local&quot;,
+  &quot;bunyanMsg&quot;: &quot;bunyan: ERROR: could not stringify log record from /Users/trentm/tm/node-bunyan/examples/unstringifyable.js:12: TypeError: Converting circular structure to JSON&quot;,
+...
+</code></pre><p>Some timing shows this does effect log speed:</p>
+<pre><code>$ node tools/timeguard.js     # before
+Time try/catch-guard on JSON.stringify:
+ - log.info:  0.07365ms per iteration
+$ node tools/timeguard.js     # after
+Time try/catch-guard on JSON.stringify:
+ - log.info:  0.07368ms per iteration
+</code></pre></li>
+</ul>
+<h2 id="0-5-0"><a href="#0-5-0" class="headerlink" title="0.5.0"></a>0.5.0</h2><ul>
+<li>Use 10/20/… instead of 1/2/… for level constant values. Ostensibly this<br>allows for intermediary levels from the defined “trace/debug/…” set.<br>However, that is discouraged. I’d need a strong user argument to add<br>support for easily using alternative levels. Consider using a separate<br>JSON field instead.</li>
+<li>s/service/name/ for Logger name field. “service” is unnecessarily tied<br>to usage for a service. No need to differ from log4j Logger “name”.</li>
+<li>Add <code>log.level(...)</code> and <code>log.levels(...)</code> API for changing logger stream<br>levels.</li>
+<li>Add <code>TRACE|DEBUG|INFO|WARN|ERROR|FATAL</code> level constants to exports.</li>
+<li><p>Add <code>log.info(err)</code> special case for logging an <code>Error</code> instance. For<br>example <code>log.info(new TypeError(&quot;boom&quot;)</code> will produce:</p>
+<pre><code>...
+&quot;err&quot;: {
+  &quot;message&quot;: &quot;boom&quot;,
+  &quot;name&quot;: &quot;TypeError&quot;,
+  &quot;stack&quot;: &quot;TypeError: boom\n    at Object.&lt;anonymous&gt; ...&quot;
+},
+&quot;msg&quot;: &quot;boom&quot;,
+...
+</code></pre></li>
+</ul>
+<h2 id="0-4-0"><a href="#0-4-0" class="headerlink" title="0.4.0"></a>0.4.0</h2><ul>
+<li><p>Add <code>new Logger({src: true})</code> config option to have a ‘src’ attribute be<br>automatically added to log records with the log call source info. Example:</p>
+<pre><code>&quot;src&quot;: {
+  &quot;file&quot;: &quot;/Users/trentm/tm/node-bunyan/examples/src.js&quot;,
+  &quot;line&quot;: 20,
+  &quot;func&quot;: &quot;Wuzzle.woos&quot;
+},
+</code></pre></li>
+</ul>
+<h2 id="0-3-0"><a href="#0-3-0" class="headerlink" title="0.3.0"></a>0.3.0</h2><ul>
+<li><code>log.child(options[, simple])</code> Added <code>simple</code> boolean arg. Set <code>true</code> to<br>assert that options only add fields (no config changes). Results in a 10x<br>speed increase in child creation. See “tools/timechild.js”. On my Mac,<br>“fast child” creation takes about 0.001ms. IOW, if your app is dishing<br>10,000 req/s, then creating a log child for each request will take<br>about 1% of the request time.</li>
+<li><code>log.clone</code> -&gt; <code>log.child</code> to better reflect the relationship: streams and<br>serializers are inherited. Streams can’t be removed as part of the child<br>creation. The child doesn’t own the parent’s streams (so can’t close them).</li>
+<li>Clean up Logger creation. The goal here was to ensure <code>log.child</code> usage<br>is fast. TODO: measure that.</li>
+<li>Add <code>Logger.stdSerializers.err</code> serializer which is necessary to get good<br>Error object logging with node 0.6 (where core Error object properties<br>are non-enumerable).</li>
+</ul>
+<h2 id="0-2-0"><a href="#0-2-0" class="headerlink" title="0.2.0"></a>0.2.0</h2><ul>
+<li>Spec’ing core/recommended log record fields.</li>
+<li>Add <code>LOG_VERSION</code> to exports.</li>
+<li>Improvements to request/response serializations.</li>
+</ul>
+<h2 id="0-1-0"><a href="#0-1-0" class="headerlink" title="0.1.0"></a>0.1.0</h2><p>First release.</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/28/CHANGES/" data-id="cjhpvmjuj000grgvjceug8a16" class="article-share-link">Share</a>
+      
+      
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/05/28/LICENSE/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          (no title)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/05/28/CHANGELOG/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title"></div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+
+  
+    
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/LICENCE/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/GOVERNANCE/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/2015-01-30/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/MAINTENANCE/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/PULL_REQUEST_TEMPLATE/">(no title)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
