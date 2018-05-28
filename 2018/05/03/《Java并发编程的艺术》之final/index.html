@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>《Java并发编程的艺术》之final | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="final的重排序规则以下面的代码为例，讲解final写和final读的重排序规则12345678910111213141516171819public FinalExample&amp;#123;    int a;    final int b;    private static FinalExample self;    private FinalExample()&amp;#123;        th">
+<meta name="keywords" content="Java并发,JMM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Java并发编程的艺术》之final">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="final的重排序规则以下面的代码为例，讲解final写和final读的重排序规则12345678910111213141516171819public FinalExample&amp;#123;    int a;    final int b;    private static FinalExample self;    private FinalExample()&amp;#123;        th">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_read_sequence.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_escape_sequence.png">
+<meta property="og:updated_time" content="2018-05-18T02:12:28.614Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Java并发编程的艺术》之final">
+<meta name="twitter:description" content="final的重排序规则以下面的代码为例，讲解final写和final读的重排序规则12345678910111213141516171819public FinalExample&amp;#123;    int a;    final int b;    private static FinalExample self;    private FinalExample()&amp;#123;        th">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-《Java并发编程的艺术》之final" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》之final/" class="article-date">
+  <time datetime="2018-05-03T02:52:35.000Z" itemprop="datePublished">2018-05-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《Java并发编程的艺术》之final
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="final的重排序规则"><a href="#final的重排序规则" class="headerlink" title="final的重排序规则"></a>final的重排序规则</h2><p>以下面的代码为例，讲解final写和final读的重排序规则<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> FinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> FinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">FinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> FinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        self = <span class="keyword">new</span> FinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        FinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="final写的重排序规则"><a href="#final写的重排序规则" class="headerlink" title="final写的重排序规则"></a>final写的重排序规则</h3><ul>
+<li>JMM保证写final变量时不被编译器重排序到构造函数外</li>
+<li>编译器会在写final域后，构造函数返回前插入StoreStore屏障</li>
+</ul>
+<p>假设现在线程A执行init()，线程B执行read()时，可能的执行顺序如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png" alt=""></p>
+<p>当A线程初始化构造函数的时候，有可能会将普通域的初始化重排序到构造函数外，所以当B线程读取普通域的时候很可能获取到0，但是在后续的执行中，该值又会变成给定的数值1。<br>而编译器在遇到final域时，会在final写后面加入StoreStore内存屏障，保证在结束函数构造前执行final写。</p>
+<p>final域可以保证任何线程在读取该final变量时，已经正确初始化过。</p>
+<h3 id="final读的重排序规则"><a href="#final读的重排序规则" class="headerlink" title="final读的重排序规则"></a>final读的重排序规则</h3><p>在讲final写的重排序规则时，着重点放在了写上。而final域在读方面也做了一些特别处理。通常情况下，一个获取对象的引用和读取该对象的普通域是可能发生重排序。所以可能会发生下面这样的执行顺序：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_read_sequence.png" alt=""></p>
+<p>read()方法乍一看好像不会发生重排序，因为resultA 的写好像依赖temp变量。而resultA实际上是依赖temp引用里的a变量，<strong>间接依赖temp对象</strong>。虽然有的处理器不会对间接依赖进行重排序，但是不乏万一，比如alpha处理器，JMM就是为了避免这种会重排序<strong>间接依赖</strong>的处理器，所以给final读加上了下面的重排序规则：</p>
+<ul>
+<li>JMM保证 初次读对象引用与初次读该对象的final域不会被重排序</li>
+<li>编译器会在读final域的前面插入LoadLoad屏障</li>
+</ul>
+<h2 id="final域为引用类型"><a href="#final域为引用类型" class="headerlink" title="final域为引用类型"></a>final域为引用类型</h2><p>在构造函数内对一个final引用的对象的成员的写入，与随后在构造函数外把这个被构造对象的引用赋值给一个引用变量，这两个操作不能重排序。</p>
+<h2 id="final引用不能从构造函数内“溢出”"><a href="#final引用不能从构造函数内“溢出”" class="headerlink" title="final引用不能从构造函数内“溢出”"></a>final引用不能从构造函数内“溢出”</h2><p>写final的重排序规则虽然保证了，final域的写会在构造函数执行之前完成，并对其他线程可见。但是如果在构造函数内，引用就发生了溢出，那么就无法保证了<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> EscapeFinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> EscapeFinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">EscapeFinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">        self = <span class="keyword">this</span>; <span class="comment">// this引用溢出</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EscapeFinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        <span class="keyword">new</span> EscapeFinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        EscapeFinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>假设线程A执行init()，线程B执行read()，这里的A线程还未完成完整的初始化方法，对象引用就被B可见了。即使代码上 this溢出操作放在最后，仍然有可能被重排序。它们的执行时序如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_escape_sequence.png" alt=""></p>
+<p>上图可以看出，构造函数还没有完成时，final域对其他线程不可见。只有在完成了构造函数后，final域才对其他线程可见。</p>
+<h2 id="final语义的特殊例子"><a href="#final语义的特殊例子" class="headerlink" title="final语义的特殊例子"></a>final语义的特殊例子</h2><p>在X86处理器上，由于不会发生写写、读写、读读的重排序，所以没有StoreStore内存指令，故在使用final时，编译器会忽略StoreStore内存屏障，同样LoadLoad内存屏障也会被忽略。也就是说，在x86处理器上，final是不做任何处理的。</p>
+<h2 id="为什么要增强final语义呢"><a href="#为什么要增强final语义呢" class="headerlink" title="为什么要增强final语义呢"></a>为什么要增强final语义呢</h2><p>一方面是final本身是不可修改的，其他线程不该看到final的变化。比如一开始线程读取final值为默认值0，过一段时间再读这个final变量，final值变为值1（被初始化后）。<br>所以新的模型就保证了，只要正确的完成构造函数（不发生this溢出），即使不用同步，也可以保证其他线程见到final初始化后的值。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjhpvdwr300084kvjhc30eibt" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》之happens-before/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《Java并发编程的艺术》之happens-before
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《Java并发编程的艺术》之synchronized及JUC</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之DelayQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>《Java并发编程的艺术》之ConcurrentLinkedQueue | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="队列这个数据结构已经很熟悉了，就不多介绍，主要还是根据代码理解Doug Lea大师的一些其他技巧。 入队如图所示，很多人可能会很疑惑，为什么第一次入队后，TAIL没有指向Node2？答案是为了效率！Σ(っ °Д °;)っ 那这还能叫队列吗？当然，它依然符合先进先出（FIFO）的规则。只是TAIL变量不一定指向尾结点，那么来看看大师是怎么做的。 123456789101112131415161718">
+<meta name="keywords" content="Java并发">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Java并发编程的艺术》之ConcurrentLinkedQueue">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="队列这个数据结构已经很熟悉了，就不多介绍，主要还是根据代码理解Doug Lea大师的一些其他技巧。 入队如图所示，很多人可能会很疑惑，为什么第一次入队后，TAIL没有指向Node2？答案是为了效率！Σ(っ °Д °;)っ 那这还能叫队列吗？当然，它依然符合先进先出（FIFO）的规则。只是TAIL变量不一定指向尾结点，那么来看看大师是怎么做的。 123456789101112131415161718">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_state.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_example1_state.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_poll_state.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_poll.png">
+<meta property="og:updated_time" content="2018-05-11T08:04:47.824Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《Java并发编程的艺术》之ConcurrentLinkedQueue">
+<meta name="twitter:description" content="队列这个数据结构已经很熟悉了，就不多介绍，主要还是根据代码理解Doug Lea大师的一些其他技巧。 入队如图所示，很多人可能会很疑惑，为什么第一次入队后，TAIL没有指向Node2？答案是为了效率！Σ(っ °Д °;)っ 那这还能叫队列吗？当然，它依然符合先进先出（FIFO）的规则。只是TAIL变量不一定指向尾结点，那么来看看大师是怎么做的。 123456789101112131415161718">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_state.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-《Java并发编程的艺术》之ConcurrentLinkedQueue" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" class="article-date">
+  <time datetime="2018-05-11T01:39:55.000Z" itemprop="datePublished">2018-05-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《Java并发编程的艺术》之ConcurrentLinkedQueue
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>队列这个数据结构已经很熟悉了，就不多介绍，主要还是根据代码理解Doug Lea大师的一些其他技巧。</p>
+<h2 id="入队"><a href="#入队" class="headerlink" title="入队"></a>入队</h2><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_state.png" alt="offer状态图"><br>如图所示，很多人可能会很疑惑，为什么第一次入队后，TAIL没有指向Node2？答案是为了效率！Σ(っ °Д °;)っ 那这还能叫队列吗？当然，它依然符合先进先出（FIFO）的规则。只是TAIL变量不一定指向尾结点，那么来看看大师是怎么做的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    checkNotNull(e);</span><br><span class="line">    <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;E&gt;(e);</span><br><span class="line">    <span class="keyword">for</span> (Node&lt;E&gt; t = tail, p = t;;) &#123;</span><br><span class="line">        Node&lt;E&gt; q = p.next;</span><br><span class="line">        <span class="keyword">if</span> (q == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// p是tail结点</span></span><br><span class="line">            <span class="keyword">if</span> (p.casNext(<span class="keyword">null</span>, newNode)) &#123;</span><br><span class="line">                <span class="comment">// 判断p结点是否是尾结点</span></span><br><span class="line">                <span class="comment">// 这一步不执行的话，不会对整体流程造成影响，至多是多一次循</span></span><br><span class="line">                <span class="comment">// 环，相比CAS操作，更愿意多一次循环</span></span><br><span class="line">                <span class="keyword">if</span> (p != t) </span><br><span class="line">                    <span class="comment">// 交换Tail结点，如果CAS更新失败表示已经有其他线程对其进行更新</span></span><br><span class="line">                    casTail(t, newNode);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// CAS竞争失败，重新循环，竞争失败后q一般不会为null，除非又发生了出队</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// HEAD和TAIL都指向同一个结点</span></span><br><span class="line">        <span class="comment">// 一个线程执行入队，一个线程执行出队，假设前面都没有更新tail和head</span></span><br><span class="line">        <span class="comment">// 执行出队的线程更新HEAD并设置其为自引用</span></span><br><span class="line">        <span class="comment">// 那么就会发生这个条件想要的现象</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (p == q)</span><br><span class="line">            <span class="comment">// 如果tail发生了改变，那么就为p设置t，并重新寻找</span></span><br><span class="line">            <span class="comment">// 如果tail未发生改变，head发生了改变，保</span></span><br><span class="line">            <span class="comment">// 险方法就是重新从新head开始遍历</span></span><br><span class="line">            <span class="comment">// 注意： -----只要在读取前完成tail发生更新就行了-----</span></span><br><span class="line">            p = (t != (t = tail)) ? t : head;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="comment">// p != t 表示p不是尾结点，发生的原因是 入队时没有更新尾结点</span></span><br><span class="line">            <span class="comment">// t != (t = tail) 更新tail，如果tail被其他线程修改，则返回true</span></span><br><span class="line">            <span class="comment">// 如果为true，重新将p设置为尾结点（此时尾结点已经更新了）</span></span><br><span class="line">            <span class="comment">// 如果为false，p = q，继续循环下去</span></span><br><span class="line">            p = (p != t &amp;&amp; t != (t = tail)) ? t : q;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer.png" alt=""></p>
+<p>第一次入队：</p>
+<ol>
+<li>初始状态下head和tail都指向同一个item为null的结点</li>
+<li>tail没有后继结点</li>
+<li>尝试CAS为tail设置next结点</li>
+<li>p == t，没有更新tail变量，直接返回true<br><strong>注意offer永远都返回true</strong></li>
+</ol>
+<p>第二次入队：</p>
+<ol>
+<li>初始状态下head和tail都指向同一个item为null的结点，但是next指向Node2</li>
+<li>tail有后继结点</li>
+<li>p != q，进入下个if语句</li>
+<li>p == t 返回false，整个三目运算符返回false，p = t</li>
+<li>此时p没有后继结点</li>
+<li>尝试CAS为p设置next</li>
+<li>p != t，更新tail结点，直接返回true</li>
+</ol>
+<p><strong>第二次入队多线程版</strong><br>线程A执行入队，线程B执行出队</p>
+<p>初始状态图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_example1_state.png" alt=""></p>
+<p>操作步骤如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>次序</th>
+<th>线程A</th>
+<th>线程B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td></td>
+<td>node1.item == null，执行下个if语句</td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>(q = node1.next) != null，执行下个if语句</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>p != q，执行后面的else语句</td>
+</tr>
+<tr>
+<td>5</td>
+<td></td>
+<td>p = q</td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td>node2.item != null</td>
+</tr>
+<tr>
+<td>7</td>
+<td></td>
+<td>p != h (p是node2)</td>
+</tr>
+<tr>
+<td>8</td>
+<td></td>
+<td>(q = p.next) == null，故将p设置为头结点，即将node2作为头结点</td>
+</tr>
+<tr>
+<td>9</td>
+<td></td>
+<td>将node1设置为自引用</td>
+</tr>
+<tr>
+<td>10</td>
+<td>q = p.next，即node1.next，因为自引用q == p</td>
+<td>返回item</td>
+</tr>
+<tr>
+<td>11</td>
+<td>q != null</td>
+<td></td>
+</tr>
+<tr>
+<td>12</td>
+<td>p == q</td>
+<td></td>
+</tr>
+<tr>
+<td>13</td>
+<td>t != (t = tail)，即此时tail是否发生改变：true -&gt; p =tail；false -&gt; p = head</td>
+</tr>
+</tbody>
+</table>
+<p>在步骤13，如果有个线程C已经执行了入队且tail发生改变，那么p就直接紧跟着更新后的tail就行了；如果tail没更新，就要设置p = head，然后重新循环遍历。</p>
+<h2 id="出队"><a href="#出队" class="headerlink" title="出队"></a>出队</h2><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_poll_state.png" alt=""></p>
+<p>从图中可以看出每次出队会有<strong>两种可能</strong>：将首结点的item置空，不移除；或是将移除首结点。总结一下，就是每次出队更新HEAD结点时，当HEAD结点里有元素时，直接弹出HEAD结点内的元素，而不会直接更新HEAD结点。只有当HEAD结点里没有元素时，出队操作才会更新HEAD结点。这种做法是为了减少CAS更新HEAD结点的消耗，从而提高出队效率。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> E <span class="title">poll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    restartFromHead:</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="comment">// p变量可以理解为游标、当前处理的结点，用于遍历的</span></span><br><span class="line">        <span class="comment">// q变量可以理解为p变量的next</span></span><br><span class="line">        <span class="keyword">for</span> (Node&lt;E&gt; h = head, p = h, q;;) &#123;</span><br><span class="line">            E item = p.item;</span><br><span class="line">            <span class="comment">// ① 先判断当前结点的值不为null 且 CAS更新p变量的item值</span></span><br><span class="line">            <span class="keyword">if</span> (item != <span class="keyword">null</span> &amp;&amp; p.casItem(item, <span class="keyword">null</span>)) &#123;</span><br><span class="line">                <span class="comment">// ②更新成功后，判断当前结点是否是头结点</span></span><br><span class="line">                <span class="comment">// 这一步主要是为了节省CAS操作，因为少更新一次HEAD结点没什么影响</span></span><br><span class="line">                <span class="keyword">if</span> (p != h) </span><br><span class="line">                    <span class="comment">// ③更新头结点</span></span><br><span class="line">                    updateHead(h, ((q = p.next) != <span class="keyword">null</span>) ? q : p);</span><br><span class="line">                <span class="keyword">return</span> item;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// ④ 获取当前结点的下一个结点，判断是否为null</span></span><br><span class="line">            <span class="comment">// 一般发生于只有一个结点的情况</span></span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> ((q = p.next) == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// ⑤ 将当前结点设置为自引用</span></span><br><span class="line">                updateHead(h, p);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// ⑥ 如果当前结点出现自引用</span></span><br><span class="line">            <span class="comment">// 一般发生在一个线程更新了头结点，让p结点自引用时，p才会等于q</span></span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (p == q)</span><br><span class="line">                <span class="comment">// 重新获取一个头结点</span></span><br><span class="line">                <span class="keyword">continue</span> restartFromHead;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                <span class="comment">// p = p.next</span></span><br><span class="line">                p = q;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_poll.png" alt="poll的流程图"></p>
+<p>第一次出队：</p>
+<ol>
+<li>初始状态所有item不为null，尝试更新结点的item（一般情况下都是成功的），更新成功后结点item为null</li>
+<li>判断 p == h，不满足条件，直接返回item值</li>
+</ol>
+<p>第二次出队：</p>
+<ol>
+<li>Node1.item为null，进入下个条件</li>
+<li>(q = p.next) != null，进入下个条件</li>
+<li>p != q，进入下个条件</li>
+<li>p = q，重新循环</li>
+<li>Node2.item不为null，尝试更新结点的item，更新成功后结点item为null</li>
+<li>判断 p != h，满足条件</li>
+<li>判断p结点(Node2)是否有后继结点，如果有就将后继结点作为HEAD，否则将P作为HEAD</li>
+<li>返回item值</li>
+</ol>
+<p><strong>第二次出队多线程版1</strong>：<br>线程A和线程B同时执行poll()方法，假设线程A稍快</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">线程A</th>
+<th style="text-align:left">线程B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A1. Node1.item为null</td>
+<td style="text-align:left">B1. Node1.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A2. (q = p.next) != null</td>
+<td style="text-align:left">B2. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A3. p != q</td>
+<td style="text-align:left">B3. p != q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A4. p = q，循环</td>
+<td style="text-align:left">B4. p = q，循环</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A5. Node2.item不为null，尝试更新结点item，更新成功，item值为null</td>
+<td style="text-align:left">B5.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A6. 满足条件 p != h</td>
+<td style="text-align:left">B6. Node2.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A7. 判断p结点(Node2)是否有后继结点</td>
+<td style="text-align:left">B7. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A8.</td>
+<td style="text-align:left">B8. p != q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A9.</td>
+<td style="text-align:left">B9. p = q 循环</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A10.</td>
+<td style="text-align:left">B10. Node3.item不为null，尝试更新结点item，更新成功，item值为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A11. 将后继结点即Node3设置为HEAD</td>
+<td style="text-align:left">B11.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A12. 返回item</td>
+<td style="text-align:left">B12. 满足条件 p != h</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A13.</td>
+<td style="text-align:left">B13. 判断p结点(Node2)是否有后继结点</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A14.</td>
+<td style="text-align:left">B14. 由于HEAD已经被修改，所以CAS更新失败</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A15.</td>
+<td style="text-align:left">B15. 返回item</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>这里主要是想讲即便HEAD更新发生冲突，有一次没有更新，也不会影响整体的流程，大不了下次出队的时候多出队一个。</p>
+<p><strong>第二次出队多线程版2</strong>：<br>线程A和线程B同时执行poll()方法，假设线程A稍快</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">线程A</th>
+<th style="text-align:left">线程B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A1. Node1.item为null</td>
+<td style="text-align:left">B1. Node1.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A2. (q = p.next) != null</td>
+<td style="text-align:left">B2. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A3. p != q</td>
+<td style="text-align:left">B3. p != q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A4. p = q，循环</td>
+<td style="text-align:left">B4. p = q，循环</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A5. Node2.item不为null，尝试更新结点item，更新成功，item值为null</td>
+<td style="text-align:left">B5.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A6. 满足条件 p != h</td>
+<td style="text-align:left">B6. Node2.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A7. 判断p结点(Node2)是否有后继结点</td>
+<td style="text-align:left">B7.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A8. 将后继结点即Node3设置为HEAD</td>
+<td style="text-align:left">B8.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A9. 返回item</td>
+<td style="text-align:left">B9. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A10.</td>
+<td style="text-align:left">B10. p == q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A11.</td>
+<td style="text-align:left">B11. 重新获取HEAD并执行遍历</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>这个例子主要表达了当A线程先修改了首结点，并将原来的首结点设置为自引用时，B线程在循环过程中会执行到一条语句<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">## 总结</span><br><span class="line">ConcurrentLinkedQueue主要内容都已经学习过了，其中分析的过程花费了一个早上，吃完饭回来坐下才有了一些思路。学习的难点主要还是在**它不同于普通的队列**，它的tail和head变量不会时刻指向头结点和尾结点，这也造就了代码的复杂性，否则如下所示即可：</span><br><span class="line">```java</span><br><span class="line">public boolean offer(E item)&#123;</span><br><span class="line">    checkNotNull(item);</span><br><span class="line">    for(;;)&#123;</span><br><span class="line">        Node&lt;T&gt; node = new Node(item);</span><br><span class="line">        if(tail.casNext(null, node) &amp;&amp; casTail(tail, node))&#123;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是这样和上面的例子比起来，就有性能的差距，差距主要体现在CAS写竞争方面：</p>
+<p>最悲观的角度，ConcurrentLinkedQueue的offer方法需要执行两次 CAS （假设不发生竞争，其实我觉得不会有CAS竞争发生），上面的通用代码方法也需要执行两次，这里持平。<br>最乐观的角度，ConcurrentLinkedQueue只需要执行一次CAS，上面的通用方法仍需要两次。<br>原本是参考《Java并发编程的艺术》，但是里面的实现和现在不同了，所以根据现在的实际情况写了一份。当然，里面的主线思路仍然没有发生改变——尽量减少CAS操作。书上的代码是通过hops变量来控制多久需要更新一次值，大致思路如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">遍历前，hops = 0</span><br><span class="line">HEAD---</span><br><span class="line">      |</span><br><span class="line">    Node1 -&gt; Node2 -&gt; Node3 -&gt; Node4</span><br><span class="line">      |</span><br><span class="line">TAIL---</span><br></pre></td></tr></table></figure>
+<p>假设现在要插入Node5，就要从TAIL变量位置(Node1位置)开始往后遍历，总共要<strong>循环三次</strong>才能找到最后一个尾结点，此时计数器hops就等于3，当Node5插入成功后，判断hops的值是否达到阈值，如果达到了，就更新tail变量；反之则不更新，直接返回。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">遍历完后，hops = 3，达到阈值（假设达到了），将tail变量更新给Node5</span><br><span class="line">HEAD---</span><br><span class="line">      |</span><br><span class="line">    Node1 -&gt; Node2 -&gt; Node3 -&gt; Node4 -&gt; Node5</span><br><span class="line">                                          |</span><br><span class="line">                                    TAIL---</span><br></pre></td></tr></table></figure>
+<p>ConcurrentLinkedQueue初看以为很简单，其实逻辑还是挺复杂的，拓展了对队列的看法。今天在写这篇博客时，感觉一头雾水，因为CAS操作不像锁那样简单，代码块锁住就能放心执行，CAS只对单个操作保证可见性和原子性，很担心后面的线程会对其进行什么修改，今天过后总结了一下写并发容器的思路：</p>
+<ol>
+<li>在了解某个方法的实现时，需要分清局部变量和共享变量，在理清了局部变量的含义后，将重点放在共享变量上</li>
+<li>如果方法里某个语句没看懂（一头雾水型，突然就来了这么一句），请往多线程方向思考。</li>
+<li>多对方法进行多线程分析（有助于理清思路），用md表格的例子写出来，很清晰，如果感觉md表格难以阅读，可以看这个网站 <a href="http://www.tablesgenerator.com/markdown_tables#" target="_blank" rel="noopener">MD表格生成器</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjhpvdwr7000c4kvjdmkl1xkq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《Java并发编程的艺术》之阻塞队列
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《Java并发编程的艺术》之final</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之DelayQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

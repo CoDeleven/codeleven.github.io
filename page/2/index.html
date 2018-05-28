@@ -65,25 +65,83 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-(未埋)了解阻塞队列之PriorityBlockingQueue" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" class="article-date">
-  <time datetime="2018-05-12T03:32:00.852Z" itemprop="datePublished">2018-05-12</time>
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
+  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
 </a>
     
   </div>
   <div class="article-inner">
     
     
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
+    </h1>
+  
+
+      </header>
+    
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <p>线程池的优点：</p>
+<ul>
+<li>降低资源开销：每次任务到达时不需要重新创建和销毁</li>
+<li>提高可管理性：统一对线程进行调优、监控</li>
+<li>提高任务响应速度：不需要等待线程创建</li>
+</ul>
+<p>线程池创建的各个参数：</p>
+<ul>
+<li>corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程）</li>
+<li>maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务</li>
+<li>keepAliveTime：存活时间。非核心线程可空闲的最大时间</li>
+<li>workQueue: 任务阻塞队列。当提交新任务且核心线程数已经被使用完时，新任务会先加入任务队列</li>
+</ul>
+<p>线程池中线程创建流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png" alt=""></p>
+<ol>
+<li>提交任务时，先判断核心线程数<strong>是否已经创建完毕</strong>，如果没有，则<strong>先将核心线程数创建满</strong>；反之则进入下个阶段</li>
+<li>判断核心线程数是否已经全部被占用，如果没有则交给核心线程执行；反之进入下个阶段</li>
+<li>判断工作队列是否已满，如果没满加入队列等待；反之进入下个阶段</li>
+<li>判断当前线程数是否小于MaxThread，如果是，则创建新线程执行任务；反之调用RejectPolicyHandler执行对应的策略</li>
+</ol>
+<h2 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h2><p>我们可以通过ThreadPoolExecutor创建一个线程池<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ThreadPoolExecutor(</span><br><span class="line">    <span class="keyword">int</span> corePoolSize,</span><br><span class="line">    <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">    <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">    TimeUnit unit,</span><br><span class="line">    BlockingQueue&lt;Runnable&gt; workQueue，</span><br><span class="line">    RejectedExecutionHandler handler)</span><br></pre></td></tr></table></figure></p>
+<p>1) corePoolSize: 当提交一个任务时（即使其他空闲核心线程也能够执行新任务），线程池会创建一个新线程来执行任务，等到corePoolSize个线程被创建了，就不再创建了。如果要额外创建，就要看后面的参数。如果调用了线程的<figure class="highlight plain"><figcaption><span>方法，线程池会提前创建并启动所有核心线程</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2) maximumPoolSize: 线程池允许创建的最大线程数。如果队列满了，并且已经创建的线程数小于最大线程数，则线程池会再创建新的线程执行任务。如果使用了无界队列，该参数没什么效果</span><br><span class="line"></span><br><span class="line">3) keepAliveTime: 线程池的工作线程空闲后，保持存活的时间。如果每个线程执行时间较短，可以将该值调大，提高线程利用率</span><br><span class="line"></span><br><span class="line">4) unit: 时间单位</span><br><span class="line"></span><br><span class="line">5) workQueue: 用于保存等待执行的任务的阻塞队列，可以选择以下几个阻塞队列：</span><br><span class="line"></span><br><span class="line">    * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO原则队元素进行排序</span><br><span class="line">    * LinkedBlockingQueue: 一个基于链表结构的阻塞，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法Executors.newFixedThreadPool()使用了这个队列。</span><br><span class="line">    * SynchronousQueue: 一个不存储元素的队列。每个插入操作要必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法Executors.newCachedThreadPool使用了这个队列</span><br><span class="line">    * PriorityQueue: 一个具有优先级的无限阻塞队列</span><br><span class="line"></span><br><span class="line">6) handler: RejectPolicy默认有四种：</span><br><span class="line">    * AbortPolicy，直接抛出异常</span><br><span class="line">    * DiscardPolicy，丢弃该任务，放弃处理</span><br><span class="line">    * CallerRunsPolicy，只用调用者线程执行任务</span><br><span class="line">    * DiscardOldestPolicy，丢弃队列里的队首元素</span><br><span class="line"></span><br><span class="line">## 执行任务</span><br><span class="line">线程池提交任务有两个方法向线程池提交任务，分别为execute()和submit():</span><br><span class="line"></span><br><span class="line">* execute: 执行后没有返回值，无法判断任务是否被线程池执行成功</span><br><span class="line">* submit: 提交后会返回一个Future类型的对象，通过该Future对象可以判断执行是否成功。其中get方法可以阻塞当前线程直到任务完成，get(timeout, unit)方法可以阻塞当前线程一段时间后返回</span><br><span class="line"></span><br><span class="line">## 关闭线程</span><br><span class="line">关闭线程池有两个方法，分别为```shutdown()``` 和 ```shutdownNow()</span><br></pre></td></tr></table></figure></p>
+<p>共同点：<br>遍历线程池中的所有线程，然后逐个调用线程的<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">不同点：</span><br><span class="line">* shutdownNow首先将线程池的状态设置为STOP状态，然后尝试停止所有的正在执行或暂停任务的线程，并返回等待执行任务的列表</span><br><span class="line">* shutdown只是将线程池的状态设置成SHUTDOWN状态，然后中断所有没有正在执行任务的线程</span><br><span class="line"></span><br><span class="line">当任意一个关闭方法被调用时，isShutdown()方法就会返回true。当所有的任务关闭后，调用isTerminated()才会返回true。</span><br><span class="line"></span><br><span class="line">具体要调用```shutdown()```还是```shutdownNow()```，需要根据具体业务来判断(通常调用```shutdown()```)。如果任务不一定要执行完，可以用```shutdownNow()</span><br></pre></td></tr></table></figure></p>
+<h2 id="合理配置"><a href="#合理配置" class="headerlink" title="合理配置"></a>合理配置</h2><ul>
+<li>任务的性质：CPU密集型任务、IO密集型任务、混合型任务</li>
+<li>任务的优先级：高、中、低</li>
+<li>任务的执行时间：长、中、短</li>
+<li>任务的依赖性：是否依赖其他系统资源，如  数据库连接</li>
+</ul>
+<p>如何挑选：</p>
+<ul>
+<li>CPU密集型任务需要长时间用到CPU运算，所以线程数量最好配置: N<sub>cpu + 1</sub> </li>
+<li>IO密集型任务并不是一直占用CPU，则尽可能配置多的线程: 2 * N<sub>cpu</sub></li>
+<li>如果是混合型任务，尝试将其拆分为CPU密集型任务和IO密集型任务</li>
+<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲时间越长，那么线程数应该设置的越大，这样才能更好的利用CPU。</li>
+</ul>
+<p>注意：建议使用有界队列，因为如果线程池里的工作线程全部阻塞，任务挤压在线程池里，最终会导致整个系统不可用</p>
+<h2 id="监控要素"><a href="#监控要素" class="headerlink" title="监控要素"></a>监控要素</h2><ul>
+<li>taskCount: 线程池需要执行的任务数量</li>
+<li>completedTaskCount: 线程池在运行过程中已完成的任务数量，小于等于taskCount</li>
+<li>targetPoolSize: 线程池里曾将创建过的最大线程数。通过这个数据可以直到线程池是否曾经瞒过。</li>
+<li>getPoolSize: 线程池的线程数量。如果线程池不销毁，线程池里的线程不会自动销毁，所以该值只增不减</li>
+<li>getActiveCount: 获取活动的线程数</li>
+</ul>
+<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<code>beforeExecute()</code>, <code>afterExecute()</code>, <code>terminated()</code> 方法，也可以在任务执行前、后执行一些代码来监控。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该篇主要了解了线程池的使用已经各个元素的含义以及监控时的优化。</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjhpt5vgv00032cvjkcjzcxed" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhpvdwrl000q4kvjsx0pfxny" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
     </footer>
   </div>
   
@@ -91,25 +149,102 @@
 
 
   
-    <article id="post-(未埋)了解阻塞队列之LinkedTransferQueue" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之线程池(二)" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/" class="article-date">
-  <time datetime="2018-05-12T03:32:00.848Z" itemprop="datePublished">2018-05-12</time>
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/" class="article-date">
+  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
 </a>
     
   </div>
   <div class="article-inner">
     
     
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
+    </h1>
+  
+
+      </header>
+    
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h1 id="线程池核心Executor"><a href="#线程池核心Executor" class="headerlink" title="线程池核心Executor"></a>线程池核心Executor</h1><p>Java的线程既是工作单元，也是执行机制。从JDK5开始，把工作单元与执行机制分离开来。工作单元包括Runnable、Callable，而执行机制由Executor提供。</p>
+<h2 id="Executor框架结构和流程"><a href="#Executor框架结构和流程" class="headerlink" title="Executor框架结构和流程"></a>Executor框架结构和流程</h2><p>主要由以下三部分组成：</p>
+<ul>
+<li>任务：Runnable、Callable接口</li>
+<li>任务的执行：Executor，以及继承Executor的ExecutorService</li>
+<li>异步计算的结果：Future接口、实现Future接口的FutureTask类</li>
+</ul>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_member_flow.png" alt=""></p>
+<p>各个部分的执行流程：</p>
+<ul>
+<li>主线程创建任务（实现Runnable或Callable接口的任务对象）。工具类Executors可以把一个Runnable对象封装成Callable对象。</li>
+<li>把Runnable对象直接交给ExecutorSerivce执行，或者也可以把Runnable对象或Callable对象提交给ExecutorService执行。</li>
+<li>submit()会返回一个实现Future接口的对象。主线程可以执行FutureTask.get()方法来等待任务执行完成。主线程也可以通过FutureTask.cancel()方法取消任务执行。</li>
+</ul>
+<h2 id="Executor框架成员"><a href="#Executor框架成员" class="headerlink" title="Executor框架成员"></a>Executor框架成员</h2><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_uml.jpg" alt=""></p>
+<p>Executors可以创建以下四个ThreadPoolExecutor特殊应用的类：</p>
+<ul>
+<li>ThreadPoolExecutor</li>
+<li>FixedThreadPool，固定线程数量的线程池，多余的任务会加入无界的阻塞队列中</li>
+<li>SingleThreadPool，只有单个线程的线程池，多余的任务会加入无界的阻塞队列中</li>
+<li>CachedThreadPool，没有上限的线程池，使用的SynchronousQueue队列</li>
+</ul>
+<p>Executors可以创建以下两个ScheduledThreadPoolExecutor特殊应用的类：</p>
+<ul>
+<li>ScheduledThreadPoolExecutor</li>
+<li>SingleThreadScheduledExecutor</li>
+</ul>
+<p>下面将对Executor的后两个部分进行分解讲解</p>
+<h2 id="ThreadPoolExecutor下的特殊应用（任务执行-部分）"><a href="#ThreadPoolExecutor下的特殊应用（任务执行-部分）" class="headerlink" title="ThreadPoolExecutor下的特殊应用（任务执行 部分）"></a>ThreadPoolExecutor下的特殊应用（任务执行 部分）</h2><h3 id="FixedThreadPool"><a href="#FixedThreadPool" class="headerlink" title="FixedThreadPool"></a>FixedThreadPool</h3><p>FixedThreadPool的创建方法，FixedThreadPool其实就是ThreadPoolExecutors的特殊用法：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 只能通过Executors.newFixedThreadPool()创建</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</span><br><span class="line">                                  <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                                  <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>主要需要注意的是<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">* 执行中的线程数达到corePoolSize，新任务会在无界队列中等待，所以线程数不会超过corePoolSize</span><br><span class="line">* 因为不会创建更多的线程，所以maximumPoolSize和keepAliveTime参数就没什么作用了</span><br><span class="line">* 因为是无界队列，所以也不需要用到RejectPolicyHandler</span><br><span class="line"></span><br><span class="line">### SingleThreadExecutor</span><br><span class="line">该类也是ThreadPoolExecutor的特殊用法</span><br><span class="line">```java</span><br><span class="line">public static ExecutorService newSingleThreadExecutor() &#123;</span><br><span class="line">    return new FinalizableDelegatedExecutorService</span><br><span class="line">        (new ThreadPoolExecutor(1, 1,</span><br><span class="line">                                0L, TimeUnit.MILLISECONDS,</span><br><span class="line">                                new LinkedBlockingQueue&lt;Runnable&gt;()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>相比FixedThreadPool，除一个正在执行任务的线程，其他任务都会一一加入队列中等待执行。</p>
+<h3 id="CachedThreadPool"><a href="#CachedThreadPool" class="headerlink" title="CachedThreadPool"></a>CachedThreadPool</h3><p>该类比较特殊，是FixedThreadPool的无限版本：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,</span><br><span class="line">                                  <span class="number">60L</span>, TimeUnit.SECONDS,</span><br><span class="line">                                  <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>一手<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### ScheduledThreadPoolExecutor</span><br><span class="line">ScheduledThreadPoolExecutor虽然不是对ThreadPoolExecutor的参数进行调整，但是对其执行流程进行了一个调整。该类主要用来在给定的延时之后执行任务或定期执行任务。ScheduledThreadPoolExecutor和Timer类似，但是更强大。Timer在单线程下执行，如果前一个任务执行时间过长，会影响下一个任务的执行。</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">public ScheduledThreadPoolExecutor(int corePoolSize,</span><br><span class="line">                                   ThreadFactory threadFactory,</span><br><span class="line">                                   RejectedExecutionHandler handler) &#123;</span><br><span class="line">    // 继承ThreadPoolExecutor</span><br><span class="line">    super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,</span><br><span class="line">          new DelayedWorkQueue(), threadFactory, handler);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>因为是无界队列，所以maximumPoolSize，aliveKeepTime和workQueue三个参数没什么意义（根据流程判断用不到它们）</p>
+<p>ScheduledThreadPoolExecutor的执行主要分成两个部分：</p>
+<ul>
+<li>当调用ScheduledThreadPoolExecutor的scheduleAtFixedRate()方法或者scheduleWithFixedDelay()方法时，会向DelayQueue添加一个实现了RunnableScheduledFuture接口的ScheduledFutureTask</li>
+<li>线程池会从DelayQueue中获取ScheduledFutureTask，然后执行任务</li>
+</ul>
+<p>ScheduledThreadPoolExecutor在ThreadPoolExecutor的基础上做了以下修改：</p>
+<ul>
+<li>使用DelayQueue作为任务队列</li>
+<li>获取任务的方式不同</li>
+<li>执行任务时会做一些修改</li>
+</ul>
+<p>接下来就围绕着上面三点不同点，研究ScheduledThreadPoolExecutor</p>
+<h4 id="DelayQueue作为任务队列"><a href="#DelayQueue作为任务队列" class="headerlink" title="DelayQueue作为任务队列"></a>DelayQueue作为任务队列</h4><p>具体的内容看这篇</p>
+<p>DelayQueue封装了一个PriorityQueue，这个PriorityQueue会对队列中的ScheduledFutureTask进行排序。time小的排在前面（时间早的任务先被执行）。如果两个task的taim相同就比较sequenceNumber，sequenceNumber小的排在前面。</p>
+<h4 id="获取任务的方式"><a href="#获取任务的方式" class="headerlink" title="获取任务的方式"></a>获取任务的方式</h4><p>线程池总从DelayQueue中获取流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ScheduledThreadPool_flow.png" alt=""></p>
+<ol>
+<li>线程1从DelayQueue中获取已到期的ScheduledFutureTask</li>
+<li>线程1执行该task</li>
+<li>线程1修改该task的time变量为下一次执行的时间</li>
+<li>线程1把这个修改time后的task放回DelayQueue中</li>
+</ol>
+<h2 id="FutureTask（异步结果-部分）"><a href="#FutureTask（异步结果-部分）" class="headerlink" title="FutureTask（异步结果 部分）"></a>FutureTask（异步结果 部分）</h2><p>该类除了Future接口外还实现了Runnable接口。因此可以将FutureTask提交给线程池使用。该任务如果有多个线程尝试去执行，最终只会有一个线程可以执行，其他线程只能等待该任务执行完毕才能继续执行。</p>
+<p>FutureTask可以处于以下三种状态：</p>
+<ul>
+<li>未启动。在run()方法还没执行之前，FutureTask处于未启动状态</li>
+<li>已启动。在run()方法执行过程中，FutureTask处于已启动状态</li>
+<li>已完成。在run()方法执行完后正常结束、被取消、抛出异常。</li>
+</ul>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/FutureTask_state_change.png" alt="状态迁移示例图"><br>当FutureTask处于未启动或已启动状态，调用get()方法，会让调用线程进入阻塞状态；当FutureTask处于已完成状态，阻塞的get()方法会立即返回</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/FutureTask_perform_flow.png" alt="执行示意图"><br>不同状态下调用get/cancel方法，会有不同的影响</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>无论是ScheduledThreadPoolExecutor还是FixedThreadExecutor等，都是ThreadPoolExecutor的特殊用法，只要把ThreadPoolExecutor搞懂，那么就不需要担心其他的特殊应用。</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/" data-id="cjhpt5vgo00022cvj0to6t725" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhpvdwry00104kvjzah0rbkz" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
     </footer>
   </div>
   
@@ -117,25 +252,53 @@
 
 
   
-    <article id="post-(未埋)了解阻塞队列之DelayQueue" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之同步工具" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之DelayQueue/" class="article-date">
-  <time datetime="2018-05-12T03:32:00.848Z" itemprop="datePublished">2018-05-12</time>
+    <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/" class="article-date">
+  <time datetime="2018-05-13T02:25:39.000Z" itemprop="datePublished">2018-05-13</time>
 </a>
     
   </div>
   <div class="article-inner">
     
     
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/">《Java并发编程的艺术》之同步工具</a>
+    </h1>
+  
+
+      </header>
+    
     <div class="article-entry" itemprop="articleBody">
       
-        
+        <h2 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h2><p>该类主要实现了：让一个线程等待其他线程完成后再执行的功能，好比<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">该类的初始化需要一个整数值count，当每次调用```CountDownLatch.countDown()```时Count会递减。直到count降到0时，所有执行```CountDownLatch.await()```的方法都会返回。</span><br><span class="line"></span><br><span class="line">初始化了一个共享变量latch，并赋予count为3</span><br><span class="line">```java</span><br><span class="line">CountDownLatch latch = new CountDownLatch(3);</span><br></pre></td></tr></table></figure></p>
+<p>创建一个任务，睡眠1秒假装执行任务，最后执行countDown<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> throw InterruptedException</span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"执行任务..."</span>);</span><br><span class="line">    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">    latch.countDown();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>主线程里执行如下方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 调用3个线程执行上述的任务</span></span><br><span class="line">...</span><br><span class="line">latch.await();</span><br><span class="line">System.out.println(<span class="string">"执行结束"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>当三个任务线程全部执行完latch.countDown()时，main线程就会从阻塞的await()中返回，最后输出”执行结束”。<br>注意：CountDownLatch 只能使用一次，下一次使用要重新创建一个。</p>
+<h2 id="CylicBarrier"><a href="#CylicBarrier" class="headerlink" title="CylicBarrier"></a>CylicBarrier</h2><p>该类和CountDownLatch有点类似，不过从名字就可以看出它是一个<strong>可循环使用</strong> 的类。它的功能主要是等待所有线程达到某个位置，然后统一执行。可以想象成出发旅游，大家都先到集合地等待，待所有人都到了，就可以出发了。</p>
+<p>创建一个屏障<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CyclicBarrier barrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">4</span>);</span><br></pre></td></tr></table></figure></p>
+<p>任务类，让先完成的任务进行等待，等待其他线程到达<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> throw InterruptedException</span>&#123;</span><br><span class="line">    System.out.println(Thread.currentThread.getName() + <span class="string">" -&gt; 到达集合点"</span>);</span><br><span class="line">    barrier.await();</span><br><span class="line">    System.out.println(Thread.currentThread.getName() + <span class="string">"出发！"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>睡5秒，不让主线程过早结束<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建4个线程执行上述的任务</span></span><br><span class="line">...</span><br><span class="line">Thread.sleep(<span class="number">5000</span>);</span><br><span class="line">System.out.println(<span class="string">"执行结束"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>注意，如果barrier在等待过程中某个线程被中断了一次，那么整个barrier就需要重新来过。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Thread thread = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        barrier.await();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (BrokenBarrierException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">thread.start();</span><br><span class="line">thread.interrupt();</span><br><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    barrier.await();</span><br><span class="line">&#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">    System.out.println(<span class="string">"无法等待..."</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当另起的线程被中断后，后续的barrier就无法使用了，会抛出<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## Semaphore</span><br><span class="line">该类被称作信号量，用于控制同一时间的线程执行数。想象下面一副场景:</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>🚌     🚌 🚌 🚌↘—————<br>🚌   🚌   🚌    🚌🚌  🚌🚌</p>
+<h2 id="🚌-🚌-🚌↗—————"><a href="#🚌-🚌-🚌↗—————" class="headerlink" title="   🚌    🚌  🚌↗—————"></a>   🚌    🚌  🚌↗—————</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">在窄路口里每次只能通过5辆车，5辆车通过后，后5辆车才能通过。Semaphore的作用就和它很类似，当有20条线程在执行IO密集型的任务，执行完后需要将处理结果存储到数据库中。如果数据库连接只有10条，那就要用semaphore去控制拿到数据库连接的线程数量。</span><br><span class="line"></span><br><span class="line">Semaphore里没用过的方法：</span><br><span class="line">* hasQueuedThreads()：是否有等待的线程</span><br><span class="line">* getQueueLength()：返回正在等待获取许可证的线程数量</span><br><span class="line"></span><br><span class="line">## Exchanger</span><br><span class="line">该类是一个用于线程间协作的工具类。Exchanger用于进行线程间的数据交换。它提供一个同步点，在这个通不见，两个线程可以交换彼此间的数据。这两个线程通过exchange方法交换数据：如果第一个线程执行exchange()，它会一直等待第二个线程exchange()，当两个线程达到同步点，这两个线程就可以交换线程。</span><br><span class="line">虽然我不知道这个类有啥作用(ε=ε=ε=┏(゜ロ゜;)┛</span><br><span class="line">但是书上说可以用于遗传算法、校对工作：</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">Exchanger&lt;String&gt; exchanger = new Exchanger&lt;&gt;();</span><br><span class="line"></span><br><span class="line">new Thread(() -&gt; &#123;</span><br><span class="line">    String dataOfAThread = Thread.currentThread().getName() + &quot;-----A的数据&quot;;</span><br><span class="line">    try &#123;</span><br><span class="line">        String resultOfBThread = exchanger.exchange(dataOfAThread);</span><br><span class="line">        System.out.println(Thread.currentThread().getName() + &quot;-------&gt; &quot; + resultOfBThread);</span><br><span class="line">    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br><span class="line"></span><br><span class="line">new Thread(() -&gt; &#123;</span><br><span class="line">    String dataOfBThread = Thread.currentThread().getName() + &quot;-----B的数据&quot;;</span><br><span class="line">    try &#123;</span><br><span class="line">        String resultOfAThread = exchanger.exchange(dataOfBThread);</span><br><span class="line">        System.out.println(Thread.currentThread().getName() + &quot;-------&gt; &quot; + resultOfAThread);</span><br><span class="line">    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br></pre></td></tr></table></figure>
+<p>最后输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Thread-1-------&gt; Thread-0-----A的数据</span><br><span class="line">Thread-0-------&gt; Thread-1-----B的数据</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>重新熟悉一下同步工具，学习到了CyclicBarrier被中断一次后，整个作废的点；学习到了Exchanger的适用场景</p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之DelayQueue/" data-id="cjhpt5vgn00012cvj26prwjt4" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhpvdwrn000s4kvju0yee6od" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
     </footer>
   </div>
   
@@ -143,9 +306,52 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之阻塞队列" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之AtomicX" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之阻塞队列/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之AtomicX/" class="article-date">
+  <time datetime="2018-05-13T01:53:39.000Z" itemprop="datePublished">2018-05-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之AtomicX/">《Java并发编程的艺术》之AtomicX</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/atomic_family.png" alt=""></p>
+<p>其中主要是了解下<code>AtomicReference</code>以及<code>AtomicXUpdater</code></p>
+<p>AtomicReference是支持对象引用原子更新的类，仅仅是支持引用，如果要让对象内的字段支持原子更新，就一定要使用到AtomicXUpdater。</p>
+<p>字段更新类需要特别注意，字段必须是<code>public volatile</code> 类型的。</p>
+<p>AtomicStampedReference和AtomicMarkableReference均是用于解决ABA问题的类（后者不知道有没有，暂时没实践经验）。前者解决字段方面的更新，后者解决引用类型的更新。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhpvdwqv00054kvj2ax4bd7w" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之阻塞队列" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/" class="article-date">
   <time datetime="2018-05-12T01:48:01.000Z" itemprop="datePublished">2018-05-12</time>
 </a>
     
@@ -157,7 +363,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之阻塞队列/">《Java并发编程的艺术》之阻塞队列</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/">《Java并发编程的艺术》之阻塞队列</a>
     </h1>
   
 
@@ -228,7 +434,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之阻塞队列/" data-id="cjhpt5vid000p2cvjv4bhid71" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjhpvdws400194kvj92uvzp36" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -240,35 +446,9 @@
 
 
   
-    <article id="post-(未埋)Java动态代理解析" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之ConcurrentLinkedQueue" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/11/(未埋)Java动态代理解析/" class="article-date">
-  <time datetime="2018-05-11T08:09:39.886Z" itemprop="datePublished">2018-05-11</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/(未埋)Java动态代理解析/" data-id="cjhpt5vgj00002cvjh2nxwmvs" class="article-share-link">Share</a>
-      
-      
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentLinkedQueue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentLinkedQueue/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" class="article-date">
   <time datetime="2018-05-11T01:39:55.000Z" itemprop="datePublished">2018-05-11</time>
 </a>
     
@@ -280,7 +460,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentLinkedQueue/">《Java并发编程的艺术》之ConcurrentLinkedQueue</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/">《Java并发编程的艺术》之ConcurrentLinkedQueue</a>
     </h1>
   
 
@@ -577,7 +757,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjhpt5vie000r2cvj61txdqp0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjhpvdwr7000c4kvjdmkl1xkq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -589,9 +769,9 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentHashMap" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之ConcurrentHashMap" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentHashMap/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" class="article-date">
   <time datetime="2018-05-10T05:29:46.000Z" itemprop="datePublished">2018-05-10</time>
 </a>
     
@@ -603,7 +783,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentHashMap/">《Java并发编程的艺术》之final</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/">《Java并发编程的艺术》之final</a>
     </h1>
   
 
@@ -642,7 +822,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjhpt5vij00132cvj74c47ylt" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjhpvdwrb000g4kvjphvhmx7n" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -654,9 +834,9 @@
 
 
   
-    <article id="post-源码阅读/了解AQS之SharedLock" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-了解AQS之SharedLock" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/09/源码阅读/了解AQS之SharedLock/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/" class="article-date">
   <time datetime="2018-05-09T14:49:13.000Z" itemprop="datePublished">2018-05-09</time>
 </a>
     
@@ -668,7 +848,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/09/源码阅读/了解AQS之SharedLock/">了解AQS之SharedLock</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/">了解AQS之SharedLock</a>
     </h1>
   
 
@@ -693,7 +873,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/09/源码阅读/了解AQS之SharedLock/" data-id="cjhpt5viv001u2cvjw0elxl7t" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjhpvdwtn001t4kvjqmtur7mf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -705,9 +885,9 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之延迟初始化" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之延迟初始化" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/06/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之延迟初始化/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/06/《Java并发编程的艺术》之延迟初始化/" class="article-date">
   <time datetime="2018-05-06T02:18:58.000Z" itemprop="datePublished">2018-05-06</time>
 </a>
     
@@ -719,7 +899,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/06/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之延迟初始化/">《Java并发编程的艺术》之延迟初始化</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/06/《Java并发编程的艺术》之延迟初始化/">《Java并发编程的艺术》之延迟初始化</a>
     </h1>
   
 
@@ -755,7 +935,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之延迟初始化/" data-id="cjhpt5via000k2cvjh62plcem" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjhpvdwrh000l4kvj0u5m69bc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -767,9 +947,9 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之happens-before" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》之happens-before" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之happens-before/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》之happens-before/" class="article-date">
   <time datetime="2018-05-05T02:32:09.000Z" itemprop="datePublished">2018-05-05</time>
 </a>
     
@@ -781,7 +961,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之happens-before/">《Java并发编程的艺术》之happens-before</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/05/《Java并发编程的艺术》之happens-before/">《Java并发编程的艺术》之happens-before</a>
     </h1>
   
 
@@ -835,7 +1015,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之happens-before/" data-id="cjhpt5vi5000d2cvjnn22v3z4" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cjhpvdwre000i4kvjg2u7f85e" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -895,23 +1075,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》笔记/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》笔记/《深入Java虚拟机》之对象的GC/">《深入Java虚拟机》之对象的GC</a>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》笔记/《深入Java虚拟机》之对象内存布局及使用/">《深入Java虚拟机》之对象内存布局及使用</a>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之DelayQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》笔记/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/">队列之PriorityQueue</a>
+            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>
