@@ -65,9 +65,70 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之final" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之final/" class="article-date">
+  <time datetime="2018-05-03T02:52:35.000Z" itemprop="datePublished">2018-05-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之final/">《Java并发编程的艺术》之final</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="final的重排序规则"><a href="#final的重排序规则" class="headerlink" title="final的重排序规则"></a>final的重排序规则</h2><p>以下面的代码为例，讲解final写和final读的重排序规则<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> FinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> FinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">FinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> FinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        self = <span class="keyword">new</span> FinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        FinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="final写的重排序规则"><a href="#final写的重排序规则" class="headerlink" title="final写的重排序规则"></a>final写的重排序规则</h3><ul>
+<li>JMM保证写final变量时不被编译器重排序到构造函数外</li>
+<li>编译器会在写final域后，构造函数返回前插入StoreStore屏障</li>
+</ul>
+<p>假设现在线程A执行init()，线程B执行read()时，可能的执行顺序如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png" alt=""></p>
+<p>当A线程初始化构造函数的时候，有可能会将普通域的初始化重排序到构造函数外，所以当B线程读取普通域的时候很可能获取到0，但是在后续的执行中，该值又会变成给定的数值1。<br>而编译器在遇到final域时，会在final写后面加入StoreStore内存屏障，保证在结束函数构造前执行final写。</p>
+<p>final域可以保证任何线程在读取该final变量时，已经正确初始化过。</p>
+<h3 id="final读的重排序规则"><a href="#final读的重排序规则" class="headerlink" title="final读的重排序规则"></a>final读的重排序规则</h3><p>在讲final写的重排序规则时，着重点放在了写上。而final域在读方面也做了一些特别处理。通常情况下，一个获取对象的引用和读取该对象的普通域是可能发生重排序。所以可能会发生下面这样的执行顺序：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_read_sequence.png" alt=""></p>
+<p>read()方法乍一看好像不会发生重排序，因为resultA 的写好像依赖temp变量。而resultA实际上是依赖temp引用里的a变量，<strong>间接依赖temp对象</strong>。虽然有的处理器不会对间接依赖进行重排序，但是不乏万一，比如alpha处理器，JMM就是为了避免这种会重排序<strong>间接依赖</strong>的处理器，所以给final读加上了下面的重排序规则：</p>
+<ul>
+<li>JMM保证 初次读对象引用与初次读该对象的final域不会被重排序</li>
+<li>编译器会在读final域的前面插入LoadLoad屏障</li>
+</ul>
+<h2 id="final域为引用类型"><a href="#final域为引用类型" class="headerlink" title="final域为引用类型"></a>final域为引用类型</h2><p>在构造函数内对一个final引用的对象的成员的写入，与随后在构造函数外把这个被构造对象的引用赋值给一个引用变量，这两个操作不能重排序。</p>
+<h2 id="final引用不能从构造函数内“溢出”"><a href="#final引用不能从构造函数内“溢出”" class="headerlink" title="final引用不能从构造函数内“溢出”"></a>final引用不能从构造函数内“溢出”</h2><p>写final的重排序规则虽然保证了，final域的写会在构造函数执行之前完成，并对其他线程可见。但是如果在构造函数内，引用就发生了溢出，那么就无法保证了<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> EscapeFinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> EscapeFinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">EscapeFinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">        self = <span class="keyword">this</span>; <span class="comment">// this引用溢出</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EscapeFinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        <span class="keyword">new</span> EscapeFinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        EscapeFinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>假设线程A执行init()，线程B执行read()，这里的A线程还未完成完整的初始化方法，对象引用就被B可见了。即使代码上 this溢出操作放在最后，仍然有可能被重排序。它们的执行时序如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_escape_sequence.png" alt=""></p>
+<p>上图可以看出，构造函数还没有完成时，final域对其他线程不可见。只有在完成了构造函数后，final域才对其他线程可见。</p>
+<h2 id="final语义的特殊例子"><a href="#final语义的特殊例子" class="headerlink" title="final语义的特殊例子"></a>final语义的特殊例子</h2><p>在X86处理器上，由于不会发生写写、读写、读读的重排序，所以没有StoreStore内存指令，故在使用final时，编译器会忽略StoreStore内存屏障，同样LoadLoad内存屏障也会被忽略。也就是说，在x86处理器上，final是不做任何处理的。</p>
+<h2 id="为什么要增强final语义呢"><a href="#为什么要增强final语义呢" class="headerlink" title="为什么要增强final语义呢"></a>为什么要增强final语义呢</h2><p>一方面是final本身是不可修改的，其他线程不该看到final的变化。比如一开始线程读取final值为默认值0，过一段时间再读这个final变量，final值变为值1（被初始化后）。<br>所以新的模型就保证了，只要正确的完成构造函数（不发生this溢出），即使不用同步，也可以保证其他线程见到final初始化后的值。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之final/" data-id="cjhpt5vi4000b2cvjtzcu17jl" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
   <time datetime="2018-05-02T02:36:31.000Z" itemprop="datePublished">2018-05-02</time>
 </a>
     
@@ -79,7 +140,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
     </h1>
   
 
@@ -146,7 +207,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjhoh6dn4000h2svjmi6rcv6i" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjhpt5vic000n2cvjw3tt3qst" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -158,9 +219,9 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="article-date">
+    <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之volatile/" class="article-date">
   <time datetime="2018-05-01T02:52:35.000Z" itemprop="datePublished">2018-05-01</time>
 </a>
     
@@ -172,7 +233,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
+      <a class="article-title" href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
     </h1>
   
 
@@ -249,7 +310,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhoh6dn7000m2svjlaveccca" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之volatile/" data-id="cjhpt5vi9000i2cvj1d4zfk0e" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -261,9 +322,9 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》之Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之Java内存模型/" class="article-date">
   <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
 </a>
     
@@ -275,7 +336,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
     </h1>
   
 
@@ -391,7 +452,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhoh6dn2000f2svjditgqrhq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之Java内存模型/" data-id="cjhpt5vi3000a2cvjv0y0qrvw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
@@ -403,9 +464,9 @@
 
 
   
-    <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-开发日志/关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/29/开发日志/关于final插入StoreStore的疑惑/" class="article-date">
   <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
 </a>
     
@@ -417,7 +478,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/开发日志/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
     </h1>
   
 
@@ -436,7 +497,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhoh6dny001o2svjwiw8fftw" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/开发日志/关于final插入StoreStore的疑惑/" data-id="cjhpt5vio001i2cvjxh0znnnt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -448,9 +509,9 @@
 
 
   
-    <article id="post-《Java并发编程的艺术》之synchronized的底层实现原理" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized的底层实现原理" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized的底层实现原理/" class="article-date">
   <time datetime="2018-04-27T14:55:43.000Z" itemprop="datePublished">2018-04-27</time>
 </a>
     
@@ -462,7 +523,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
     </h1>
   
 
@@ -498,7 +559,7 @@
 </tr>
 </tbody>
 </table>
-<p>具体的对象内存布局看<a href="">这篇文章</a></p>
+<p>具体的对象内存布局看<a href="https://codeleven.cn/2018/05/27/%E3%80%8A%E6%B7%B1%E5%85%A5Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E3%80%8B%E4%B9%8B%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80%E5%8F%8A%E4%BD%BF%E7%94%A8/" target="_blank" rel="noopener">这篇文章</a></p>
 <p>而根据JVM的设置<sup><a href="关于偏向锁的相关JVM设置:-XXBiasedLockingStartupDelay=0表示启动程序几秒钟后激活偏向锁-XXUseBiasedLocking=false表示关闭偏向锁（确定会发生竞争时可以这么设置）">^1</a></sup>，具体分配时又会有不同的情况，如下所示</p>
 <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg" alt="偏向锁到重量锁的过程"></p>
 <p>当关闭了偏向锁的设置，那么就会走左边的流程；反之则走右边的流程。</p>
@@ -578,7 +639,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhoh6dn9000o2svjqtyqy82x" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》笔记/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhpt5vi5000e2cvjqsepx848" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -617,7 +678,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhoh6dms00082svj2a3nb425" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhpt5vhk00052cvj9v6wm05f" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -629,9 +690,9 @@
 
 
   
-    <article id="post-记一次List.subList的错误" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-开发日志/记一次List.subList的错误" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/24/开发日志/记一次List.subList的错误/" class="article-date">
   <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">2018-04-24</time>
 </a>
     
@@ -643,7 +704,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/24/开发日志/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
     </h1>
   
 
@@ -660,7 +721,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhoh6dnv001j2svjigpwnctb" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/开发日志/记一次List.subList的错误/" data-id="cjhpt5vim001d2cvj9xf70qlb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -672,9 +733,9 @@
 
 
   
-    <article id="post-了解AQS之Condition" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-源码阅读/了解AQS之Condition" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/06/源码阅读/了解AQS之Condition/" class="article-date">
   <time datetime="2018-04-06T01:54:53.000Z" itemprop="datePublished">2018-04-06</time>
 </a>
     
@@ -686,7 +747,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/06/了解AQS之Condition/">了解AQS之Condition</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/06/源码阅读/了解AQS之Condition/">了解AQS之Condition</a>
     </h1>
   
 
@@ -725,7 +786,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhoh6dnp001c2svj5ck029j1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/源码阅读/了解AQS之Condition/" data-id="cjhpt5vin001f2cvjtztcijbf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -737,9 +798,9 @@
 
 
   
-    <article id="post-了解AQS之ExclusiveLock" class="article article-type-post" itemscope itemprop="blogPost">
+    <article id="post-源码阅读/了解AQS之ExclusiveLock" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/" class="article-date">
+    <a href="/codeleven.github.io/2018/04/05/源码阅读/了解AQS之ExclusiveLock/" class="article-date">
   <time datetime="2018-04-05T11:57:27.000Z" itemprop="datePublished">2018-04-05</time>
 </a>
     
@@ -751,7 +812,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/">了解AQS之ExclusiveLock</a>
+      <a class="article-title" href="/codeleven.github.io/2018/04/05/源码阅读/了解AQS之ExclusiveLock/">了解AQS之ExclusiveLock</a>
     </h1>
   
 
@@ -851,83 +912,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhoh6dnx001m2svj2imcnf9v" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-深入Unsafe" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/05/深入Unsafe/" class="article-date">
-  <time datetime="2018-04-05T11:56:34.000Z" itemprop="datePublished">2018-04-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/05/深入Unsafe/">深入Unsafe</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在JUC（并发包）里经常会使用到<code>Unsafe</code>这个类，那么了解这个类，就成为了下面学习的重中之重</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 注意如果是获取基础变量类型，那么所有方法都要调用对应基础变量类型的方法，不能使用Object代替全部，因为C语言底层是没有包装类型的</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/*------------------对象操作------------------*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 返回一个字段的偏移量</span></span><br><span class="line"><span class="comment"> * PS：注意区分objectFieldOffset和staticFieldOffset，一个操作的参数是对象实例，一个是Class对象</span></span><br><span class="line"><span class="comment"> * 不要对该偏移量进行任何处理，该偏移量会被传给不安全的堆内存里</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> f Class文件里面的字段</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">long</span> <span class="title">objectFieldOffset</span><span class="params">(Field f)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 获取变量时，具有volatile语义</span></span><br><span class="line"><span class="comment"> * PS:如果是获取静态变量，那么Object就要用Class；获取非静态变量，那么Object就要用对应的Object</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> o 待获取的对象，要区分Class和Object</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> offset 对象里某个位置的偏移量，<span class="doctag">@see</span> #objectFieldOffset(Field)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function">Object <span class="title">getObjectVolatile</span><span class="params">(Object o, <span class="keyword">long</span> offset)</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function"><span class="comment">/**</span></span></span><br><span class="line"><span class="function"><span class="comment"> * 为Object实例设置一个值，具有volatile的语义</span></span></span><br><span class="line"><span class="function"><span class="comment"> *</span></span></span><br><span class="line"><span class="function"><span class="comment"> * @param o 目标实例</span></span></span><br><span class="line"><span class="function"><span class="comment"> * @param offset 对应字段的偏移量</span></span></span><br><span class="line"><span class="function"><span class="comment"> * @param x 要赋予的值</span></span></span><br><span class="line"><span class="function"><span class="comment"> */</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">putObjectVolatile</span><span class="params">(Object o, <span class="keyword">long</span> offset, Object x)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 获取静态字段的偏移量</span></span><br><span class="line"><span class="comment"> * PS：注意区分objectFieldOffset和staticFieldOffset，一个操作的参数是对象实例，一个是Class对象</span></span><br><span class="line"><span class="comment"> * 不要对该偏移量进行任何处理，该偏移量会被传给不安全的堆内存里</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> f Class文件里的静态字段</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">long</span> <span class="title">staticFieldOffset</span><span class="params">(Field f)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 延迟设置属性</span></span><br><span class="line"><span class="comment"> * 对于volatile属性来说是立即生效的。</span></span><br><span class="line"><span class="comment"> * 详情见putOrderedObject小节</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@see</span> #putObjectVolatile</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"> <span class="function"><span class="keyword">void</span> <span class="title">putOrderedObject</span><span class="params">(Object o, <span class="keyword">long</span> offset, Object x)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 非阻塞锁的属性交换</span></span><br><span class="line"><span class="comment"> * 比较字段的值和原来的是否一样，如果一样就进行设置</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> o 要操作的实例对象</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> offset 要操作的字段</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> expected 原来的值</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> x 新的值</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span> 设置是否成功</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">boolean</span> <span class="title">compareAndSwapInt</span><span class="params">(Object o, <span class="keyword">long</span> offset, <span class="keyword">int</span> expected,</span></span></span><br><span class="line"><span class="function"><span class="params"> <span class="keyword">int</span> x)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*------------------数组操作------------------*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 获取array第一个元素的偏移量</span></span><br><span class="line"><span class="comment"> * 该数值配合arrayIndexScale使用</span></span><br><span class="line"><span class="comment"> * 通过arrayBaseOffset + arrayIndexScale * index 获取对应下标的元素</span></span><br><span class="line"><span class="comment"> * arrayBaseOffset在64位下，都是16（没有开启指针压缩）</span></span><br><span class="line"><span class="comment"> * arrayIndexScale根据不同的类型，有不同的值，比如double是8，int是4</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> arrayClass 数组的Class的类型，比如A[].class</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">arrayBaseOffset</span><span class="params">(Class arrayClass)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 获取数组元素的增量</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@arrayClass</span> 数组的Class类型</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">arrayIndexScale</span><span class="params">(Class arrayClass)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*------------------锁相关操作------------------*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/** 锁对象 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">monitorEnter</span><span class="params">(Object o)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** 解锁对象 */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">monitorExit</span><span class="params">(Object o)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/*------------------线程相关操作------------------*/</span></span><br><span class="line"></span><br><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment"> * block当前线程</span></span><br><span class="line"><span class="comment"> * 在以下几种情况下会结束阻塞并返回</span></span><br><span class="line"><span class="comment"> * 1. 在park前调用unpark或者在park后调用unpark均可立即返回</span></span><br><span class="line"><span class="comment"> * 2. 当前线程被中断（interrupte）</span></span><br><span class="line"><span class="comment"> * 3. 阻塞时间超过给定值</span></span><br><span class="line"><span class="comment"> * 4. ？？没有任何原因的返回？？</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> isAbsolute true则使用Epoch来表示；false则使用相对时间</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> time 根据isAbsolute来决定，若为true，表示绝对时间（epoch、unix时间戳）单位毫秒；若为false，表示相对时间（相对现在多少纳秒以后返回），单位纳秒;若time为0，表示永远阻塞</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">park</span><span class="params">(<span class="keyword">boolean</span> isAbsolute, <span class="keyword">long</span> time)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment"> * unblock指定的线程</span></span><br><span class="line"><span class="comment"> * 当unblock不同状态的线程有不同的现象：</span></span><br><span class="line"><span class="comment"> * 当指定线程已经阻塞，那么unblock指定的线程</span></span><br><span class="line"><span class="comment"> * 当指定线程尚未阻塞，那么指定线程的下一次park将不会产生阻塞</span></span><br><span class="line"><span class="comment"> * </span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> thread  请确保thread不为空</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">unpark</span><span class="params">(Object thread)</span></span>;</span><br></pre></td></tr></table></figure>
-<h2 id="putOrderedObject整理"><a href="#putOrderedObject整理" class="headerlink" title="putOrderedObject整理"></a>putOrderedObject整理</h2><p>这方法纠结了我很久，因为doc上很简略，大体就是讲对<strong>非volatile变量的修改</strong>对其他线程不会立即生效</p>
-<ol>
-<li>那么这货有什么用？</li>
-<li>这货和普通写入有什么区别吗？（因为普通写入对其他线程也不会立即生效）</li>
-</ol>
-<p>下面的Bug Report是为什么添加“lazySet”的初衷：</p>
-<p><a href="https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6275329" target="_blank" rel="noopener">Bug_6275329 By Doug Lea</a></p>
-<blockquote>
-<p>“As probably the last little JSR166 follow-up for Mustang,<br>we added a “lazySet” method to the Atomic classes<br>(AtomicInteger, AtomicReference, etc). This is a niche<br>method that is sometimes useful when fine-tuning code using<br>non-blocking data structures. The semantics are<br>that the write is guaranteed not to be re-ordered with any<br>previous write, but may be reordered with subsequent operations<br>(or equivalently, might not be visible to other threads) until<br>some other volatile write or synchronizing action occurs).</p>
-</blockquote>
-<p>我们添加了“lazySet”一方法给AtomicX这些类（比如AtomicInteger、AtomicReference等）。这个方法在使用非阻塞数据结构调整代码的情况下很有用。它的作用主要表现在 <strong>保证写入前的操作的不会被重排序，写入后的操作可能会被重排序（换言之就是写入后对其他线程不会立即可见）</strong> 直到有其他的volatile写入或者同步操作发生。</p>
-<blockquote>
-<p>The main use case is for nulling out fields of nodes in<br>non-blocking data structures solely for the sake of avoiding<br>long-term garbage retention; it applies when it is harmless<br>if other threads see non-null values for a while, but you’d<br>like to ensure that structures are eventually GCable. In such<br>cases, you can get better performance by avoiding<br>the costs of the null volatile-write. There are a few<br>other use cases along these lines for non-reference-based<br>atomics as well, so the method is supported across all of the<br>AtomicX classes.</p>
-</blockquote>
-<p>这个方法的主要用途是 在非阻塞数据结构中单独空出结点，来降低长时间的垃圾滞留问题来的性能问题；这能运用在就算其他线程看到非空值也没关系的情况下。但是你要确保这个结构确实能够被GC。在这种情况下，你能通过避免null值的写入，来获得更好的性能。</p>
-<blockquote>
-<p>For people who like to think of these operations in terms of<br>machine-level barriers on common multiprocessors, lazySet<br>provides a preceeding store-store barrier (which is either<br>a no-op or very cheap on current platforms), but no<br>store-load barrier (which is usually the expensive part<br>of a volatile-write).”</p>
-</blockquote>
-<p>对于那些在通用多处理器下需要考虑底层机器屏障的人来说，“lazySet”提供了预Store-Store屏障（对于现在的平台来说，要么无操作，要么代价不大），但是没有Store-Load屏障（通常需要付出较高的代价）</p>
-<p>PS：因为“lazySet”其实就是“volatile”的削弱版，所以叫“weak volatile”也挺符合的。</p>
-<hr>
-<h3 id="“weak-volatile”的场景："><a href="#“weak-volatile”的场景：" class="headerlink" title="“weak volatile”的场景："></a>“weak volatile”的场景：</h3><p>“weak volatile”适用于对实时性要求不高的场景，该方法可以较大的节省性能消耗</p>
-<ol>
-<li><del>一个链表中的某个节点被修改了，在volatile的情况下，整个链表都会一定被强制更新；而在”weak volatile”的情况下，不被强制更新，节省部分性能。</del></li>
-<li>在修改帖子状态的时，如果对性能要求很高，可以使用“lazySet”保证写入内存，但是对实时性的要求不高</li>
-</ol>
-<p>具体的其他场景可以看下面的链接（表示第一个回答没看懂，功力深了后再来）</p>
-<ol>
-<li><a href="https://stackoverflow.com/questions/7557156/atomicxxx-lazyset-in-terms-of-happens-before-edges" target="_blank" rel="noopener">AtomicXXX.lazySet(…) in terms of happens before edges —-StackOverflow</a></li>
-</ol>
-<hr>
-<h3 id="“weak-volatile”的原理"><a href="#“weak-volatile”的原理" class="headerlink" title="“weak volatile”的原理"></a>“weak volatile”的原理</h3><p>volatile的工作原理是插入屏障，在写入的时候插入StoreStore，写完后插入StoreLoad，根据Doug Lea的说法，StoreLoad相比StoreStore更消耗资源<br>而“weak volatile”则是省去了最后的StoreLoad的步骤，相比插入两个屏障，“weak volatile”性能提升了不少</p>
-<p>更加具体的底层原理可以看下面的链接</p>
-<ol>
-<li><a href="http://ifeve.com/juc-atomic-class-lazyset-que/" target="_blank" rel="noopener">JUC中Atomic class之lazySet的一点疑惑—-并发编程网</a></li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjhoh6do0001r2svjgl314hfj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/源码阅读/了解AQS之ExclusiveLock/" data-id="cjhpt5viq001m2cvjcitkd2pb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -965,7 +950,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -987,23 +972,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/">《深入Java虚拟机》之对象内存布局及使用</a>
+            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》笔记/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/26/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》笔记/《深入Java虚拟机》之对象的GC/">《深入Java虚拟机》之对象的GC</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+            <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》笔记/《深入Java虚拟机》之对象内存布局及使用/">《深入Java虚拟机》之对象内存布局及使用</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》笔记/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
           </li>
         
           <li>
             <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/">队列之PriorityQueue</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/">队列之PriorityQueue</a>
           </li>
         
       </ul>
