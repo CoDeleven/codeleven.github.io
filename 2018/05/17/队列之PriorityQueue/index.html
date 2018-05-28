@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>队列之PriorityQueue | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="由于该优先级队列是实现定时等任务的基础，所以想彻底理解后续的DelayQueue及ScheduledThreadPoolExecutor就要先学习优先级队列。 该队列是更具堆排序的划分优先级的队列，默认情况下优先级是使用按照自然顺序排序的比较器（即从小到大），当然你也可以传入一个比较器，让队列按照比较器排序。因为会用到比较器，所以每个元素都需要实现Comparable接口。 注意：该队列不是线程安">
+<meta name="keywords" content="Java集合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="队列之PriorityQueue">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="由于该优先级队列是实现定时等任务的基础，所以想彻底理解后续的DelayQueue及ScheduledThreadPoolExecutor就要先学习优先级队列。 该队列是更具堆排序的划分优先级的队列，默认情况下优先级是使用按照自然顺序排序的比较器（即从小到大），当然你也可以传入一个比较器，让队列按照比较器排序。因为会用到比较器，所以每个元素都需要实现Comparable接口。 注意：该队列不是线程安">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status0.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status2.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status3.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status4.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status5.png">
+<meta property="og:updated_time" content="2018-05-17T14:15:13.214Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="队列之PriorityQueue">
+<meta name="twitter:description" content="由于该优先级队列是实现定时等任务的基础，所以想彻底理解后续的DelayQueue及ScheduledThreadPoolExecutor就要先学习优先级队列。 该队列是更具堆排序的划分优先级的队列，默认情况下优先级是使用按照自然顺序排序的比较器（即从小到大），当然你也可以传入一个比较器，让队列按照比较器排序。因为会用到比较器，所以每个元素都需要实现Comparable接口。 注意：该队列不是线程安">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status0.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-队列之PriorityQueue" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/" class="article-date">
+  <time datetime="2018-05-17T01:58:51.000Z" itemprop="datePublished">2018-05-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      队列之PriorityQueue
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>由于该优先级队列是实现定时等任务的基础，所以想彻底理解后续的DelayQueue及ScheduledThreadPoolExecutor就要先学习优先级队列。</p>
+<p>该队列是更具堆排序的划分优先级的队列，默认情况下优先级是使用按照自然顺序排序的比较器（即从小到大），当然你也可以传入一个比较器，让队列按照比较器排序。因为会用到比较器，所以每个元素都需要实现Comparable接口。</p>
+<p><strong>注意：该队列不是线程安全的</strong></p>
+<p>PriorityQueue有以下几个构造方法：</p>
+<ul>
+<li>PriorityQueue(): 创建一个可以存放11个元素的，<strong>因为没有比较器，传入的元素必须要实现Comparable(像int、double这类可以自动装箱的元素不必实现，它们在强转的时候不会出问题)</strong>。</li>
+<li>PriorityQueue(Collection&lt;? extends E&gt;): 根据给定的集合创建一个优先级队列，<strong>每个元素都必须实现Comparable</strong> </li>
+<li>PriorityQueue(PriorityQueue&lt;? extends E&gt; c)</li>
+<li>PriorityQueue(SortedSet&lt;? extends E&gt; c) </li>
+<li>PriorityQueue(int initialCapacity): 根据给定的初始容器大小，创建一个按自然数排序的优先级队列</li>
+<li>PriorityQueue(int initialCapacity, Comparator&lt;? super E&gt; comparator): 根据给定的初始容器大小和比较器，创建一个优先级队列，优先级队列会按照比较器进行排序</li>
+<li>PriorityQueue(Comparator&lt;? super E&gt; comparator): 该方法从1.8之后才有</li>
+</ul>
+<h2 id="属性介绍"><a href="#属性介绍" class="headerlink" title="属性介绍"></a>属性介绍</h2><table>
+<thead>
+<tr>
+<th>变量名称</th>
+<th>变量类型</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>queue</td>
+<td>Object[]</td>
+<td>二叉树。每一次插入或移除都会调整树的结构</td>
+</tr>
+<tr>
+<td>size</td>
+<td>int</td>
+<td>元素个数。</td>
+</tr>
+<tr>
+<td>comparator</td>
+<td>Comparator&lt;? super E&gt;</td>
+<td>比较器。决定队列是从小到大还是从大到小</td>
+</tr>
+<tr>
+<td>modCount</td>
+<td>int</td>
+<td>修改次数。每次增删操作都会使modCount递增</td>
+</tr>
+</tbody>
+</table>
+<h2 id="offer"><a href="#offer" class="headerlink" title="offer()"></a>offer()</h2><p>在执行offer()方法前的队列状态，此时 <strong>元素个数size</strong>为7, <strong>queue.length</strong>为8</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status0.png" alt="插入前的初始状态"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (e == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="keyword">int</span> i = size;</span><br><span class="line">    <span class="comment">// 如果队列包含元素的数量大于等于数组的长度</span></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= queue.length)</span><br><span class="line">        <span class="comment">// 扩充数组长度</span></span><br><span class="line">        grow(i + <span class="number">1</span>);</span><br><span class="line">    <span class="comment">// 递增总元素数量</span></span><br><span class="line">    size = i + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (i == <span class="number">0</span>)</span><br><span class="line">        queue[<span class="number">0</span>] = e;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="comment">// 关键点</span></span><br><span class="line">        siftUp(i, e);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>执行offer()时，<figure class="highlight plain"><figcaption><span>< queue.length``` 所以不扩容，只是对size进行递增。此时， **元素个数size为8**, **queue.length**为8。状态图如下所示</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">![插入时的状态1](https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status1.png)</span><br><span class="line"></span><br><span class="line">offer()方法前面都在做一些准备，比如检查元素是否为null、检查数组长度。真正执行插入的地方在siftUp()。siftUp()就是将插入的元素调整到大于等于其祖先元素，说的术语点就是堆排序。这里会判断是否存在比较器，如果创建PriorityQueue没有传入Comparator时，则进入else，通过元素的Comparable判断；否则进入if语句</span><br><span class="line">```java</span><br><span class="line">private void siftUp(int k, E x) &#123;</span><br><span class="line">    if (comparator != null)</span><br><span class="line">        siftUpUsingComparator(k, x);</span><br><span class="line">    else</span><br><span class="line">        siftUpComparable(k, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>假设我们没传Comparator，进入else语句:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftUpComparable</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 必须要让元素显式实现Comparable，如果是int、double这类可以自动装箱的元素，倒是不需要显式实现</span></span><br><span class="line">    Comparable&lt;? <span class="keyword">super</span> E&gt; key = (Comparable&lt;? <span class="keyword">super</span> E&gt;) x;</span><br><span class="line">    <span class="keyword">while</span> (k &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> parent = (k - <span class="number">1</span>) &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        Object e = queue[parent];</span><br><span class="line">        <span class="keyword">if</span> (key.compareTo((E) e) &gt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        queue[k] = e;</span><br><span class="line">        k = parent;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>k为新元素的下标，x为新元素的值。由于新元素尚未插入，其中的元素个数实际上还是只有k - 1个，故要执行<figure class="highlight k"><figcaption><span>- 1```。</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="number">1.</span> (k - <span class="number">1</span>) / <span class="number">2</span> 获取 **祖先元素下标 parent** ，parent是**新元素 x** 的祖先元素的下标。</span><br><span class="line"><span class="number">2.</span> 将祖先（该新元素的parent）和新元素进行比较</span><br><span class="line"><span class="number">3.</span> 如果新元素和parent比较后返回<span class="number">0</span>或负数，就将**新元素所在位置**设置为parent值；反之就直接插入（这里还是要具体看比较器，通常是小到大的排序，下文也是这样）</span><br><span class="line"><span class="number">4.</span> 最后将**新元素的下标 k**改成**parent所在位置 parent**，即新元素值要保存在parent所在位置</span><br><span class="line"><span class="number">5.</span> 继续拿**新元素下标 k** 比较，重复<span class="number">1</span><span class="number">-3</span>的步骤</span><br><span class="line"></span><br><span class="line">对不明白为什么要这么做的同学，请移步这里[排序算法之堆排序]()</span><br><span class="line"></span><br><span class="line">当`siftUpComarable`执行完后，状态图如下所示（没有体现排序的过程）</span><br><span class="line">![](https:<span class="comment">//blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status2.png)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## poll()</span><br><span class="line">![poll前的初始状态](https:<span class="comment">//blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status1.png)</span></span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">public E poll() &#123;</span><br><span class="line">    if (size == <span class="number">0</span>)</span><br><span class="line">        return <span class="built_in">null</span>;</span><br><span class="line">    <span class="type">int</span> s = --size;</span><br><span class="line">    modCount++;</span><br><span class="line">    E result = (E) queue[<span class="number">0</span>];</span><br><span class="line">    E x = (E) queue[s];</span><br><span class="line">    queue[s] = <span class="built_in">null</span>;</span><br><span class="line">    if (s != <span class="number">0</span>)</span><br><span class="line">        siftDown(<span class="number">0</span>, x);</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>poll()方法和offer()有异曲同工之妙，其区别主要在于它出队后，是通过将最后一个元素放在首结点，然后 <strong>下沉</strong> 调整堆结构的。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status2.png" alt="将最后一个结点移到顶点"></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftDownComparable</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>&#123;</span><br><span class="line">    Comparable&lt;? <span class="keyword">super</span> E&gt; key = (Comparable&lt;? <span class="keyword">super</span> E&gt;)x;</span><br><span class="line">    <span class="keyword">int</span> half = size &gt;&gt;&gt; <span class="number">1</span>;        <span class="comment">// loop while a non-leaf</span></span><br><span class="line">    <span class="keyword">while</span> (k &lt; half) &#123;</span><br><span class="line">        <span class="keyword">int</span> child = (k &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>; <span class="comment">// assume left child is least</span></span><br><span class="line">        Object c = queue[child];</span><br><span class="line">        <span class="keyword">int</span> right = child + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (right &lt; size &amp;&amp;</span><br><span class="line">            ((Comparable&lt;? <span class="keyword">super</span> E&gt;) c).compareTo((E) queue[right]) &gt; <span class="number">0</span>)</span><br><span class="line">            c = queue[child = right];</span><br><span class="line">        <span class="keyword">if</span> (key.compareTo((E) c) &lt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        queue[k] = c;</span><br><span class="line">        k = child;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><code>(k &lt;&lt; 1) + 1</code> 获取到首结点的左子结点，<code>child + 1</code> 获取到右子结点。当<code>k &lt; half</code>时，<code>(k &gt;&gt;&gt; 1) + 1 &lt;= size - 1</code>，所以只需要判断<code>right &lt; size</code> 即可知道数组是否越界。此时状态图如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status3.png" alt=""></p>
+<p>比较左子结点和右子节点，如果左大于右，将右下标设置给左下标，右值设置给左变量c</p>
+<p><strong>注意：这里只将右结点的下标设置到左结点的下标，数组里的值还没有动，然后将c设置为right的值，并没有修改数组</strong></p>
+<p>状态图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status4.png" alt=""></p>
+<p>此时比较新值x 和 变量c(即<code>min(leftValue, rightValue)</code>)，如果新值x最小，直接退出循环。反之，<code>queue[k] = c; k = child</code></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status5.png" alt=""></p>
+<p>到这一步，前三个结点已经挑出最大值，看图可以得知数值“111”还没有设置进去，这是为什么呢？因为如果下标为2的结点还有子结点，还要和他们比较，最终才能确定一个最合适的位置。</p>
+<p>当数值“111”确定下了位置<code>queue[k] = key;</code>将111设置到k的位置。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>到这一步，PriorityQueue的难点基本上没有了。让人头大的堆排序还是要归结于数据结构学的不够精，不过话说回来这段代码写的很妙，和看AQS一样的感觉，很精细，每个局部变量最大程度上被利用起来，缺一不可。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhpvquyz00263ovjkqja6h4h" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          队列之PriorityQueue
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《Java并发编程的艺术》之线程池(二)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之DelayQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

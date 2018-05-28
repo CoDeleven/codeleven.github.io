@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="Codeleven的博客">
+<meta property="og:type" content="website">
+<meta property="og:title" content="CoDeleven的个人博客">
+<meta property="og:url" content="http://yoursite.com/GithubPages/page/3/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="Codeleven的博客">
+<meta property="og:locale" content="zh">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:description" content="Codeleven的博客">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main">
+  
+    <article id="post-《Java并发编程的艺术》之final" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》之final/" class="article-date">
+  <time datetime="2018-05-03T02:52:35.000Z" itemprop="datePublished">2018-05-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/03/《Java并发编程的艺术》之final/">《Java并发编程的艺术》之final</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="final的重排序规则"><a href="#final的重排序规则" class="headerlink" title="final的重排序规则"></a>final的重排序规则</h2><p>以下面的代码为例，讲解final写和final读的重排序规则<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> FinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> FinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">FinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> FinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        self = <span class="keyword">new</span> FinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        FinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="final写的重排序规则"><a href="#final写的重排序规则" class="headerlink" title="final写的重排序规则"></a>final写的重排序规则</h3><ul>
+<li>JMM保证写final变量时不被编译器重排序到构造函数外</li>
+<li>编译器会在写final域后，构造函数返回前插入StoreStore屏障</li>
+</ul>
+<p>假设现在线程A执行init()，线程B执行read()时，可能的执行顺序如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_write_sequence.png" alt=""></p>
+<p>当A线程初始化构造函数的时候，有可能会将普通域的初始化重排序到构造函数外，所以当B线程读取普通域的时候很可能获取到0，但是在后续的执行中，该值又会变成给定的数值1。<br>而编译器在遇到final域时，会在final写后面加入StoreStore内存屏障，保证在结束函数构造前执行final写。</p>
+<p>final域可以保证任何线程在读取该final变量时，已经正确初始化过。</p>
+<h3 id="final读的重排序规则"><a href="#final读的重排序规则" class="headerlink" title="final读的重排序规则"></a>final读的重排序规则</h3><p>在讲final写的重排序规则时，着重点放在了写上。而final域在读方面也做了一些特别处理。通常情况下，一个获取对象的引用和读取该对象的普通域是可能发生重排序。所以可能会发生下面这样的执行顺序：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_read_sequence.png" alt=""></p>
+<p>read()方法乍一看好像不会发生重排序，因为resultA 的写好像依赖temp变量。而resultA实际上是依赖temp引用里的a变量，<strong>间接依赖temp对象</strong>。虽然有的处理器不会对间接依赖进行重排序，但是不乏万一，比如alpha处理器，JMM就是为了避免这种会重排序<strong>间接依赖</strong>的处理器，所以给final读加上了下面的重排序规则：</p>
+<ul>
+<li>JMM保证 初次读对象引用与初次读该对象的final域不会被重排序</li>
+<li>编译器会在读final域的前面插入LoadLoad屏障</li>
+</ul>
+<h2 id="final域为引用类型"><a href="#final域为引用类型" class="headerlink" title="final域为引用类型"></a>final域为引用类型</h2><p>在构造函数内对一个final引用的对象的成员的写入，与随后在构造函数外把这个被构造对象的引用赋值给一个引用变量，这两个操作不能重排序。</p>
+<h2 id="final引用不能从构造函数内“溢出”"><a href="#final引用不能从构造函数内“溢出”" class="headerlink" title="final引用不能从构造函数内“溢出”"></a>final引用不能从构造函数内“溢出”</h2><p>写final的重排序规则虽然保证了，final域的写会在构造函数执行之前完成，并对其他线程可见。但是如果在构造函数内，引用就发生了溢出，那么就无法保证了<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> EscapeFinalExample&#123;</span><br><span class="line">    <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">int</span> b;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> EscapeFinalExample self;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="title">EscapeFinalExample</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.a = <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">this</span>.b = <span class="number">5</span>;</span><br><span class="line">        self = <span class="keyword">this</span>; <span class="comment">// this引用溢出</span></span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> EscapeFinalExample <span class="title">init</span><span class="params">()</span></span>&#123; <span class="comment">//线程A执行</span></span><br><span class="line">        <span class="keyword">new</span> EscapeFinalExample();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">read</span><span class="params">()</span></span>&#123; <span class="comment">//线程B执行</span></span><br><span class="line">        EscapeFinalExample temp = self; <span class="comment">// 获取引用</span></span><br><span class="line">        <span class="keyword">int</span> resultA = temp.a; <span class="comment">// 读普通域</span></span><br><span class="line">        <span class="keyword">int</span> resultB = temp.b; <span class="comment">// 读final域</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>假设线程A执行init()，线程B执行read()，这里的A线程还未完成完整的初始化方法，对象引用就被B可见了。即使代码上 this溢出操作放在最后，仍然有可能被重排序。它们的执行时序如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/final_escape_sequence.png" alt=""></p>
+<p>上图可以看出，构造函数还没有完成时，final域对其他线程不可见。只有在完成了构造函数后，final域才对其他线程可见。</p>
+<h2 id="final语义的特殊例子"><a href="#final语义的特殊例子" class="headerlink" title="final语义的特殊例子"></a>final语义的特殊例子</h2><p>在X86处理器上，由于不会发生写写、读写、读读的重排序，所以没有StoreStore内存指令，故在使用final时，编译器会忽略StoreStore内存屏障，同样LoadLoad内存屏障也会被忽略。也就是说，在x86处理器上，final是不做任何处理的。</p>
+<h2 id="为什么要增强final语义呢"><a href="#为什么要增强final语义呢" class="headerlink" title="为什么要增强final语义呢"></a>为什么要增强final语义呢</h2><p>一方面是final本身是不可修改的，其他线程不该看到final的变化。比如一开始线程读取final值为默认值0，过一段时间再读这个final变量，final值变为值1（被初始化后）。<br>所以新的模型就保证了，只要正确的完成构造函数（不发生this溢出），即使不用同步，也可以保证其他线程见到final初始化后的值。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjhpvquxl000e3ovj0kloie7m" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
+  <time datetime="2018-05-02T02:36:31.000Z" itemprop="datePublished">2018-05-02</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="synchrnoized的happens-before"><a href="#synchrnoized的happens-before" class="headerlink" title="synchrnoized的happens-before"></a>synchrnoized的happens-before</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;<span class="comment">// ①</span></span><br><span class="line">    a = <span class="number">100</span>; <span class="comment">// ②</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ③</span></span><br><span class="line">&#125;<span class="comment">// ④</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123; <span class="comment">// ⑤</span></span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ⑥</span></span><br><span class="line">        <span class="keyword">int</span> result = a; <span class="comment">// ⑦</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// ⑧</span></span><br></pre></td></tr></table></figure>
+<p>假设线程A执行init()，线程B执行doTask()，有如下的happens-before关系：</p>
+<ul>
+<li>根据程序次序规则：<ul>
+<li>① hb ②</li>
+<li>② hb ③</li>
+<li>③ hb ④</li>
+<li>⑤ hb ⑥</li>
+<li>⑥ hb ⑦</li>
+<li>⑦ hb ⑧</li>
+</ul>
+</li>
+<li>根据监视器规则：<ul>
+<li>① hb ④</li>
+<li>④ hb ⑤</li>
+<li>⑤ hb ⑧</li>
+</ul>
+</li>
+</ul>
+<p>根据传递规则，保证init()方法所有的修改对doTask()方法可见，happens-before关系如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png" alt=""></p>
+<p>1、2间的表示程序次序性规则，4、5间的表示监视器规则，由于3、4有happens-before关系，4、5有happens-before关系，所以根据传递性规则，2、6间有happens-before关系。</p>
+<p>线程A释放锁之前所有可见的共享变量，在线程B获取同个锁之后就变得可见了。</p>
+<h2 id="synchrnoized的内存语义"><a href="#synchrnoized的内存语义" class="headerlink" title="synchrnoized的内存语义"></a>synchrnoized的内存语义</h2><h3 id="synchrnoized获取锁内存语义"><a href="#synchrnoized获取锁内存语义" class="headerlink" title="synchrnoized获取锁内存语义"></a>synchrnoized获取锁内存语义</h3><p>当释放锁时，JMM会把线程对应的本地内存中的共享变量刷新到主内存。以上面的例子为例，共享数据的状态示意图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png" alt=""></p>
+<h3 id="synchrnoized释放锁内存语义"><a href="#synchrnoized释放锁内存语义" class="headerlink" title="synchrnoized释放锁内存语义"></a>synchrnoized释放锁内存语义</h3><p>当A线程获取到锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png" alt=""></p>
+<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><p>对比锁释放-获取的内存语义和volatile的写-读内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取和volatile读有相同的内存语义。</p>
+<ul>
+<li>线程A释放一个锁，实质上是告诉其他 要获取该共享变量 线程 一个消息（线程A所做的修改）</li>
+<li>线程B获取一个锁，实质上是接受到其他线程发出的消息（释放这个锁的线程对共享变量所做的修改）</li>
+<li>线程A释放，随后线程B获取，实质上是线程A通过主内存给线程B发送消息。</li>
+</ul>
+<p>这里判断语义是否相同是通过两个操作的流程是否相同，比如线程A的锁释放完时，刷新至主内存；volatile写完后，刷新至主内存，并通知其他线程本地内存的共享变量失效（在锁释放环节里是交给锁获取执行）；</p>
+<h2 id="CAS和JUC"><a href="#CAS和JUC" class="headerlink" title="CAS和JUC"></a>CAS和JUC</h2><p>synchronized是通过控制对象头来控制锁的升级，但是具体获取锁和释放锁的流程藏在JVM里，这里将通过ReentrantLock类比synchronized过程。</p>
+<p><a href="https://codeleven.cn/2018/04/05/%E4%BA%86%E8%A7%A3AQS%E4%B9%8BExclusiveLock/" target="_blank" rel="noopener">ReentrantLock的实现流程</a></p>
+<p>这里要学习的是CAS，JDK文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步设置为给定的更新值。此操作具有volatile读和写的语义。<br>前面讲到volatile写保证volatile写不会和前面的操作发生重排序，volatile读保证volatile读不会和后面的操作发生重排序。组合这两个条件就意味着同时实现了 禁止某一操作和操作前、操作后的重排序。CAS操作就是如此，它在是通过加上lock前缀来实现以下的功能：</p>
+<ul>
+<li>使用缓存锁定保证原子性</li>
+<li>禁止之前和之后的重排序</li>
+<li>把写缓冲区中的所有数据刷新到内存</li>
+</ul>
+<p>正是因为CAS同时具有volatile读和写的内存语义，因此Java线程之间的通信有下面四种方式。</p>
+<ol>
+<li>A线程写volatile变量，B线程读这个volatile变量</li>
+<li>A线程写volatile变量，B线程用CAS修改volatile变量</li>
+<li>A线程用CAS修改volatile变量，B线程用CAS修改这个变量</li>
+<li>A线程用CAS修改volatile变量，B线程用volatile读取该变量</li>
+</ol>
+<p>JUC包的通用化的实现模式：</p>
+<ul>
+<li>声明共享变量为volatile</li>
+<li>使用CAS的原子条件来实现线程间的同步</li>
+<li>配合volatile读/写和CAS 来实习线程间的通信</li>
+</ul>
+<p>AQS，非阻塞数据结构和原子变量类，这些JUC包中的基础都是使用上面的模式来实现的，而JUC包的高层类又是依赖这些基础类来实现的。从整体看，JUC包的实现示意图如下所示。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjhpvquxp000i3ovj1ldhauz8" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="article-date">
+  <time datetime="2018-05-01T02:52:35.000Z" itemprop="datePublished">2018-05-01</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本章是在学习内存模型后，对<em>Volatile</em>关键字 有了更加全面得理解，对知识点进行一个分析总结。</p>
+<h2 id="volatile的特性"><a href="#volatile的特性" class="headerlink" title="volatile的特性"></a>volatile的特性</h2><p>volatile在单个操作上和synchronized一样</p>
+<ul>
+<li>可见性：volatile字段的写操作保证对所有线程可见</li>
+<li>原子性：volatile字段的单个读写操作是原子性的（比如在32位机上，读取64位的long、double类型），但是volatile++就不具有原子性</li>
+</ul>
+<h2 id="volatile的happens-before"><a href="#volatile的happens-before" class="headerlink" title="volatile的happens-before"></a>volatile的happens-before</h2><p>本节采用happens-before关系阐述volatile的作用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>; <span class="comment">//①</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ②</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ③</span></span><br><span class="line">        result = a; <span class="comment">// ④</span></span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>假设线程A执行init(), 线程B执行doTask()；这个过程里，happens-before关系共分为三类：</p>
+<ol>
+<li>① happens-before ②</li>
+<li>③ happens-before ④</li>
+<li>② happens-before ③</li>
+</ol>
+<p>这个过程的happens-before关系图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_happens-before.png" alt=""></p>
+<p>分别遵守程序次序规则、volatile变量规则和传递规则：</p>
+<ul>
+<li>程序次序规则：一个线程内，按照代码顺序，书写在前面的操作先行发生于书写在后面的操作</li>
+<li>volatile变量规则：对一个变量的写操作先行发生于后面对这个变量的读操作</li>
+<li>传递规则：如果操作A先行发生于操作B，而操作B又先行发生于操作C，则可以得出操作A先行发生于操作C</li>
+</ul>
+<h2 id="volatile的内存语义"><a href="#volatile的内存语义" class="headerlink" title="volatile的内存语义"></a>volatile的内存语义</h2><p><strong>JMM针对编译器制定</strong>的volatile的重排序规则<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png" alt=""></p>
+<ul>
+<li>第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被<strong>编译器重排序</strong>到volatile写之后。</li>
+<li>当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被<strong>编译器重排序</strong>到volatile读之前。</li>
+<li>当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。</li>
+</ul>
+<h3 id="volatile的写内存语义"><a href="#volatile的写内存语义" class="headerlink" title="volatile的写内存语义"></a>volatile的写内存语义</h3><p>当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_concept.png" alt=""></p>
+<p>线程A写入flag变量后，本地内存将<strong>更新的共享变量</strong>（更新了几个就刷新几个）刷新至主内存，此时A线程的本地内存和主内存的共享变量相同。</p>
+<h3 id="volatile的读内存语义"><a href="#volatile的读内存语义" class="headerlink" title="volatile的读内存语义"></a>volatile的读内存语义</h3><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_memory_concept.png" alt=""></p>
+<p>当B线程要读取flag变量时，本地内存B 中包含的共享变量已经被置为无效，B线程不得不去主内存读取共享变量。线程B的读取将导致本地内存B与主内存的共享变量的值变成一致。</p>
+<p>将两张图综合起来看，在读线程B读取一个volatile变量后，写线程A在写这个volatile变量之前所有可见的共享变量都将立即变得对读线程B可见。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_summary.png" alt=""></p>
+<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><ul>
+<li>当写线程写了一个volatile变量，实质是写线程向接下来要读取这个变量的线程发出了消息（对其共享变量所做的修改）</li>
+<li>读线程读对应的volatile变量，实质是收到写线程发来的消息（在volatile写之前的共享变量的修改）</li>
+<li>随后写线程写入volatile变量，读线程去读取volatile变量，这个过程实质是A线程通过主内存给B线程发送消息</li>
+</ul>
+<h2 id="volatile内存语义的实现"><a href="#volatile内存语义的实现" class="headerlink" title="volatile内存语义的实现"></a>volatile内存语义的实现</h2><p>volatile关键字实现原理主要还是通过内存屏障进行控制的。编译器在生成字节码时，会在指令序列里插入内存屏障来禁止特定的重排序。对于编译器来说，自行判断最小化插入屏障总数不太可能。为此，JMM采取保守策略：</p>
+<ul>
+<li>在每个volatile写操作的前面加入<em>StoreStore</em></li>
+<li>在每个volatile写操作的后面加入<em>StoreLoad</em></li>
+<li>在每个volatile读操作的后面加入<em>LoadLoad</em></li>
+<li>在每个volatile读操作的后面加入<em>LoadStore</em></li>
+</ul>
+<p>上面的插入策略十分保守，但它可以保证在任意处理器平台上（在X86里，写/写，读/读，读/写 是不会发生重排序的，而且只有StoreLoad一个内存屏障），任意的程序中都能实现正确的语义。</p>
+<h3 id="volatile写的内存语义实现"><a href="#volatile写的内存语义实现" class="headerlink" title="volatile写的内存语义实现"></a>volatile写的内存语义实现</h3><p>下面是保守策略下，volatile写插入内存屏障的指令序列示意图。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png" alt=""></p>
+<p>StoreStore保证在执行volatile写前，所有写操作的处理已经刷新至内存，保证对其他线程可见了。而StoreLoad的作用是避免后面还有其他的volatile读/写操作发生重排序。由于JMM无法准确判断StoreLoad所处的环境（比如结尾是return），所以有两种选择：</p>
+<ol>
+<li>在volatile读前加上StoreLoad</li>
+<li>在volatile写后加上StoreLoad</li>
+</ol>
+<p>但是因为StoreLoad相比其他内存屏障更加消耗性能，考虑更多场景下是少写多读，所以将StoreLoad加在volatile写后。</p>
+<p>讲到StoreLoad的性能问题，不得不提一下Unsafe里面的<em>putOrderedObject()</em>。 这个方法很有意思，乍一看命名是放一个有序的对象，但它是通过避免加上StoreLoad内存屏障来弥补volatile写的性能问题。这时可能会有朋友问，不加上volatile不会影响可见性吗？会影响可见性，但不会永远影响下去，最多就两三秒的延迟，就会将共享变量刷新至主内存。所以当延迟要求不高，性能要求高时，就可以采用这个方法（Unsafe不安全类，这个方法的实现在Atmoic***类里面）。</p>
+<h3 id="volatile读的内存语义实现"><a href="#volatile读的内存语义实现" class="headerlink" title="volatile读的内存语义实现"></a>volatile读的内存语义实现</h3><p>下面是保守策略下，volatile读插入内存屏障的指令序列示意图。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_semantic.png" alt=""></p>
+<p>LoadLoad保证先执行volatile读再执行后续的读操作（禁止volatile读和后续的读发生重排序），而后的LoadStore保证先执行volatile读再执行写操作（禁止volatile读和后续的写发生重排序）。两者联合起来就是无论如何volatile读必须和程序顺序保持一致。</p>
+<h3 id="volatile执行时的优化"><a href="#volatile执行时的优化" class="headerlink" title="volatile执行时的优化"></a>volatile执行时的优化</h3><p>上面的volatile读/写的内存屏障插入策略都十分保守，但是在实际过程中，只要不改变volatile写/读的内存语义，编译器可以根据实际情况省略不必要的屏障。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> v1 = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> v2 = <span class="number">2</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">readAndWrite</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = v1;</span><br><span class="line">    <span class="keyword">int</span> j = v2;</span><br><span class="line">    a = i + j;</span><br><span class="line">    v1 = i + <span class="number">1</span>;</span><br><span class="line">    v2 = j + <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>针对readAndWrite()方法，编译器在生成字节码时会做如下优化。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png" alt=""></p>
+<p>按顺序下来，第一个volatile读先于第二个volatile，第二个volatile先于所有后续的写，故第一个volatile读一定不会被重排序；StoreStore保证普通写先于第一个volatile写，StoreStore又保证第一个volatile写先于第二个volatile写，最后安全起见插入StoreLoad。</p>
+<p>上面的优化针对任意处理器平台，由于不同的处理器有不同“松紧度”的处理器内存模型，内存屏障的插入还可以根据具体的处理器内存模型继续优化。比如X86处理器，由于X86不会对读/读，读/写，写/写做重排序，所以面对X86处理器时，JMM会省略掉三种类型对应的内存屏障，保留StoreLoad内存屏障。</p>
+<h2 id="JSR-133为什么增强volatile的内存语义"><a href="#JSR-133为什么增强volatile的内存语义" class="headerlink" title="JSR-133为什么增强volatile的内存语义"></a>JSR-133为什么增强volatile的内存语义</h2><p>在之前的版本，虽然不允许<strong>volatile变量间</strong> 的重排序，但是允许<strong>volatile和普通变量</strong>间的重排序。为了提供一种比锁更轻量级的线程间通信机制，专家组决定增强volatile的内存语义，严格限制volatile变量与普通变量的重排序，确保volatile的写-读和锁的释放-获取具有相同的内存语义。</p>
+<p>由于volatile仅仅保证对单个volatile变量的读/写具有原子性，而锁的互斥执行的特性可以确保对整个临界区代码的执行具有原子性。在功能上，锁比volatile更强大；在可伸缩性和性能上，volatile更有优势。具体看《Java理论与实践：正确使用volatile变量》</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjhpvquxt000q3ovjzs3p0j8e" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" class="article-date">
+  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png" alt=""></p>
+<p>整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 <strong>重排序</strong> 和 <strong>写缓冲区</strong> 引发的，重排序又分为 <strong>处理器重排序</strong> 和 <strong>编译器重排序</strong>。面对 <strong>写缓冲区</strong>的问题，像Java这样的高级语言一般无能为力，所以从<strong>重排序</strong> 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。</p>
+<hr>
+<p>相信许多在<strong>多线程</strong>前线作战的伙伴们经常会遇到一种叫做<strong>内存可见性</strong>的大麻烦。这个麻烦可以简单粗暴的用<em>synchronized</em>解决，也可以很巧妙的用一些轻量级的同步原语解决。虽然能解决问题的都是好方案，但是在程序人生的旅途上，后者才是更为远见的选择。</p>
+<p>在面对<strong>内存可见性</strong>这个问题时，我们不得不先去学习一个叫做<strong>内存模型</strong>的东西。这个模型解释了 <strong>如何解决多线程间的通讯</strong> 和 <strong>如何实现多线程间的同步</strong> 两个问题。<br>传统上有两种模型，一种叫做<strong>内存共享模型</strong>，另外一种则时<strong>消息传递模型</strong>。而Java采用了<strong>内存共享模型</strong>，后文简称<strong>JMM</strong>。这个抽象概念主要描述了：</p>
+<pre><code>线程间的共享变量存储在主内存中，每个线程拥有自己的本地内存，每个本地内存上都有该线程读/写变量的副本。
+</code></pre><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png" alt="JMM概念图"></p>
+<p>然而了解这个模型还不够，我们还要知道在Java编译、运行阶段都会有一种优化手段——<strong>重排序</strong>。重排序分为以下三种类型：</p>
+<ul>
+<li>编译器优化的重排序。在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序</li>
+<li>指令集并行的重排序。现代处理器采用了指令级并行技术（Instruction-Level Parallelism）来将多条指令重叠执行，如果不存在数据以来，处理器可以改变语句对应机器指令的执行顺序。</li>
+<li>内存系统的重排序。由于处理器适用缓存和读/写缓冲区，这使得加载和存储操作看上去是乱序执行的。</li>
+</ul>
+<p>第1类属于<strong>编译器重排序</strong>，第2、3类型属于<strong>处理器重排序</strong>。而JMM作为语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保障。</p>
+<p>另外Java尽可能地满足处理器级别的重排序优化，又让程序员自己把握优化程度。正如我们前面所讲的，遇到<strong>内存可见性问题</strong>，可以简单的用<em>synchronized</em> 大范围的禁止重排序，也可以根据实际情况，选用<em>volatile、final等轻量级同步原语</em> 仅仅禁止关键部分的重排序。</p>
+<p>总而言之，发生<strong>内存可见性问题</strong>的原因不外乎两点：</p>
+<ol>
+<li>本地内存（在CPU那个层面理解为缓冲区）在作怪</li>
+<li>重排序</li>
+</ol>
+<p>第一点属于硬件架构问题，基本上是无法从语言层面进行解决。故通过<strong>解决重排序问题</strong>来解决<strong>内存可见性问题</strong>。</p>
+<h1 id="深入底层，了解本地内存"><a href="#深入底层，了解本地内存" class="headerlink" title="深入底层，了解本地内存"></a>深入底层，了解本地内存</h1><p>现代处理器都会配备一个写缓冲区，该缓冲区用来暂存写入的变量，保证指令流水线持续运行，避免CPU停下来等待向内存写入数据而产生的延迟；同时也能合并对同一地址的多次写。虽然写缓冲区好处多多，但是只对自己的CPU可见。这个特性在<strong>重排序</strong>的加持下，容易发生CPU对内存的读/写顺序 和实际内存发生的读/写顺序 不一致的情况。</p>
+<p>假设现在有这样一个情况，线程A和线程B并发执行：</p>
+<ul>
+<li>处理器A：<ul>
+<li>int a = 1;</li>
+<li>int a = b;</li>
+</ul>
+</li>
+<li>处理器B：<ul>
+<li>int b = 2;</li>
+<li>int b = a;</li>
+</ul>
+</li>
+</ul>
+<p>这样的程序偶尔会出现预料之外的结果，比如a和b均为0，或者a=1，b=1等等。具体原因如下图所示</p>
+<p>这里CPU0 和 CPU1 均往自己的缓冲区写入数据，然后从内存中读取共享变量，最后才把写缓冲区中的数据刷新至主内存。当以这种时许执行时，就会出现a = y = 0的情况。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow2.png" alt=""></p>
+<p>从内存理想执行角度看，下面的图例可能更符合直观感受：先写入缓冲区，缓冲区刷新到主内存，最后CPU从主内存中读取。对处理器来说，它认为执行顺序是①、②、③，但是实际操作情况却是①、③、②。此时CPU0的内存操作顺序被重排序了。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow.png" alt=""></p>
+<p>为了解决一些重要操作被重排序导致的问题，处理器提供了一种被称作<strong>内存屏障（Memory Fence）</strong> 的CPU指令，该指令可以处理重排序和可见性问题。Java编译器在生成指令序列时，会在适当位置中插入内存屏障来禁止特定类型的处理器重排序（所以那些同步原语本质都是<strong>内存屏障</strong>在其作用）。JVM把内存屏障分为4类，如下所示：</p>
+<table>
+<thead>
+<tr>
+<th>屏障类型</th>
+<th style="text-align:center">指令示例</th>
+<th style="text-align:center">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>LoadLoad</td>
+<td style="text-align:center">Load1;LoadLoad;Load2</td>
+<td style="text-align:center">在Load2及所有后续读取指令之前，Load1读取数据完毕</td>
+<td></td>
+</tr>
+<tr>
+<td>StoreStore</td>
+<td style="text-align:center">Store1;StoreStore;Store2</td>
+<td style="text-align:center">在Store2及所有后续写入指令执行前，Store1写入的数据对其他处理器可见(将修改的变量都刷新到主内存中，毕竟刷新不可能只刷新Store1这一个数据，而是Store1及前面所有的修改后的共享变量)</td>
+<td></td>
+</tr>
+<tr>
+<td>LoadStore</td>
+<td style="text-align:center">Load1;LoadStore;Store2</td>
+<td style="text-align:center">在Store2及所有后续写入指令刷新到主内存前，Load1读取数据完毕</td>
+<td></td>
+</tr>
+<tr>
+<td>StoreLoad</td>
+<td style="text-align:center">Store1;StoreLoad;Load2</td>
+<td style="text-align:center">在Load2及后续所有读取操作执行前，保证Store1的写入对所有处理器可见(将修改的变量都刷新到主内存中)</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>最后一个StoreLoad指令是万能指令（有些处理器不支持前三种指令），兼具前三种指令的功能，且开销最大。<br>内存屏障在禁止重排序、保证内存可见性方面作用极大，为后续JMM的规则打下了基础。</p>
+<h1 id="解决内存可见性问题"><a href="#解决内存可见性问题" class="headerlink" title="解决内存可见性问题"></a>解决内存可见性问题</h1><p>为了能让JVM在一定程度上(因为重排序就是优化)保持<strong>重排序</strong>，又能解决<strong>内存可见性问题</strong>。Java 在 JSR-133 里推出了Happens-Before规则，修改了<strong>volatile、final等同步原语</strong>。</p>
+<h2 id="程序顺序规则-as-if-serial"><a href="#程序顺序规则-as-if-serial" class="headerlink" title="程序顺序规则(as-if-serial)"></a>程序顺序规则(as-if-serial)</h2><p>上面我们都了解到了<strong>处理器重排序</strong> 对 CPU的影响，现在我们看看<strong>编译器重排序</strong>对单线程的影响<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">// ①</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">3</span>; <span class="comment">// ②</span></span><br><span class="line"><span class="keyword">int</span> c = a * b; <span class="comment">// ③</span></span><br></pre></td></tr></table></figure></p>
+<p>在单线程的环境下运行这段代码，会和直观感受一样，它的结果是3，但是它的执行顺序是否和想象中一样就不得而知了。这就引出了一个这么概念——if as serial，这个概念主要描述了 <strong>不管如何重排序，单线程程序的执行结果不能被改变</strong>，编译器、runtime和处理器都必须遵守这个as-if-serial语义(处理器本身是不会遵守的，但是有JMM的控制)。</p>
+<p>因为③依赖①、②的数据，所以为了保证结果一致，无论如何③都不会被排到①或②之前。</p>
+<p>as-if-serial语义使单线程程序员无需担心重排序会干扰他们，也无需担心内存可见性问题。这是JMM对程序员作的第一个保证：在单线程下，你不用管重排不重排，结果肯定给你保证一样。</p>
+<p>但是面对多线程的情况下，这个语义显得有点单薄，无法保证 多线程的重排序不会对程序有影响。为了能让多线程也无需担心重排序和内存可见性问题，我们需要<strong>同步</strong>，</p>
+<h2 id="顺序一致性模型"><a href="#顺序一致性模型" class="headerlink" title="顺序一致性模型"></a>顺序一致性模型</h2><p>在讲同步之前，需要了解下<strong>顺序一致性模型</strong>，这个模型是一个理论参考模型，它为程序提供了极强的内存可见性，该模型有以下两个特点：</p>
+<ol>
+<li>一个线程中的所有操作必须按照程序的顺序来执行</li>
+<li>（不管程序是否同步）所有线程都只能看到一个单一的操作执行顺序。在顺序一致内存模型中，每个操作都必须原子执行且立刻对所有线程可见</li>
+</ol>
+<p>在顺序一致性内存模型中，假设现有A、B两个线程，A线程先获取锁再执行A1、A2、A3，B线程同上。它的执行顺序图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInSynchronized.png" alt="SequenceModelInSynchronized"><br>当线程A获取锁时，按顺序依次执行A1到A3；在A释放锁，B获取时，按顺序依次执行B1到B3。</p>
+<p>假设现在不用锁这些同步工具，它的执行顺序如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png" alt="SequenceModelInNormal"><br>虽然整体执行顺序发生了改变，但是再每个线程依然能看到一个一致的执行顺序，之所以能保证它一致就是因为上述的两个特点：必须按程序顺序执行、每个操作立即对所有线程可见。<br>但是在JMM上却没有这个保证，首先JMM不是顺序一致性模型，而且未同步程序的执行顺序是无需的，而且所有线程看到的执行顺序也可能不一样。就比如A线程先写入了一个数值，缓存在本地内存，A线程以为写进去了，但是本地内存只对A线程可见。其他线程仍然是原来的数值，只有等本地内存将数据刷新到主内存，其他线程才可见。这种情况下，当前线程看到的执行顺序和其他线程顺序将不一致。</p>
+<h3 id="JMM里正确同步地顺序"><a href="#JMM里正确同步地顺序" class="headerlink" title="JMM里正确同步地顺序"></a>JMM里正确同步地顺序</h3><p>讲完了理想的顺序一致性模型，我们回归到现实，看看JMM里的同步程序执行顺序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">int</span> result;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>;</span><br><span class="line">    flag = <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123;</span><br><span class="line">        result = a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在这个代码里，假设A线程执行init()方法，B线程执行doTask()方法。根据JMM规范，只要正确同步的程序，结果都会和顺序一致性内存模型的结果一致。下面是该程序在两个内存模型的时序图。<br>对于JMM来说，在临界区内的代码可任意重排序（但不允许临界区内的代码溢出到临界区外，那样会破坏监视器语言），JMM会在进入临界区和退出临界区时做一些特别的处理，使程序在这两个时间点具有和顺序一致性相同的内存视图。虽然线程A在临界区内进行了重排序，但是在监视器互斥执行的特性下，线程B根本不知道过程，只能观测到结果。这种重排序既提高了效率，又没改变程序的执行结果。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png" alt=""></p>
+<p>从这里我们可以看到JMM在不改变（正确同步）程序执行结果的前提下，尽可能地为编译器和处理器地优化打开了方便之门。</p>
+<h3 id="JMM里没有同步地执行顺序"><a href="#JMM里没有同步地执行顺序" class="headerlink" title="JMM里没有同步地执行顺序"></a>JMM里没有同步地执行顺序</h3><p>在JMM里，对没有正确同步地程序只提供了最小安全性：线程执行时读取到的值，要么时默认值（0，null，false），JMM保证线程读取到的值不会无中生有。为了实现最小安全性，JVM在堆上分配对象时，首先会对内存清零，然后才会在上面分配对象（JVM内部会同步该操作）。因此，在已清零的内存空间中分配对象时，域的默认初始化已经完成了。</p>
+<p>在JMM里，未同步的程序不能保证执行结果和顺序一致性模型的结果一样。因为JVM要这么做的话需要大量禁止重排序，极其影响性能。未同步程序在JMM中的执行顺序整体上是无序的，其执行结果也是不可预测的，在两个模型中的执行特性有如下几个差异。</p>
+<ul>
+<li>顺序一致性模型保证单线程内的操作会按程序的顺序执行，而JMM不保证单线程的操作会按程序顺序执行</li>
+<li>顺序一致性模型保证所有线程只能看到一致的操作顺序，而JMM不保证所有线程能看到一致的操作执行顺序</li>
+<li>JMM不保证对64位的long、double型变量的写操作具有原子性，而顺序一致性保证所有对内存的读写操作都是原子性</li>
+</ul>
+<p>第三点与处理器总线工作机制密切相关。这里放出书上的原话</p>
+<p>JVM在这点上也只是鼓励去做但不强求，因为在一些32位处理器上，要64位的写操作保持原子性是会需要大开销的。所以当JVM在这种处理器上运行时，会把64位long/double型变量拆做两个32位的写操作执行。此时，这种64位变量的写操作将不具有原子性。当单个内存操作不存在原子性时，可能会产生意想不到的后果。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Target</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">long</span> a;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Target target = <span class="keyword">new</span> Target();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = <span class="number">0l</span>).start();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = Long.MAX_VALUE).start();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">        String binary = toBinary(target.a);</span><br><span class="line">        <span class="comment">// 出现不是0，又不是MAX_VALUE的二进制字串是就输出</span></span><br><span class="line">        <span class="keyword">if</span>(!binary.equals(<span class="string">"00000000000000000000000000000000"</span>) &amp;&amp; </span><br><span class="line">        !binary.equals(<span class="string">"01111111111111111111111111111111"</span>))&#123;</span><br><span class="line">            System.out.println(<span class="string">"long不是原子性操作.."</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">toBinary</span><span class="params">(<span class="keyword">long</span> l)</span> </span>&#123;</span><br><span class="line">    StringBuilder sb = <span class="keyword">new</span> StringBuilder(Long.toBinaryString(l));</span><br><span class="line">    <span class="keyword">while</span> (sb.length() &lt; <span class="number">64</span>) &#123;</span><br><span class="line">        sb.insert(<span class="number">0</span>, <span class="string">"0"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>代码如上所示，假设处理器A写一个了long型变量，同时B处理器要读取这个long型变量。处理器A中的64位操作被拆分为两个32位的写操作，且这两个32位的写操作被分配到不同的事务中执行。同时处理器B 64位的读操作被分配到单个读事务中处理，执行顺序如下图所示时就会发生处理器A写到一半的数据被处理器B看见。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjhpvquxj000c3ovjhrfxuxgq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
+  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在学习volatile和final时，注意到写时的区别：</p>
+<ol>
+<li>volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写</li>
+<li>final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作</li>
+</ol>
+<p>想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。</p>
+<p>而在<strong>对final域和普通域初始化的构造函数</strong>里，即使final写前面有StoreStore，前面的普通写/读仍然会发生重排序？？</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjhpvquyq00223ovjrlowszgq" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之synchronized的底层实现原理" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" class="article-date">
+  <time datetime="2018-04-27T14:55:43.000Z" itemprop="datePublished">2018-04-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/">《Java并发编程的艺术》之synchronized的底层实现原理</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在学习锁优化时，<strong>对象头(Mark Word)</strong> 是必不可缺的一环，因为<em>synchronized</em> 用的锁是存在<strong>对象头</strong>里的。32位的虚拟机上对象头占64位（8字节），64位的虚拟机上对象头占128位(16字节）<a href="https://www.zhihu.com/question/63340239" target="_blank" rel="noopener">^objectHead</a>；而不同的类型，对象头的布局不太一样：</p>
+<ul>
+<li>数组类型：Mark Word、Class Metadata Address、Array Length</li>
+<li>普通类型：Mark Word、Class Metadata Address</li>
+</ul>
+<p><em>Mark Word</em> 表示对象的<em>HashCode</em> 或 <em>锁信息</em><br><em>Class Metadata Address</em> 表示对象的数据类型在方法区对应的地址<br><em>Array Length</em> 表示数组的长度（只在对象是数组的情况下才会存在）</p>
+<p>对象头的默认表示应该如下所示</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th style="text-align:center">25bit</th>
+<th style="text-align:center">4bit</th>
+<th style="text-align:center">1bit是否是偏向锁</th>
+<th style="text-align:center">2bit 锁标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>无状态锁</td>
+<td style="text-align:center">对象的hashcode</td>
+<td style="text-align:center">对象分代年龄</td>
+<td style="text-align:center">0</td>
+<td style="text-align:center">01</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>具体的对象内存布局看<a href="https://codeleven.cn/2018/05/27/%E3%80%8A%E6%B7%B1%E5%85%A5Java%E8%99%9A%E6%8B%9F%E6%9C%BA%E3%80%8B%E4%B9%8B%E5%AF%B9%E8%B1%A1%E5%86%85%E5%AD%98%E5%B8%83%E5%B1%80%E5%8F%8A%E4%BD%BF%E7%94%A8/" target="_blank" rel="noopener">这篇文章</a></p>
+<p>而根据JVM的设置<sup><a href="关于偏向锁的相关JVM设置:-XXBiasedLockingStartupDelay=0表示启动程序几秒钟后激活偏向锁-XXUseBiasedLocking=false表示关闭偏向锁（确定会发生竞争时可以这么设置）">^1</a></sup>，具体分配时又会有不同的情况，如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg" alt="偏向锁到重量锁的过程"></p>
+<p>当关闭了偏向锁的设置，那么就会走左边的流程；反之则走右边的流程。</p>
+<h2 id="偏向锁"><a href="#偏向锁" class="headerlink" title="偏向锁"></a>偏向锁</h2><p>由于大多数情况下，锁大多都不处于多线程竞争状态，而且总是由同一个线程获取，所以JVM在1.6之后加入了<strong>偏向锁</strong> 和 <strong>轻量锁</strong> ，如今总共由4种锁状态：<strong>无状态锁</strong>、<strong>偏向锁</strong>、<strong>轻量锁</strong>、<strong>重量锁</strong>。随着线程竞争的提升，锁会逐渐升级（无法降级）。<br>偏向锁在没有竞争的情况下可以提高同步的性能，这方面主要体现在偏向锁只需要进行一次CAS而轻量锁需要两次。它是一个需要权衡利弊的选择，它不是在任何情况下都对程序有利的。如果竞争很多，那么撤销偏向锁的过程就会成为性能瓶颈。</p>
+<p>当偏向锁可用时，初始化的对象头分配如下所示</p>
+<table>
+<thead>
+<tr>
+<th>锁状态</th>
+<th style="text-align:center">23bit</th>
+<th style="text-align:center">2bit</th>
+<th style="text-align:center">4bit</th>
+<th style="text-align:center">1bit 是否是偏向锁</th>
+<th style="text-align:center">2bit 锁标志位</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>偏向锁</td>
+<td style="text-align:center">线程ID</td>
+<td style="text-align:center">epoch</td>
+<td style="text-align:center">对象分代年龄</td>
+<td style="text-align:center">1</td>
+<td style="text-align:center">01</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h3 id="加锁过程"><a href="#加锁过程" class="headerlink" title="加锁过程"></a>加锁过程</h3><ol>
+<li>当对象头的<em>isBiased</em> 为1时且锁状态为<em>01</em>时，偏向锁可用，继续后面的流程</li>
+<li>判断目标对象头是否包含本线程ID，如果没有，则直接CAS往对象头里写入本线程ID。到这一步加锁就结束了</li>
+</ol>
+<h3 id="锁撤销"><a href="#锁撤销" class="headerlink" title="锁撤销"></a>锁撤销</h3><p>由于偏向锁使用了一种<strong>直到竞争发生时才会释放</strong>的机制，所以当其他线程竞争偏向锁时，持有偏向锁的线程才会去释放锁。</p>
+<ol>
+<li>等待<strong>原持有偏向锁的线程(后文简称原线程)</strong>运行至<strong>全局安全点(safe point)</strong></li>
+<li>暂停<strong>原线程</strong></li>
+<li>检查<strong>原线程</strong> 的线程状态，如果退出了同步代码块，则重偏向；反之升级为轻量锁</li>
+<li>恢复<strong>原线程</strong> </li>
+</ol>
+<h2 id="轻量锁"><a href="#轻量锁" class="headerlink" title="轻量锁"></a>轻量锁</h2><h3 id="加锁过程-1"><a href="#加锁过程-1" class="headerlink" title="加锁过程"></a>加锁过程</h3><p>注意：轻量锁会一直保持，唤醒总是发生在轻量锁解锁的时候，因为加锁的时候已经成功CAS操作；而CAS失败的线程，会立即锁膨胀，并阻塞等待唤醒。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LightLockFlowChart.png" alt="引用Java并发编程艺术的图片"></p>
+<ol>
+<li>第一次进入同步块，开辟一个叫做<em>Lock Record</em> 的空间用于存储锁记录<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/InitLockRecord.png" alt=""></li>
+<li>将对象头中的Mark Word 复制到 当前线程栈中</li>
+<li>尝试用CAS将<em>Mark Word</em> <strong>替换</strong>为 <em>指向Lock Record的指针</em> <img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CopyMW2LockRecord.png" alt=""></li>
+<li>第三步操作成功，则将<em>Mark Word</em> 设置为<em>00</em>状态，标识<strong>轻量锁</strong></li>
+<li>然后执行同步体</li>
+<li>第三部操作失败，进入自旋获取锁</li>
+<li>自旋获取锁的失败次数到达阈值，膨胀锁，修改为重量级锁（状态改为<strong>10</strong>）</li>
+<li>线程阻塞</li>
+</ol>
+<h3 id="锁释放过程"><a href="#锁释放过程" class="headerlink" title="锁释放过程"></a>锁释放过程</h3><ol>
+<li>尝试CAS将<strong>Lock Record的Owner</strong> 复制回 <strong>Mark Word</strong></li>
+<li>如果CAS操作成功，则表示没有竞争发生；否则看步骤3</li>
+<li>释放锁并唤醒等待的线程</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本章是对<em>synchronized</em> 在JVM里的各种等级及升级的流程进行了讲解，其中主要是通过控制<strong>对象头</strong>的一些状态来控制锁的等级。偏向锁通过标记<em>Thread ID</em> 来表示，当前对象已经被对应线程占用；轻量锁则替换<em>Mark Word</em> 为 <em>Lock Record 地址</em> 来表示当前对象被对应线程占用。无论是哪种锁，在不同的场景下有不同的需求，可以参考以下表格做出选择</p>
+<p>偏向锁：</p>
+<ul>
+<li>优点：加锁和解锁不需要额外小号，和执行非同步方法相比，仅存在纳秒级的差距</li>
+<li>缺点：如果线程间存在竞争，会带来额外开销（偏向锁的撤销）</li>
+<li>适用场景： 适用于只有一个线程访问同步块的场景</li>
+</ul>
+<p>轻量锁：</p>
+<ul>
+<li>优点： 竞争的线程不会造成阻塞，提高了程序的响应速度</li>
+<li>缺点： 如果始终得不到锁，使用自旋会消耗CPU</li>
+<li>适用场景： 追求相应实践，同步块执行速度非常快</li>
+</ul>
+<p>重量锁：</p>
+<ul>
+<li>优点： 线程竞争不使用自选，不会消耗CPU</li>
+<li>缺点： 线程阻塞，响应时间缓慢</li>
+<li>适用场景： 追求吞吐量，同步块执行速度较慢</li>
+</ul>
+<p>这个是网上找到的关于锁撤销、膨胀等操作的总流程<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/27/《Java并发编程的艺术》之synchronized的底层实现原理/" data-id="cjhpvquxq000l3ovjfogmmq9i" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-(未埋)ForkJoin并不是银弹" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/26/(未埋)ForkJoin并不是银弹/" class="article-date">
+  <time datetime="2018-04-26T07:11:46.000Z" itemprop="datePublished">2018-04-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/26/(未埋)ForkJoin并不是银弹/">(未埋)ForkJoin并不是银弹</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这是一段难受的排Bug的经历，ForkJoin框架的粗浅理解让我在单核服务器下发生了<strong>栈溢出</strong>，因为”ForkJoinPool.invokeAll()”的底层原理不仅会调用空闲的线程，也会调用当前的线程。如果处理不好，在单核服务器下就会发生死循环，最终产生栈溢出。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread <span class="string">"main"</span> java.util.concurrent.ExecutionException: java.lang.St</span><br><span class="line">ackOverflowError</span><br><span class="line">        at java.util.concurrent.FutureTask.report(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.get(Unknown Source)</span><br><span class="line">        at cn.codeleven.App.main(App.java:<span class="number">20</span>)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Sou</span><br><span class="line">rce)</span><br><span class="line">        at java.lang.reflect.Constructor.newInstance(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.getThrowableException(Unknown Sourc</span><br><span class="line">e)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.reportException(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.join(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.XiCiHandler.handleDocument2IPEntity(XiCiHandler.</span><br><span class="line">java:<span class="number">40</span>)</span><br><span class="line">        at cn.codeleven.Crawler.start(Crawler.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.Crawler.run(Crawler.java:<span class="number">20</span>)</span><br><span class="line">        at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.run(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Unknown Source)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>$<span class="number">1</span>.&lt;init&gt;(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>.opWrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)</span><br><span class="line">        at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(Unknown Source</span><br><span class="line">)</span><br><span class="line">        at java.util.stream.AbstractPipeline.evaluate(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline.collect(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/(未埋)ForkJoin并不是银弹/" data-id="cjhpvqux700043ovjhih4lmsn" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-记一次List.subList的错误" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/" class="article-date">
+  <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">2018-04-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>以后有空完整了解下ArrayList和相关集合<br>这次先解决一个这样的问题，看下面代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; foo = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i)&#123;</span><br><span class="line">    foo.add(i);</span><br><span class="line">&#125;</span><br><span class="line">List&lt;Integer&gt; foo1 = foo.subList(<span class="number">0</span>, <span class="number">3</span>);</span><br><span class="line">List&lt;Integer&gt; foo2 = foo.subList(<span class="number">3</span>, <span class="number">5</span>);</span><br><span class="line">foo2.add(<span class="number">1</span>);</span><br><span class="line">System.out.println(foo1.size());</span><br></pre></td></tr></table></figure>
+<p>读者感觉是否挺正常的，没有<strong>迭代</strong>，没有在<strong>多线程</strong>下，单纯的给<em>foo1</em>列表添加一个值好像没什么问题。但是在运行后会抛出“ConcurrentModificationException”，这就很气了。博主因为这个问题思来想去，从<strong>迭代</strong>到<strong>多线程</strong>，每个角度都思考过，后来进入源码一看<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SubList是ArrayList的内部类</span></span><br><span class="line"><span class="comment">/* parent = ArrayList.this</span></span><br><span class="line"><span class="comment"> * offset = 0</span></span><br><span class="line"><span class="comment"> * 剩下两个就不用解释了</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">SubList(AbstractList&lt;E&gt; parent,</span><br><span class="line">        <span class="keyword">int</span> offset, <span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex) &#123;</span><br><span class="line">    <span class="keyword">this</span>.parent = parent;</span><br><span class="line">    <span class="keyword">this</span>.parentOffset = fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.offset = offset + fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.size = toIndex - fromIndex;</span><br><span class="line">    <span class="comment">// 注意，这里从ArrayList.this获取了modCount</span></span><br><span class="line">    <span class="keyword">this</span>.modCount = ArrayList.<span class="keyword">this</span>.modCount;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在进入add等修改方法后，可以看到最终递增modCount的方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureExplicitCapacity</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 可以看到，这里递增的只是ArrayList.this的modCount</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// overflow-conscious code</span></span><br><span class="line">    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)</span><br><span class="line">        grow(minCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所以通过<em>size()</em>，<em>add()</em>等方法对<em>SubList内部类</em>的修改会引起<em>外部类的modCount变化</em>，但是<em>其他内部类的modCount</em> (作修改的内部类的modCount会改变)不改变就会产生不一致，所以抛出这个异常</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjhpvquyb001o3ovjxd0ntgsm" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-了解AQS之Condition" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/" class="article-date">
+  <time datetime="2018-04-06T01:54:53.000Z" itemprop="datePublished">2018-04-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/06/了解AQS之Condition/">了解AQS之Condition</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在实现生产队列和消费队列时，第一个想到的大多数都是<em>Object.wait()</em> 和 <em>Object.notify()</em> ，而今天要介绍一个<em>ReentrantLock</em> 自带的一个工具<em>Condition</em>。它相比<em>Object</em> 在唤醒方面多了一些可控性，阻塞方面多了一个限时功能。两者的等待唤醒机制几乎一致，宏观流程图如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SimpleConditionObjectWaitFlow.png" alt="宏观的Condition和Object的等待唤醒机制"></p>
+<ol>
+<li>在当前线程A获取到锁</li>
+<li>调用对象的等待方法（AQS是Condition.await(),Object是Object.wait()），并进入阻塞</li>
+<li>其他线程B获取锁（是不是发现了问题，为什么B线程可以获取锁？）</li>
+<li>B线程唤醒阻塞的A线程（AQS是Condition.signal()，Object是Object.notify()）；B线程释放锁（如果A线程解除阻塞会做什么？）</li>
+<li>A线程尝试获取锁（为什么要尝试获取锁？）</li>
+<li>A线程执行下文</li>
+<li>A线程释放锁</li>
+</ol>
+<p>由于Object的实现机制涉及到<em>native方法</em>，所以这里趁机讲解一波AQS的实现过程，我猜测两者的实现原理不会相差太大。这里根据宏观流程图的①、②、③等序号分别进行解释</p>
+<h2 id="流程详解"><a href="#流程详解" class="headerlink" title="流程详解"></a>流程详解</h2><ol>
+<li>当<em>Condition</em>对象调用了<em>await()</em> 方法时，<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/whenWait%28%291.png" alt="*await()*方法的执行细节"></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</span><br><span class="line">    <span class="comment">// 将当前线程封装成结点，加入Condition队列尾部，类似enq()方法，但是在锁内进行await()，不需要CAS</span></span><br><span class="line">    Node node = addConditionWaiter();</span><br><span class="line">    <span class="comment">// 释放当前线程持有的所有锁，在这个操作之后很有可能出现竞态条件</span></span><br><span class="line">    <span class="keyword">int</span> savedState = fullyRelease(node);</span><br><span class="line">    <span class="keyword">int</span> interruptMode = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 结点在同步队列里时就返回true</span></span><br><span class="line">    <span class="comment">// 结点在CONDITION队列里时就返回false</span></span><br><span class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node)) &#123;</span><br><span class="line">        <span class="comment">// 当唤醒线程调用unlock()时就会解除该线程的等待</span></span><br><span class="line">        LockSupport.park(<span class="keyword">this</span>);</span><br><span class="line">        <span class="comment">/* 第一种情况，该线程被中断，就会将interruptMode设置为THROW_IE</span></span><br><span class="line"><span class="comment">         * 第二种情况，该线程被中断且在检查过程中状态改变（比如中断时，被唤醒），就会将mode设置为REINTERRUPT</span></span><br><span class="line"><span class="comment">         * 第三种情况，该线程被正常signal(notify)，此时结点状态值为0</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> ((interruptMode = checkInterruptWhileWaiting(node)) != <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 加入获取锁的 Sync队列中，获取成功时判断一下mode类型</span></span><br><span class="line">    <span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</span><br><span class="line">        interruptMode = REINTERRUPT;</span><br><span class="line">    <span class="comment">// 如果当前结点有后续结点，那么就清理一下链表</span></span><br><span class="line">    <span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></span><br><span class="line">        unlinkCancelledWaiters();    </span><br><span class="line">    <span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</span><br><span class="line">        <span class="comment">// 这里判断事抛出异常还是简单的中断</span></span><br><span class="line">        reportInterruptAfterWait(interruptMode);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在看到<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">final boolean isOnSyncQueue(Node node) &#123;</span><br><span class="line">    // node是CONDITION状态 或者 是CONDITION队列里的第一个</span><br><span class="line">    if (node.waitStatus == Node.CONDITION || node.prev == null)</span><br><span class="line">        return false;</span><br><span class="line">    // 该状态一般发生在两个以上Condition处于wait且被唤醒一个</span><br><span class="line">    if (node.next != null) </span><br><span class="line">        return true;</span><br><span class="line">    /*</span><br><span class="line">     * node.prev can be non-null, but not yet on queue because</span><br><span class="line">     * the CAS to place it on queue can fail. So we have to</span><br><span class="line">     * traverse from tail to make sure it actually made it.  It</span><br><span class="line">     * will always be near the tail in calls to this method, and</span><br><span class="line">     * unless the CAS failed (which is unlikely), it will be</span><br><span class="line">     * there, so we hardly ever traverse much.</span><br><span class="line">     */</span><br><span class="line">     // 当前结点是尾结点返回true；反之返回false</span><br><span class="line">    return findNodeFromTail(node);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li><p>当其他线程唤醒等待线程，因为这部分比较简单就省略了前面的内容，讲一下重要的地方。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">transferForSignal</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 更改node结点的状态；如果更改失败就是已经取消了</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (!compareAndSetWaitStatus(node, Node.CONDITION, <span class="number">0</span>))</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 将当前结点接入Sync队列，让这个结点加入等待；如果结点处于取消状态或者CAS</span></span><br><span class="line"><span class="comment">     * 设置状态失败，都会重新唤醒结点所在的线程，重新来过（在这一步会有一些不影</span></span><br><span class="line"><span class="comment">     * 响整体的小错误）</span></span><br><span class="line"><span class="comment">     */</span> </span><br><span class="line">    Node p = enq(node);</span><br><span class="line">    <span class="keyword">int</span> ws = p.waitStatus;</span><br><span class="line">    <span class="comment">// 如果这边修改状态失败了，那么就直接唤醒线程；否则交给release()方法来唤醒</span></span><br><span class="line">    <span class="keyword">if</span> (ws &gt; <span class="number">0</span> || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))</span><br><span class="line">        LockSupport.unpark(node.thread);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>阻塞线程被唤醒后，检查结点状态，然后设置interruptMode，最后进入争夺锁的过程里</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">checkInterruptWhileWaiting</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">     <span class="comment">// 判断是否有中断</span></span><br><span class="line">     <span class="keyword">return</span> Thread.interrupted() ?</span><br><span class="line">         (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) :</span><br><span class="line">         <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">transferAfterCancelledWait</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (compareAndSetWaitStatus(node, Node.CONDITION, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="comment">// 加入Sync队列，这一步做了signal()做的事</span></span><br><span class="line">        enq(node);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 该线程先被signal()后又被中断，我们就等该signal()流程结束。</span></span><br><span class="line"><span class="comment">     * 因为transfer过程不会太长，就选择自选</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node))</span><br><span class="line">        Thread.yield();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里是await()的后半部分</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 加入锁的获取，因为后半部分还有lock.unlock()，所以必须要重新获取锁</span></span><br><span class="line"><span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</span><br><span class="line">    interruptMode = REINTERRUPT;</span><br><span class="line"><span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></span><br><span class="line">    unlinkCancelledWaiters();</span><br><span class="line"><span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</span><br><span class="line">    <span class="comment">// 如果该线程是被中断的，那么就重新抛出异常</span></span><br><span class="line">    <span class="comment">// 如果该线程是被唤醒且中断的，那么就重新设置中断标志，交给程序员自己处理</span></span><br><span class="line">    reportInterruptAfterWait(interruptMode);</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>AQS的锁机制主要依靠双向的链表，而Condition的等待唤醒机制只需要普通链表即可实现。<br>这里对整体流程又进行了个总结。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/summary4AQS_Condition.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjhpvquy5001d3ovj4czy9iie" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-了解AQS之ExclusiveLock" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/" class="article-date">
+  <time datetime="2018-04-05T11:57:27.000Z" itemprop="datePublished">2018-04-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/">了解AQS之ExclusiveLock</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="1-1-AQS简介"><a href="#1-1-AQS简介" class="headerlink" title="1.1 AQS简介"></a>1.1 AQS简介</h2><p>相比重新造个轮子来管理内部线程状态，AQS提供了一个稳定的、多面（排斥锁，Condition及共享锁）的线程状态管理框架。AQS是一个由FIFO队列构成的同步框架，主要用于构建自定义的同步器，比如<em>ReentrantLock</em>等常见的同步器。它的整体方法流程如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/exclusiveLockIntroduction.png" alt="排斥锁方法流程图"></p>
+<h2 id="1-2-AQS要点"><a href="#1-2-AQS要点" class="headerlink" title="1.2 AQS要点"></a>1.2 AQS要点</h2><p>AQS的结构和<strong>CLH(Craig, Landin, anHagersten)自旋锁队列</strong> 很像，但AQS是阻塞的队列而CLH是自旋的队列。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">Node</span></span>&#123;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 等待状态，用来判断当前的线程是否需要阻塞</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">volatile</span> <span class="keyword">int</span> waitStatus;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 前一个结点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">volatile</span> Node prev;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 后一个结点，当该结点释放了锁后，通知后一个结点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">volatile</span> Node next;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 当前结点所代表的线程</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">volatile</span> Thread thread;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 后一个节点，用于condition的情况下</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    Node nextWaiter;</span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 获取前一个结点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    predecessor():<span class="keyword">boolean</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="1-3-排斥锁"><a href="#1-3-排斥锁" class="headerlink" title="1.3 排斥锁"></a>1.3 排斥锁</h2><p>为了方便后续讲解，这边给出场景：</p>
+<p>现在有A、B、C、D四个线程同时抢占同一个锁实例。</p>
+<p>为了方便讲解, 假设A线程会先抢到锁，我们对A线程获取锁的过程进行解析;B、C、D线程作为结点依次加入等待队列（队列里顺序按B、C、D来，方便点）</p>
+<h3 id="1-3-1-上锁"><a href="#1-3-1-上锁" class="headerlink" title="1.3.1 上锁"></a>1.3.1 上锁</h3><ol>
+<li><p>当调用ReentrantLock.lock() 时，首先会调用AQS的acquire() 方法并传入数值1。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">acquire</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// tryAcquire()是留给子类实现的，先让当前线程尝试获取锁，如果获取锁失败就会将当前线程封装到等待队列里</span></span><br><span class="line">    <span class="comment">// 调用子类的tryAcquire()</span></span><br><span class="line">    <span class="keyword">if</span> (!tryAcquire(arg) &amp;&amp;</span><br><span class="line">        acquireQueued(addWaiter(Node.EXCLUSIVE), arg))</span><br><span class="line">        selfInterrupt();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><em>ReentrantLock.tryAcquire()</em> 会调用其内部的<em>Sync.nonfairTryAcquire()</em>，并对加锁的个数进行计算。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/nonfairTryAcquire%28%29.png" alt="非公平锁下的tryAcquire()方法流程图"></p>
+</li>
+</ol>
+<ul>
+<li>① 传入的<em>acquires</em> 参数是想请求的锁个数，这个参数的值是由子类决定的，在<em>ReentrantLock</em> 里面这个值均为1</li>
+<li>② 在<em>ReentrantLock</em> 里面（不同的实现<em>state</em> 意义不同），<strong><em>state</em>是否为0代表锁是否被持有</strong></li>
+<li>③ 当<em>state == 0</em> 时，调用<em>compareAndSetState()</em> 尝试设置<em>state</em> 为1。成功则设置当前线程为锁拥有者，并返回true；否则返回false</li>
+<li>④ 当<em>state != 0</em> 时，判断是否是当前线程持有锁</li>
+<li>⑤ 当前线程已经持有该锁了，那么重入该锁，<em>state</em> 值递增1，最多重入Integer.MAX_VALUE次。注意，当<em>state &gt; 0 &amp;&amp; state != 1</em> 的情况下，释放一次锁是无法完全释放的，只有释放<em>state</em> 次锁，让<em>state</em> 为0，才能完全释放锁</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">nonfairTryAcquire</span><span class="params">(<span class="keyword">int</span> acquires)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> Thread current = Thread.currentThread();</span><br><span class="line">    <span class="keyword">int</span> c = getState();</span><br><span class="line">    <span class="comment">// 该锁尚未被持有</span></span><br><span class="line">    <span class="keyword">if</span> (c == <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/* 非公平锁：</span></span><br><span class="line"><span class="comment">         *    将state设置为acquires的值，谁能抢到就是谁的</span></span><br><span class="line"><span class="comment">         *    想不通的这样想：头结点唤醒了后继结点</span></span><br><span class="line"><span class="comment">         *    此时另外一个节点插了进来，发生竞争，可能新插进来的结点获取到锁</span></span><br><span class="line"><span class="comment">         *    也可能是后继结点获取到锁</span></span><br><span class="line"><span class="comment">         * 公平锁：</span></span><br><span class="line"><span class="comment">         *    将锁让给等待时间最长的结点</span></span><br><span class="line"><span class="comment">         *    一般来说是让给头结点的后继结点（因为FIFO）</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (compareAndSetState(<span class="number">0</span>, acquires)) &#123;</span><br><span class="line">            setExclusiveOwnerThread(current);</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (current == getExclusiveOwnerThread()) &#123;</span><br><span class="line">        <span class="keyword">int</span> nextc = c + acquires;</span><br><span class="line">        <span class="keyword">if</span> (nextc &lt; <span class="number">0</span>) <span class="comment">// overflow</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> Error(<span class="string">"Maximum lock count exceeded"</span>);</span><br><span class="line">        setState(nextc);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>到这一步，A线程顺利拿到锁去执行它的任务了，而B、C、D三线程就会因为<em>tryAcquire()</em> 返回false而执行后续的内容：<em>addWaiter()</em></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Node <span class="title">addWaiter</span><span class="params">(Node mode)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 创建结点，mode用来控制是共享锁、还是排斥锁</span></span><br><span class="line">    Node node = <span class="keyword">new</span> Node(Thread.currentThread(), mode);</span><br><span class="line">    Node pred = tail;</span><br><span class="line">    <span class="comment">// 是否存在尾结点</span></span><br><span class="line">    <span class="keyword">if</span> (pred != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 新结点放在尾结点后端</span></span><br><span class="line">        node.prev = pred;</span><br><span class="line">        <span class="comment">// 重新设置尾结点（原子操作）</span></span><br><span class="line">        <span class="keyword">if</span> (compareAndSetTail(pred, node)) &#123;</span><br><span class="line">            <span class="comment">/* 尾结点的next域指向新结点</span></span><br><span class="line"><span class="comment">             * 这里会发生竟竞态条件？</span></span><br><span class="line"><span class="comment">             * 竞态条件典型的一个例子就是“条件判断失效”</span></span><br><span class="line"><span class="comment">             * 因为CAS的原子性，条件不会失效，保证一次只有一个线程执行成功</span></span><br><span class="line"><span class="comment">             * 注意CAS无法保证ABA问题</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            pred.next = node;</span><br><span class="line">            <span class="keyword">return</span> node;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 第一次发生竞争（或者设置尾结点竞争失败）进入enq()</span></span><br><span class="line">    enq(node);</span><br><span class="line">    <span class="keyword">return</span> node;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>因为B、C、D线程均会进入<strong>未初始化</strong>的等待队列，所以<strong>至少有一个结点</strong>会进入<em>enq()</em> 方法。<em>enq()</em> 方法很简单，就是创建一个空结点作为头结点来初始化等待队列（有人可能会问那A线程呢？不用封装成结点吗？别急，往下看），其余<strong>CAS 竞争失败的结点插入尾结点后</strong>。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Node <span class="title">enq</span><span class="params">(<span class="keyword">final</span> Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        Node t = tail;</span><br><span class="line">        <span class="keyword">if</span> (t == <span class="keyword">null</span>) &#123; </span><br><span class="line">            <span class="comment">// Must initialize</span></span><br><span class="line">            <span class="comment">/* 为什么要在这里初始化，而不是一开始就初始化队列？</span></span><br><span class="line"><span class="comment">             * 因为如果没有发生竞争，就永远不会产生等待队列</span></span><br><span class="line"><span class="comment">             * 所以将初始化放到产生竞争的时候</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            <span class="keyword">if</span> (compareAndSetHead(<span class="keyword">new</span> Node()))</span><br><span class="line">                tail = head;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 要入队的结点插入尾结点</span></span><br><span class="line">            node.prev = t;</span><br><span class="line">            <span class="keyword">if</span> (compareAndSetTail(t, node)) &#123;</span><br><span class="line">                t.next = node;</span><br><span class="line">                <span class="keyword">return</span> t;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在addWaiter结束后：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterEnq.png" alt="addwaiter结束"></p>
+<ol start="5">
+<li>在<em>addWaiter()</em> 方法结束后，准备通过<em>acquireQueued()</em> 开始尝试获取锁。B结点获取新建的空结点（即上文新建的头结点），然后B线程<em>tryAcquire()</em> ，众所周知，A线程正持有锁，所以B线程<em>tryAcquire()</em> 失败，然后进入<em>shouldParkAfterFailedAcquire()</em> </li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">acquireQueued</span><span class="params">(<span class="keyword">final</span> Node node, <span class="keyword">int</span> arg)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">boolean</span> failed = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">boolean</span> interrupted = <span class="keyword">false</span>;</span><br><span class="line">        <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">            <span class="comment">// 获取当前结点的前驱结点</span></span><br><span class="line">            <span class="keyword">final</span> Node p = node.predecessor();</span><br><span class="line">            <span class="comment">// 判断p是否是头结点，如果p是头结点，尝试获取</span></span><br><span class="line">            <span class="comment">// 否者根据p判断变量node是否需要阻塞</span></span><br><span class="line">            <span class="keyword">if</span> (p == head &amp;&amp; tryAcquire(arg)) &#123;</span><br><span class="line">                setHead(node);</span><br><span class="line">                p.next = <span class="keyword">null</span>; <span class="comment">// help GC</span></span><br><span class="line">                failed = <span class="keyword">false</span>;</span><br><span class="line">                <span class="keyword">return</span> interrupted;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">if</span> (shouldParkAfterFailedAcquire(p, node) &amp;&amp;</span><br><span class="line">                parkAndCheckInterrupt())</span><br><span class="line">                interrupted = <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (failed)</span><br><span class="line">            <span class="comment">/*</span></span><br><span class="line"><span class="comment">             * 设置结点状态为CANCEL</span></span><br><span class="line"><span class="comment">             * 当获取锁时抛出了异常或者超出时限</span></span><br><span class="line"><span class="comment">             * 那么就为当前结点设置CANCELLED</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            cancelAcquire(node);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="6">
+<li>该方法主要根据前驱结点判断当前结点是否需要阻塞，因为当前所有结点的状态都是初始化状态（ws为0）。每个结点在第一次失败后，都会进入<em>else块</em>（除非执行<em>acquireQueued()里的tryAcquire()</em> 成功）。<em>else块</em> 里会将前驱结点设置为<em>SIGNAL</em> 状态，暗示<strong>下一次你要是还是获取失败，你就乖乖阻塞吧</strong></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">shouldParkAfterFailedAcquire</span><span class="params">(Node pred, Node node)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ws = pred.waitStatus;</span><br><span class="line">    <span class="comment">// 前驱结点pred是SIGNAL状态，所以需要让当前结点node阻塞</span></span><br><span class="line">    <span class="keyword">if</span> (ws == Node.SIGNAL)</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    <span class="comment">// 前驱结点pred是CANCELLED状态</span></span><br><span class="line">    <span class="keyword">if</span> (ws &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Predecessor was cancelled. Skip over predecessors and</span></span><br><span class="line"><span class="comment">         * indicate retry.</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">do</span> &#123;</span><br><span class="line">            node.prev = pred = pred.prev;</span><br><span class="line">        &#125; <span class="keyword">while</span> (pred.waitStatus &gt; <span class="number">0</span>);</span><br><span class="line">        pred.next = node;</span><br><span class="line">    <span class="comment">// 前驱结点pred状态是0或者PROPAGATE</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 更新前驱结点pred的状态为SIGNAL，在下一次尝试获取锁的时候对该结点进行阻塞</span></span><br><span class="line">        compareAndSetWaitStatus(pred, ws, Node.SIGNAL);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/afterShouldParkAfterFailedAcquire.png" alt="shouldParkAfterFailedAcquire后"></p>
+<p>7.此时除了尾结点外，其他结点的<em>waitStatus域</em> 均为SIGNAL。但除了头结点（Empty结点）外的所有结点包含的线程都处于阻塞状态，并等待它们各自的前驱结点来唤醒自己</p>
+<h3 id="1-3-2-释放锁"><a href="#1-3-2-释放锁" class="headerlink" title="1.3.2 释放锁"></a>1.3.2 释放锁</h3><p>本节内容将会连接着1.3.1节的内容，前面讲到除了那个空的头结点外，其他结点包含的线程都发生了阻塞。那么A线程不在队列内该如何唤醒B呢？</p>
+<ol>
+<li>当A线程调用了<em>ReentrantLock.release()</em> (其实是AQS的release)</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">release</span><span class="params">(<span class="keyword">int</span> arg)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 调用子类的实现</span></span><br><span class="line">    <span class="keyword">if</span> (tryRelease(arg)) &#123;</span><br><span class="line">        Node h = head;</span><br><span class="line">        <span class="keyword">if</span> (h != <span class="keyword">null</span> &amp;&amp; h.waitStatus != <span class="number">0</span>)</span><br><span class="line">            unparkSuccessor(h);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">tryRelease</span><span class="params">(<span class="keyword">int</span> releases)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 计算当前线程持有锁的个数</span></span><br><span class="line">    <span class="keyword">int</span> c = getState() - releases;</span><br><span class="line">    <span class="comment">// 防止未持有锁的线程瞎搞</span></span><br><span class="line">    <span class="keyword">if</span> (Thread.currentThread() != getExclusiveOwnerThread())</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalMonitorStateException();</span><br><span class="line">    <span class="keyword">boolean</span> free = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">if</span> (c == <span class="number">0</span>) &#123;</span><br><span class="line">        free = <span class="keyword">true</span>;</span><br><span class="line">        setExclusiveOwnerThread(<span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    setState(c);</span><br><span class="line">    <span class="keyword">return</span> free;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="2">
+<li><p>细心的小伙伴可能已经注意到<em>tryRelease()</em> 传入的参数，如果<em>state域</em> 减去 <em>releases参数</em> 不为0，依然无法释放锁。这个特性和<em>CountDownLatch</em>很像，当持有的数字为0时才能释放。</p>
+</li>
+<li><p>假设现在<em>tryRelease()</em> 返回true，接下来就判断头结点是否为空且状态是否为0（如果为0，代表后面没有结点需要唤醒）。如果B结点运行到<em>acquireQueued()里tryAcquire() 和 shouldParkAfterFailedAcquire()</em> 间时，A线程调用了<em>release()</em> 会发生问题吗？<br>不会，因为在这种情况下头结点的<em>waitStatus域</em> 如果是0，B结点还有机会可以再次<em>tryAcquire()</em> ，如果是SIGNAL，那就对头结点调用后续的<em>unparkSuccessor()</em> </p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">unparkSuccessor</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> ws = node.waitStatus;</span><br><span class="line">    <span class="keyword">if</span> (ws &lt; <span class="number">0</span>)</span><br><span class="line">        compareAndSetWaitStatus(node, ws, <span class="number">0</span>);</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 获取头结点后面的结点s</span></span><br><span class="line"><span class="comment">     * 如果结点s是null或者s已经被取消了</span></span><br><span class="line"><span class="comment">     * 就从后往前遍历，直到找到一个满足条件的结点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    Node s = node.next;</span><br><span class="line">    <span class="keyword">if</span> (s == <span class="keyword">null</span> || s.waitStatus &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        s = <span class="keyword">null</span>;</span><br><span class="line">        <span class="keyword">for</span> (Node t = tail; t != <span class="keyword">null</span> &amp;&amp; t != node; t = t.prev)</span><br><span class="line">            <span class="comment">// 不用担心被唤醒的结点不是头结点，在acquireQueue方法里会重新设置</span></span><br><span class="line">            <span class="keyword">if</span> (t.waitStatus &lt;= <span class="number">0</span>)</span><br><span class="line">                s = t;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 唤醒结点</span></span><br><span class="line">    <span class="keyword">if</span> (s != <span class="keyword">null</span>)</span><br><span class="line">        LockSupport.unpark(s.thread);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="4">
+<li>在A线程释放了锁后。如果没有新的线程要竞争，那么锁不出意外就是B线程的；否则，在非公平锁的实现里，鹿死谁手还不知道（公平锁里不出意外也一定是B线程的）</li>
+</ol>
+<h3 id="1-3-3-取消-中断"><a href="#1-3-3-取消-中断" class="headerlink" title="1.3.3 取消/中断"></a>1.3.3 取消/中断</h3><p>本节介绍方法<em>cancelAcquire()</em>，该方法都出现在最后的<em>finally块</em>中，而且需要<em>failed域</em> 为true（获取锁失败），才会进入<em>cancelAcquire()</em> ，所以最终需要取消的结点，要么是<strong>定时器到时间</strong>了，要么是<strong>线程被中断</strong>了。废话不多说，看初始图。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/cancelAcquire1.png" alt="设置取消状态"><br>图表解释：</p>
+<ul>
+<li>A结点：采用lock()方法，并且获取锁成功</li>
+<li>B结点：采用tryLock()方法，并设置好10秒的期限，一到10秒就取消获取锁，当前处于阻塞状态</li>
+<li>C结点：操作同B线程</li>
+<li>D结点：采用lock()方法，获取锁失败，处于阻塞状态</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 10s过后，假设A线程仍持有锁，而B线程的tryLock()到期，那么B线程因为</span></span><br><span class="line"><span class="comment"> * throw new InterruptedException()而跳出for循环进入finally块，准备执行</span></span><br><span class="line"><span class="comment"> * cancelAcquire()</span></span><br><span class="line"><span class="comment"> * PS:此情况下C尚未到期，因为方便写:)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">cancelAcquire</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (node == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    node.thread = <span class="keyword">null</span>;</span><br><span class="line">    <span class="comment">// 获取当前结点的前驱结点</span></span><br><span class="line">    Node pred = node.prev;</span><br><span class="line">    <span class="comment">/* 判断前驱结点是否为取消状态；</span></span><br><span class="line"><span class="comment">     * 如果是取消状态的话，就一直向前查找，直到找到非CANCELLED状态的结点</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="comment">// 本示例里pred是A结点</span></span><br><span class="line">    <span class="keyword">while</span> (pred.waitStatus &gt; <span class="number">0</span>)</span><br><span class="line">        node.prev = pred = pred.prev;</span><br><span class="line">    </span><br><span class="line">    Node predNext = pred.next;</span><br><span class="line">    <span class="comment">/* 不管三七二十一，来了这个方法，这个结点就注定要设置成CANCELLED</span></span><br><span class="line"><span class="comment">     * 那会不会有其他线程同时对这个结点的状态进行操作？</span></span><br><span class="line"><span class="comment">     * 有也没关系，它的顺序无论在其他CAS写操作之前还是之后最终都会设置为</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     CANCELLED(注意是“CAS”写操作)</span><br><span class="line">    <span class="comment">// ①到这一步，本示例里B结点的ws转为CANCELLED </span></span><br><span class="line">    node.waitStatus = Node.CANCELLED;</span><br><span class="line">    <span class="comment">// 如果当前结点是尾结点，那么就将predNext（从后到前第一个非CANCELLED状态的结点）设置为尾结点</span></span><br><span class="line">    <span class="comment">// 本示例里B结点不是尾结点，跳过if进入else</span></span><br><span class="line">    <span class="keyword">if</span> (node == tail &amp;&amp; compareAndSetTail(node, pred)) &#123;</span><br><span class="line">        compareAndSetNext(pred, predNext, <span class="keyword">null</span>); </span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">int</span> ws;</span><br><span class="line">        <span class="comment">// 如果pred不是头结点，就设置状态为SIGNAL</span></span><br><span class="line">        <span class="keyword">if</span> (pred != head &amp;&amp;</span><br><span class="line">            ((ws = pred.waitStatus) == Node.SIGNAL ||</span><br><span class="line">             (ws &lt;= <span class="number">0</span> &amp;&amp; compareAndSetWaitStatus(pred, ws, Node.SIGNAL))) &amp;&amp;pred.thread != <span class="keyword">null</span>) &#123;  </span><br><span class="line">            Node next = node.next;</span><br><span class="line">            <span class="comment">/* 当前结点是否有后继结点</span></span><br><span class="line"><span class="comment">             * 若有后继结点且不是CANCELLED状态，则将后继结点和pred相连</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            <span class="keyword">if</span> (next != <span class="keyword">null</span> &amp;&amp; next.waitStatus &lt;= <span class="number">0</span>)</span><br><span class="line">                compareAndSetNext(pred, predNext, next);</span><br><span class="line">        <span class="comment">/* </span></span><br><span class="line"><span class="comment">         * 如果pred是头结点就唤醒后继的非CANCELLED结点</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// ② 唤醒后面的非CANCELLED状态的结点</span></span><br><span class="line">            unparkSuccessor(node);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/* 很骚的操作，一般都是设置null来help gc，这里采用循环引用当新一波的  </span></span><br><span class="line"><span class="comment">         * tryAcquire()之后，会将CANCELLED的引用清理掉，所以最后就变成不可达的</span></span><br><span class="line"><span class="comment">         * 引用，自然就被gc了</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        node.next = node; </span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>流程图大致是这样的:<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/cancelAcquire2.png" alt="最后的状态"></p>
+<p>到这里，整个<em>cancelAcquire()</em> 的流程结束了，最后的<em>unparkSuccessor()</em> 方法最终也不是为了唤醒C，具体的可以参考前面的<em>release()</em>一节</p>
+<h2 id="1-4-lock的其他方式"><a href="#1-4-lock的其他方式" class="headerlink" title="1.4 lock的其他方式"></a>1.4 lock的其他方式</h2><p><em>ReentrantLock</em> 除了<em>lock()</em> 之外还有<em>tryLock()</em>和<em>lockInterruptibly()</em>。</p>
+<ul>
+<li><em>tryLock(long, TimeUnit)</em> -&gt; 在一定时间内没有获得锁就放弃获取锁</li>
+<li><em>lockInterruptibly()</em> -&gt; 获取锁的过程中可以被中断</li>
+</ul>
+<h3 id="1-4-1-tryLock"><a href="#1-4-1-tryLock" class="headerlink" title="1.4.1 tryLock"></a>1.4.1 tryLock</h3><ol>
+<li><p>调用<em>tryLock()</em></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// ReentrantLock</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">tryLock</span><span class="params">(<span class="keyword">long</span> timeout, TimeUnit unit)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> sync.tryAcquireNanos(<span class="number">1</span>, unit.toNanos(timeout));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>先检查中断状态，然后至少调用一次tryAcquire()。个人理解：如果当前锁没有发生竞争，不需要再额外创建等待队列。所以预先判断锁是否被持有，可以降低资源消耗</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">tryAcquireNanos</span><span class="params">(<span class="keyword">int</span> arg, <span class="keyword">long</span> nanosTimeout)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</span><br><span class="line">    <span class="keyword">return</span> tryAcquire(arg) ||</span><br><span class="line">        doAcquireNanos(arg, nanosTimeout);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ol start="3">
+<li>没有什么特别之处，再<em>acquireQueued()</em> 基础上加了时限。唯一注意的点就是这里用到了自旋，在时间没超过<em>spinForTimeoutThreshold域</em> 之前，一直处于for循环（其实也就1000纳秒的时间处于自旋）。当超过自旋时间，进入<em>LockSupport.parkNanos()</em>，故名思意，不多介绍，想了解的可以看我的<em>LockSupport</em>文章</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">doAcquireNanos</span><span class="params">(<span class="keyword">int</span> arg, <span class="keyword">long</span> nanosTimeout)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="comment">// 设置的时间小于0，直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (nanosTimeout &lt;= <span class="number">0L</span>)</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">// 期限，绝对时间    </span></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">long</span> deadline = System.nanoTime() + nanosTimeout;</span><br><span class="line">    <span class="comment">// 创建一个新的结点，注意EXCLUSIVE</span></span><br><span class="line">    <span class="keyword">final</span> Node node = addWaiter(Node.EXCLUSIVE);</span><br><span class="line">    <span class="keyword">boolean</span> failed = <span class="keyword">true</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">            <span class="keyword">final</span> Node p = node.predecessor();</span><br><span class="line">            <span class="keyword">if</span> (p == head &amp;&amp; tryAcquire(arg)) &#123;</span><br><span class="line">                setHead(node);</span><br><span class="line">                p.next = <span class="keyword">null</span>; <span class="comment">// help GC</span></span><br><span class="line">                failed = <span class="keyword">false</span>;</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            nanosTimeout = deadline - System.nanoTime();</span><br><span class="line">            <span class="comment">// 如果当前时间超过了时限，就当获取锁失败，返回false</span></span><br><span class="line">            <span class="keyword">if</span> (nanosTimeout &lt;= <span class="number">0L</span>)</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">            <span class="comment">/* 前面和acquireQueued() 一样，后面是允许自旋的时间</span></span><br><span class="line"><span class="comment">             * 再没达到spinForTimeoutThreshold前，一直处于循环</span></span><br><span class="line"><span class="comment">             */</span></span><br><span class="line">            <span class="keyword">if</span> (shouldParkAfterFailedAcquire(p, node) &amp;&amp;</span><br><span class="line">                nanosTimeout &gt; spinForTimeoutThreshold)</span><br><span class="line">                <span class="comment">// 限时阻塞的主要逻辑</span></span><br><span class="line">                LockSupport.parkNanos(<span class="keyword">this</span>, nanosTimeout);</span><br><span class="line">            <span class="comment">// 可以中断    </span></span><br><span class="line">            <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">                <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (failed)</span><br><span class="line">            cancelAcquire(node);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="1-4-2-lockInterruptibly"><a href="#1-4-2-lockInterruptibly" class="headerlink" title="1.4.2 lockInterruptibly"></a>1.4.2 lockInterruptibly</h3><p>原本计划着要写，但是内容差不多，为了缩短篇幅，就算了。读者有兴趣可以去看看。</p>
+<h2 id="1-5-小栗子"><a href="#1-5-小栗子" class="headerlink" title="1.5 小栗子"></a>1.5 小栗子</h2><p>占坑，以后想到了来写</p>
+<h2 id="1-6-总结"><a href="#1-6-总结" class="headerlink" title="1.6 总结"></a>1.6 总结</h2><p>AQS总体给人的感觉就是提供了一个管理线程状态的框架，而这个框架是基于先进先出的链式队列，而这个队列主要是以阻塞为主，和CLH以自旋为主的队列不同，因为暂时没接触太多的并发项目，想写关于AQS的小栗子也没什么头绪，干脆在这里留个坑，以后有了回来填。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjhpvquy9001j3ovjsxc959an" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+
+
+  <nav id="page-nav">
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/page/2/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><a class="page-number" href="/codeleven.github.io/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/codeleven.github.io/page/4/">4</a><a class="extend next" rel="next" href="/codeleven.github.io/page/4/">__('next') &raquo;</a>
+  </nav>
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)了解阻塞队列之DelayQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/05/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
