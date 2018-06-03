@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>了解阻塞队列之DelayQueue | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="DelayQueue的主要功能是取出超出时间期限的元素，在缓存方面能发挥较好的效果。DelayQueue包含以下几个属性：  lock:ReentrantLock —– 不解释 q:PriorityQueue —– 存放元素的队列，该队列会根据比较器进行排序，在DelayQueue里就是按剩余时间进行排序 leader:Thread —– Leader-Follower线程模型，主要用于降低锁力度">
+<meta name="keywords" content="Java集合">
+<meta property="og:type" content="article">
+<meta property="og:title" content="了解阻塞队列之DelayQueue">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="DelayQueue的主要功能是取出超出时间期限的元素，在缓存方面能发挥较好的效果。DelayQueue包含以下几个属性：  lock:ReentrantLock —– 不解释 q:PriorityQueue —– 存放元素的队列，该队列会根据比较器进行排序，在DelayQueue里就是按剩余时间进行排序 leader:Thread —– Leader-Follower线程模型，主要用于降低锁力度">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_Structure.jpg">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_take.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_take2.png">
+<meta property="og:updated_time" content="2018-06-03T07:37:54.784Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="了解阻塞队列之DelayQueue">
+<meta name="twitter:description" content="DelayQueue的主要功能是取出超出时间期限的元素，在缓存方面能发挥较好的效果。DelayQueue包含以下几个属性：  lock:ReentrantLock —– 不解释 q:PriorityQueue —– 存放元素的队列，该队列会根据比较器进行排序，在DelayQueue里就是按剩余时间进行排序 leader:Thread —– Leader-Follower线程模型，主要用于降低锁力度">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_Structure.jpg">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-了解阻塞队列之DelayQueue" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/06/03/了解阻塞队列之DelayQueue/" class="article-date">
+  <time datetime="2018-06-03T04:10:50.000Z" itemprop="datePublished">2018-06-03</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      了解阻塞队列之DelayQueue
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>DelayQueue的主要功能是取出超出时间期限的元素，在缓存方面能发挥较好的效果。<br>DelayQueue包含以下几个属性：</p>
+<ul>
+<li>lock:ReentrantLock —– 不解释</li>
+<li>q:PriorityQueue —– 存放元素的队列，该队列会根据比较器进行排序，在DelayQueue里就是按剩余时间进行排序</li>
+<li>leader:Thread —– Leader-Follower线程模型，主要用于降低锁力度，不需要消息队列。</li>
+<li>available:Condition —– 不解释</li>
+</ul>
+<p>DelayQueue的整体结构采用代理模式，如图所示：<br><img src="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_Structure.jpg" alt="DelayQueue的继承关系图"></p>
+<p>其中有一种新的线程设计模式叫 <a href="http://ifeve.com/leader-follower-thread-model/" target="_blank" rel="noopener">Leader-Follower</a>：</p>
+<ul>
+<li>有一条线程负责监视是否有任务到达，该线程叫Leader</li>
+<li>其余线程处于Follower状态（await状态），时刻准备着被唤醒成为下一个Leader</li>
+<li>当Leader线程检测到任务到达后 <strong>进入处理状态</strong> 并 <strong>唤醒等待的Follower线程之一</strong></li>
+<li>当老Leader线程（现在处于Process状态）处理完毕后，进入Follower状态，等待新Leader的唤醒</li>
+</ul>
+<p>其出现是为了 </p>
+<ul>
+<li><strong>解决单线程接受请求线程池线程处理请求下线程上下文切换</strong></li>
+<li><strong>线程间通信数据拷贝的开销</strong></li>
+<li><strong>不需要维护一个队列</strong></li>
+</ul>
+<hr>
+<p>DelayQueue的offer()方法如下所示：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock;</span><br><span class="line">    lock.lock();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 调用PriorityQueue.offer()</span></span><br><span class="line">        q.offer(e);</span><br><span class="line">        <span class="comment">// 判断如果队首元素为新进入的元素</span></span><br><span class="line">        <span class="keyword">if</span> (q.peek() == e) &#123;</span><br><span class="line">            <span class="comment">// 设置leader为null</span></span><br><span class="line">            leader = <span class="keyword">null</span>;</span><br><span class="line">            <span class="comment">// 唤醒其他线程</span></span><br><span class="line">            available.signal();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        lock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>Q1. 为什么要额外判断下<code>peek() == e</code>？<br>因为当一个线程进入leader状态时，仍会释放锁进入一段睡眠。那么此时如果新添加的offer优先度很高，就可以唤醒其他线程准备竞争任务。</p>
+<hr>
+<p>DelayQueue的take()方法流程图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_take.png" alt="take方法流程图"></p>
+<p>这里的逻辑简单来看就是如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_take2.png" alt="take方法白话文流程图"></p>
+<p>Q1. 为什么要特意设置 <code>first = null</code><br>当消费者数量大于生产者，那么会有多个消费者线程持有队首元素的引用，然后在竞争锁的过程中，个别消费者长时间处于等待状态，那么GC发生时，队首元素就不会被回收（因为还是可达的），就发生了内存泄露。</p>
+<p>Q2. 为什么要特意设置leader？根据Leader-Follower模式，似乎ReentrantLock已经能够满足只有一个线程在处理且其他线程进入等待<br>因为即使线程拿到了Lock锁，但是其中的await()也会释放锁进入等待状态。那么其他线程拿到锁后该如何知道是否有线程正在等待呢？那么就是靠这个leader变量。</p>
+<p>Q3. 为什么设置了leader最后还要设置回null？<br>因为leader-follower，处理完后重新进入Follower状态</p>
+<hr>
+<p>总结<br>DelayQueue涉及到了Leader-Follower模型，该模型的优势在于 <strong>线程上下文开销</strong>  相比  <strong>单线程接受任务再交给多线程处理来说</strong> 更低。<br>该类可以理解为代理类，它覆写的那些方法实际上调用的都是PriorityQueue的API。DelayQueue是线程安全的，PriorityQueue是线程不安全的。<br>要谨记await()方法会释放锁并进入等待</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjhyuxfzu00203svju91mnyna" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/06/03/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/06/03/深入JDK之Queue/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">JDK之Queue专题之概览</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/03/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/03/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/03/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/03/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/03/了解阻塞队列之DelayQueue/">了解阻塞队列之DelayQueue</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
