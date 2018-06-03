@@ -1,9 +1,9 @@
 # hexo根目录
-$blogRootDir = 'E:\blog\blogSource'
+$blogRootDir = 'E:\commonWorkspace\blog\blogSource'
 # hexo里的文件
-$blogDeployDir = "E:\blog\blogSource\source\_posts\"
+$blogDeployDir = "E:\commonWorkspace\blog\blogSource\source\_posts\"
 # 我的博客归档目录
-$myAchieveDir = 'E:\blog\codeleven.github.io'
+$myAchieveDir = 'E:\commonWorkspace\blog\codeleven.github.io'
 
 if(Test-Path $blogDeployDir){
     del $blogDeployDir -confirm    
