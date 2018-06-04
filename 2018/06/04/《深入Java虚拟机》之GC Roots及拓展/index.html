@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>《深入Java虚拟机》之GC Roots及拓展 | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="这篇文章本来是想写在《对象内存布局及使用》篇的，但是无意间发现了R大的《找出栈、堆上的引用》，决定对其进行拓展。单独写了一篇笔记。  根据可达性分析算法，GC Roots节点是查找引用链的关键，所以需要知道每个GC Roots在什么地方（一个个枚举得话很消耗时间）。而且回收时得知道某个时刻，所有的GC Roots及引用链。换句话说在某个时刻，大家都应该停下来等待统计引用（好比扫地，一边扫一边丢垃圾">
+<meta name="keywords" content="JVM">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《深入Java虚拟机》之GC Roots及拓展">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="这篇文章本来是想写在《对象内存布局及使用》篇的，但是无意间发现了R大的《找出栈、堆上的引用》，决定对其进行拓展。单独写了一篇笔记。  根据可达性分析算法，GC Roots节点是查找引用链的关键，所以需要知道每个GC Roots在什么地方（一个个枚举得话很消耗时间）。而且回收时得知道某个时刻，所有的GC Roots及引用链。换句话说在某个时刻，大家都应该停下来等待统计引用（好比扫地，一边扫一边丢垃圾">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2018-06-04T07:17:22.853Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《深入Java虚拟机》之GC Roots及拓展">
+<meta name="twitter:description" content="这篇文章本来是想写在《对象内存布局及使用》篇的，但是无意间发现了R大的《找出栈、堆上的引用》，决定对其进行拓展。单独写了一篇笔记。  根据可达性分析算法，GC Roots节点是查找引用链的关键，所以需要知道每个GC Roots在什么地方（一个个枚举得话很消耗时间）。而且回收时得知道某个时刻，所有的GC Roots及引用链。换句话说在某个时刻，大家都应该停下来等待统计引用（好比扫地，一边扫一边丢垃圾">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-《深入Java虚拟机》之GC Roots及拓展" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" class="article-date">
+  <time datetime="2018-06-04T06:30:51.000Z" itemprop="datePublished">2018-06-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《深入Java虚拟机》之GC Roots及拓展
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这篇文章本来是想写在《对象内存布局及使用》篇的，但是无意间发现了R大的<a href="http://rednaxelafx.iteye.com/blog/1044951" target="_blank" rel="noopener">《找出栈、堆上的引用》</a>，决定对其进行拓展。单独写了一篇笔记。</p>
+<hr>
+<p>根据可达性分析算法，GC Roots节点是查找引用链的关键，所以需要知道每个GC Roots在什么地方（一个个枚举得话很消耗时间）。而且回收时得知道某个时刻，所有的GC Roots及引用链。换句话说在某个时刻，大家都应该停下来等待统计引用（好比扫地，一边扫一边丢垃圾，最终是扫不干净得）。</p>
+<p>简而言之，现在的问题是：</p>
+<ul>
+<li>JVM如何知道哪些位置有引用类型的变量？</li>
+<li>如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？</li>
+</ul>
+<h1 id="Q1-JVM如何知道哪些位置有引用类型的变量？"><a href="#Q1-JVM如何知道哪些位置有引用类型的变量？" class="headerlink" title="Q1. JVM如何知道哪些位置有引用类型的变量？"></a>Q1. JVM如何知道哪些位置有引用类型的变量？</h1><p>这要由 <strong>虚拟机是否记录类型信息</strong> 而决定的，而且该决定会影响GC的实现方式和引用方式（这也是为什么存在句柄引用和直接引用得原因）。通常按准确程度划分为以下三种：</p>
+<ul>
+<li>保守式</li>
+<li>半保守式</li>
+<li>准确式</li>
+</ul>
+<h3 id="保守式"><a href="#保守式" class="headerlink" title="保守式"></a>保守式</h3><p>当无法区分内存上某个位置的数据究竟是引用类型还是整数类型时（或其他类型），我们称它为保守式GC。当发生GC时，JVM从一些已知的位置开始扫描内存（比如栈，如果是堆就查找对象里面是否有引用类型的属性）并递归深入，如果满足下面的条件就认为它是一个引用类型：</p>
+<ul>
+<li>四字节对齐</li>
+<li>里面的数值在堆范围内（比如数值为100，堆的范围为0-1000，那么就认为是在堆里面）</li>
+<li>The allocbit is set. The allocbit is a flag indicating whether the memory location corresponding to it is allocated or not.</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>部分应该死的对象没死；当内存需求量大时，这些本应该释放掉的内存没被释放，总归不是一件好事</li>
+<li>由于无法确切的知道一个变量究竟是基本类型还是引用类型，所以对象发生移动时，无法确切的得知哪些变量应该被修改。简单来说，保守式GC里的对象无法被移动；若是想要移动对象，必须增加一个中间层，即 <strong>句柄</strong>。所有指针都先指向句柄池，再从句柄里找到对象。这样要移动对象就只需要修改句柄表的内容即可。</li>
+</ul>
+<h3 id="半保守式"><a href="#半保守式" class="headerlink" title="半保守式"></a>半保守式</h3><p>由于JVM要支持丰富的反射功能，本来对象就会带上一堆元数据，所以自己所有属性的类型信息都可以一目了然。<br>所以在扫描堆时，JVM可以直接根据对象带有的信息判断 <strong>该对象内什么位置是什么类型的变量</strong><br>而在扫描栈时，仍然需要一个个扫描，且无法判断某个位置上具体是什么变量</p>
+<p>改进：</p>
+<ul>
+<li>由于半保守式在堆内部的数据类型是准确可知的，所以大部分情况下可以采用 <strong>直接引用</strong>，也就可以支持部分对象的移动（对在栈上扫描出来的对象进行标记，表示 “不可移动对象”，而对象属性里的引用仍可以移动）</li>
+</ul>
+<h3 id="准确式"><a href="#准确式" class="headerlink" title="准确式"></a>准确式</h3><p>和保守式相反——能区分内存（包括栈和堆）上任意位置的数据类型。HotSpot里采用 <strong>从外部记录类型信息，存成映射表</strong>，在HotSpot里该映射表被叫做 <code>OopMap</code>。要实现这项功能，需要虚拟机里的解释器和JIT编译器共同的支持，由它们来生成足够的元数据信息。</p>
+<p>使用这样的映射表一般有两种方式：<br>1、每次都遍历原始的映射表，循环的一个个偏移量扫描过去；这种用法也叫“解释式”；<br>2、为每个映射表生成一块定制的扫描代码（想像扫描映射表的循环被展开的样子），以后每次要用映射表就直接执行生成的扫描代码；这种用法也叫“编译式”。 </p>
+<p>对于堆里的对象，<code>OopMap</code>里记录了该类型的对象内什么偏移量上是什么类型的数据。这些数据是在类的加载过程中计算出来的。</p>
+<p>对于栈来说就会比较麻烦。每个被JIT编译后的方法都会在一些 <strong>特定的位置</strong>记录下<code>OopMap</code>，记录了执行到该方法的某条指令的时候，栈上和寄存器里哪些位置是引用。特定位置主要在：</p>
+<ul>
+<li>循环的末尾</li>
+<li>方法临返回前/调用方法的call指令后</li>
+<li>可能抛出异常的位置</li>
+</ul>
+<p>这些位置被成为 <strong>安全点</strong>。由于每个位置都记录 <code>OopMap</code> 很浪费空间，所以选择几个关键的位置就能有效缩减需要记录的数据量，但仍然能达到区分数据类型的作用。安全点数量既不能太多以至于增大运行时得负荷；也不能太少以至于GC间隔很长。</p>
+<p>在解释器中执行的方法则可以通过解释器自动生成出 <code>OopMap</code>出来给GC用。</p>
+<p>注意，这里分成了两部分，一部分是解释器的操作，一部分是JIT编译的操作。<br>两个什么区别可以看<a href="https://blog.csdn.net/sunxianghuang/article/details/52094859" target="_blank" rel="noopener">这篇文章</a></p>
+<h1 id="Q2-如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？"><a href="#Q2-如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？" class="headerlink" title="Q2. 如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？"></a>Q2. 如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？</h1><p>这个问题也可以理解为 <strong>GC如何来获取OopMap信息</strong>。</p>
+<p>停下来得方式分为两种：</p>
+<ul>
+<li>抢先式中断，发生GC时，让所有线程暂停，不在安全点上得线程恢复运行，直到运行到安全点。</li>
+<li>主动式中断，发生GC时，给所有线程一个标记，每个线程运行时不断去轮询该标记，当发现标记为真时，运行到安全点并暂停本线程</li>
+</ul>
+<p>然而安全点还不够，因为如果线程没有分配到CPU时间，那么根本不会运行到安全点，典型得例子就是 Sleeping 或 Blocking 状态得线程，它们无法走到安全点上挂起。所有得线程也不可能已知等待这条线程走到安全点上，所以推出了一个 <strong>安全区域</strong> 的点。</p>
+<p>安全区域是指在一段代码片段里，引用关系不会发生变化。在这个区域的任意地方发生GC都是安全的。</p>
+<p>在线程进入 <strong>安全区域</strong>时，会给自己打上一个标记。那样在这段时间里即使JVM发生GC，就不用管在 <strong>安全区域</strong>的线程了；当线程要离开 <strong>安全区域</strong>时，判断一下JVM是否正在GC，如果是，就等待直到收到 <strong>可以安全离开安全区域的信号</strong>为止；反之，线程继续执行。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjhzxctcg000vckvjvfwl3055" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/06/04/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/06/03/了解阻塞队列之DelayQueue/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">了解阻塞队列之DelayQueue</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/04/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/">《深入Java虚拟机》之GC Roots及拓展</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

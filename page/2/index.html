@@ -65,6 +65,82 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《深入Java虚拟机》之虚拟机栈" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/" class="article-date">
+  <time datetime="2018-05-25T03:50:04.000Z" itemprop="datePublished">2018-05-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java内存区域图<br><img src="https://blog-1252749790.file.myqcloud.com/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.png" alt="Java内存区域"></p>
+<p>注意：深底色为共享内存区域</p>
+<p>先讲解虚拟机栈</p>
+<h2 id="虚拟机栈"><a href="#虚拟机栈" class="headerlink" title="虚拟机栈"></a>虚拟机栈</h2><p>虚拟机是线程私有的，<strong>它的生命周期与线程相同</strong>，每个方法在执行的时候都会创建一个栈帧用于存储局部变量表、操作数栈、动态链接、方法出口等信息。<strong>每一个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程</strong>。</p>
+<h3 id="局部变量表"><a href="#局部变量表" class="headerlink" title="局部变量表"></a>局部变量表</h3><p>用于存放方法参数和方法内部定义的局部变量。在编译后，局部变量表的大小就确定了，具体见代码和对应的字节码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对应的java代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1000</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/jvm-locals.png" alt=""><br>其中<code>locals=2</code> 即代表本地局部变量有两个</p>
+<p>局部变量表的容量以变量槽（Slot）为最小单位，虚拟机规范表示 <strong>boolean、byte、char、short、int、float、reference或returnAddress类型的数据都应该占用1个Slot</strong>。注意，只要保证slot实现的效果和32位虚拟机中的一致即可，比如，在64位虚拟机中，使用了64位物理内存空间去实现一个Slot，虚拟机上仍要使用对齐和补白让Slot看起来和32位虚拟机中的一样。</p>
+<p>其中介绍一下<code>reference</code> 这个数据类型：</p>
+<ul>
+<li>此引用应该直接或间接地查找到对象在Java堆中的数据存放的起始地址索引</li>
+<li>此引用应该直接或间接地查找到对象所属数据类型在方法区中地存储类型信息</li>
+</ul>
+<p>对于64位的数据类型（double、long），虚拟机会以高位对齐的方式为其分配两个连续的Slot空间。注意，在局部变量表里，无论是否分两次读32位数据，都不会引起数据安全问题。</p>
+<p>局部变量表的索引值范围是从0开始直最大的Slot数量，如果是 <strong>非static</strong> 方法，下标为0的位置默认是this引用。因为方法局部变量表在编译时就确定了，所以调用方法传入数据时，其实是传入了一个引用（待确定。</p>
+<p>同时为了尽可能节省 <strong>栈帧空间</strong>，局部变量表中的Slot是可以重用的，方法体中定义的变量，其作用域不一定会覆盖整个方法，如果该变量超出作用范围，那个变量的slot就会交给其他变量使用。这个规则也会带来一定副作用，因为超出范围后，局部变量表不会主动断开和引用的联系，就导致某个对象一直被局部变量表持有着，可以参考下面的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 共享变量 */</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> K = <span class="number">1024</span>;</span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> M = <span class="number">1024</span> * K;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况一，回收失败 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M]</span><br><span class="line">&#125;</span><br><span class="line">System.gc();</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况二，回收成功 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">0</span>;</span><br><span class="line">System.gc();</span><br></pre></td></tr></table></figure>
+<p>《Practical Java》里面讲到“把不使用的对象设置为null” 是有一定道理的，但是不推荐这样做，理由如下：</p>
+<ul>
+<li>代码不整洁，应该以恰当的变量作用域来控制回收才是最优雅的</li>
+<li>JIT会堆null赋值进行优化</li>
+</ul>
+<p>但是遇到这样的极端条件，还是可以一试的：对象占用内存大，此方法执行时间长，方法调用次数达不到JIT优化的的编译条件</p>
+<h3 id="操作数栈"><a href="#操作数栈" class="headerlink" title="操作数栈"></a>操作数栈</h3><p><img src="https://blog-1252749790.file.myqcloud.com/jvm/operator_stack.png" alt=""></p>
+<p>就是一个处理运算的中转站，如果有做过逆波兰序数的应该可以理解，将操作数压入栈，然后遇到操作符时，弹出两个操作数进行运算。</p>
+<h3 id="动态连接"><a href="#动态连接" class="headerlink" title="动态连接"></a>动态连接</h3><p>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，持有这个引用是为了支持方法调用过程中的动态连接。在类加载阶段或者第一次使用就转换为引用，这种转换被称为静态解析。另一部分要等到每一次运行期间转换为直接引用，这部分称为动态连接。</p>
+<p>方法调用不等同于方法执行，方法调用唯一的作用就是确定被调用方法的版本（调用哪个方法），不涉及具体运行过程。Class文件的编译过程不包含传统的连接步骤，一切方法调用在Class文件里都是符号引用，而不是方法在实际运行时内存布局中的入口地址（直接引用）。</p>
+<p>在把符号引用转换成直接引用的过程有两种：</p>
+<ol>
+<li>解析，调用的方法版本一定是在编译期就确定下来的，比如静态方法、私有方法、实例构造器、父类方法四种</li>
+<li>分派，可能是静态也可能是动态，主要是重载和重写</li>
+</ol>
+<h3 id="方法返回地址"><a href="#方法返回地址" class="headerlink" title="方法返回地址"></a>方法返回地址</h3><ul>
+<li>正常返回，将返回值传递给上层的方法调用者</li>
+<li>异常完成出口，在方法执行过程中遇到了异常，并且这个异常没有在方法内得到处理</li>
+</ul>
+<p>无论采用哪种方式退出，都需要返回到方法被调用的位置，程序才能继续执行，方法返回时可能需要在栈帧中保存一些信息，用来帮助恢复它的上层方法的执行状态。一般来说，方法正常退出时，调用者的PC计数器的值可以作为返回地址；方法异常退出时，返回地址是要通过异常处理器表来确定的</p>
+<p>方法退出的过程实际上就等同于把栈帧出栈，因此退出时可能执行的操作有：恢复上层方法的局部变量表和操作数栈，把返回值（如果有的话）压入调用者栈帧的操作数栈中，调整PC计数器的值来指向方法调用指令后的一条指令。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjhzxctcp001eckvjqaxe52n3" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-(未埋)《算法》之堆排序" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/" class="article-date">
@@ -92,7 +168,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjhyuxfxz00033svj05tmnt5y" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjhzxctbw0004ckvj680qh14o" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
@@ -193,94 +269,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhyuxfzq001v3svjvibehmkj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjhzxctd9002fckvj54awd8a5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
-  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>线程池的优点：</p>
-<ul>
-<li>降低资源开销：每次任务到达时不需要重新创建和销毁</li>
-<li>提高可管理性：统一对线程进行调优、监控</li>
-<li>提高任务响应速度：不需要等待线程创建</li>
-</ul>
-<p>线程池创建的各个参数：</p>
-<ul>
-<li>corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程）</li>
-<li>maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务</li>
-<li>keepAliveTime：存活时间。非核心线程可空闲的最大时间</li>
-<li>workQueue: 任务阻塞队列。当提交新任务且核心线程数已经被使用完时，新任务会先加入任务队列</li>
-</ul>
-<p>线程池中线程创建流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png" alt=""></p>
-<ol>
-<li>提交任务时，先判断核心线程数<strong>是否已经创建完毕</strong>，如果没有，则<strong>先将核心线程数创建满</strong>；反之则进入下个阶段</li>
-<li>判断核心线程数是否已经全部被占用，如果没有则交给核心线程执行；反之进入下个阶段</li>
-<li>判断工作队列是否已满，如果没满加入队列等待；反之进入下个阶段</li>
-<li>判断当前线程数是否小于MaxThread，如果是，则创建新线程执行任务；反之调用RejectPolicyHandler执行对应的策略</li>
-</ol>
-<h2 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h2><p>我们可以通过ThreadPoolExecutor创建一个线程池<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ThreadPoolExecutor(</span><br><span class="line">    <span class="keyword">int</span> corePoolSize,</span><br><span class="line">    <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">    <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">    TimeUnit unit,</span><br><span class="line">    BlockingQueue&lt;Runnable&gt; workQueue，</span><br><span class="line">    RejectedExecutionHandler handler)</span><br></pre></td></tr></table></figure></p>
-<p>1) corePoolSize: 当提交一个任务时（即使其他空闲核心线程也能够执行新任务），线程池会创建一个新线程来执行任务，等到corePoolSize个线程被创建了，就不再创建了。如果要额外创建，就要看后面的参数。如果调用了线程的<figure class="highlight plain"><figcaption><span>方法，线程池会提前创建并启动所有核心线程</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2) maximumPoolSize: 线程池允许创建的最大线程数。如果队列满了，并且已经创建的线程数小于最大线程数，则线程池会再创建新的线程执行任务。如果使用了无界队列，该参数没什么效果</span><br><span class="line"></span><br><span class="line">3) keepAliveTime: 线程池的工作线程空闲后，保持存活的时间。如果每个线程执行时间较短，可以将该值调大，提高线程利用率</span><br><span class="line"></span><br><span class="line">4) unit: 时间单位</span><br><span class="line"></span><br><span class="line">5) workQueue: 用于保存等待执行的任务的阻塞队列，可以选择以下几个阻塞队列：</span><br><span class="line"></span><br><span class="line">    * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO原则队元素进行排序</span><br><span class="line">    * LinkedBlockingQueue: 一个基于链表结构的阻塞，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法Executors.newFixedThreadPool()使用了这个队列。</span><br><span class="line">    * SynchronousQueue: 一个不存储元素的队列。每个插入操作要必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法Executors.newCachedThreadPool使用了这个队列</span><br><span class="line">    * PriorityQueue: 一个具有优先级的无限阻塞队列</span><br><span class="line"></span><br><span class="line">6) handler: RejectPolicy默认有四种：</span><br><span class="line">    * AbortPolicy，直接抛出异常</span><br><span class="line">    * DiscardPolicy，丢弃该任务，放弃处理</span><br><span class="line">    * CallerRunsPolicy，只用调用者线程执行任务</span><br><span class="line">    * DiscardOldestPolicy，丢弃队列里的队首元素</span><br><span class="line"></span><br><span class="line">## 执行任务</span><br><span class="line">线程池提交任务有两个方法向线程池提交任务，分别为execute()和submit():</span><br><span class="line"></span><br><span class="line">* execute: 执行后没有返回值，无法判断任务是否被线程池执行成功</span><br><span class="line">* submit: 提交后会返回一个Future类型的对象，通过该Future对象可以判断执行是否成功。其中get方法可以阻塞当前线程直到任务完成，get(timeout, unit)方法可以阻塞当前线程一段时间后返回</span><br><span class="line"></span><br><span class="line">## 关闭线程</span><br><span class="line">关闭线程池有两个方法，分别为```shutdown()``` 和 ```shutdownNow()</span><br></pre></td></tr></table></figure></p>
-<p>共同点：<br>遍历线程池中的所有线程，然后逐个调用线程的<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">不同点：</span><br><span class="line">* shutdownNow首先将线程池的状态设置为STOP状态，然后尝试停止所有的正在执行或暂停任务的线程，并返回等待执行任务的列表</span><br><span class="line">* shutdown只是将线程池的状态设置成SHUTDOWN状态，然后中断所有没有正在执行任务的线程</span><br><span class="line"></span><br><span class="line">当任意一个关闭方法被调用时，isShutdown()方法就会返回true。当所有的任务关闭后，调用isTerminated()才会返回true。</span><br><span class="line"></span><br><span class="line">具体要调用```shutdown()```还是```shutdownNow()```，需要根据具体业务来判断(通常调用```shutdown()```)。如果任务不一定要执行完，可以用```shutdownNow()</span><br></pre></td></tr></table></figure></p>
-<h2 id="合理配置"><a href="#合理配置" class="headerlink" title="合理配置"></a>合理配置</h2><ul>
-<li>任务的性质：CPU密集型任务、IO密集型任务、混合型任务</li>
-<li>任务的优先级：高、中、低</li>
-<li>任务的执行时间：长、中、短</li>
-<li>任务的依赖性：是否依赖其他系统资源，如  数据库连接</li>
-</ul>
-<p>如何挑选：</p>
-<ul>
-<li>CPU密集型任务需要长时间用到CPU运算，所以线程数量最好配置: N<sub>cpu + 1</sub> </li>
-<li>IO密集型任务并不是一直占用CPU，则尽可能配置多的线程: 2 * N<sub>cpu</sub></li>
-<li>如果是混合型任务，尝试将其拆分为CPU密集型任务和IO密集型任务</li>
-<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲时间越长，那么线程数应该设置的越大，这样才能更好的利用CPU。</li>
-</ul>
-<p>注意：建议使用有界队列，因为如果线程池里的工作线程全部阻塞，任务挤压在线程池里，最终会导致整个系统不可用</p>
-<h2 id="监控要素"><a href="#监控要素" class="headerlink" title="监控要素"></a>监控要素</h2><ul>
-<li>taskCount: 线程池需要执行的任务数量</li>
-<li>completedTaskCount: 线程池在运行过程中已完成的任务数量，小于等于taskCount</li>
-<li>targetPoolSize: 线程池里曾将创建过的最大线程数。通过这个数据可以直到线程池是否曾经瞒过。</li>
-<li>getPoolSize: 线程池的线程数量。如果线程池不销毁，线程池里的线程不会自动销毁，所以该值只增不减</li>
-<li>getActiveCount: 获取活动的线程数</li>
-</ul>
-<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<code>beforeExecute()</code>, <code>afterExecute()</code>, <code>terminated()</code> 方法，也可以在任务执行前、后执行一些代码来监控。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该篇主要了解了线程池的使用已经各个元素的含义以及监控时的优化。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhyuxfz3000y3svj4gi9ku0q" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
 
     </footer>
   </div>
@@ -380,7 +372,91 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhyuxfyu000n3svj4g2ry980" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjhzxctcj0013ckvjvp5bamud" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
+  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>线程池的优点：</p>
+<ul>
+<li>降低资源开销：每次任务到达时不需要重新创建和销毁</li>
+<li>提高可管理性：统一对线程进行调优、监控</li>
+<li>提高任务响应速度：不需要等待线程创建</li>
+</ul>
+<p>线程池创建的各个参数：</p>
+<ul>
+<li>corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程）</li>
+<li>maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务</li>
+<li>keepAliveTime：存活时间。非核心线程可空闲的最大时间</li>
+<li>workQueue: 任务阻塞队列。当提交新任务且核心线程数已经被使用完时，新任务会先加入任务队列</li>
+</ul>
+<p>线程池中线程创建流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png" alt=""></p>
+<ol>
+<li>提交任务时，先判断核心线程数<strong>是否已经创建完毕</strong>，如果没有，则<strong>先将核心线程数创建满</strong>；反之则进入下个阶段</li>
+<li>判断核心线程数是否已经全部被占用，如果没有则交给核心线程执行；反之进入下个阶段</li>
+<li>判断工作队列是否已满，如果没满加入队列等待；反之进入下个阶段</li>
+<li>判断当前线程数是否小于MaxThread，如果是，则创建新线程执行任务；反之调用RejectPolicyHandler执行对应的策略</li>
+</ol>
+<h2 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h2><p>我们可以通过ThreadPoolExecutor创建一个线程池<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ThreadPoolExecutor(</span><br><span class="line">    <span class="keyword">int</span> corePoolSize,</span><br><span class="line">    <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">    <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">    TimeUnit unit,</span><br><span class="line">    BlockingQueue&lt;Runnable&gt; workQueue，</span><br><span class="line">    RejectedExecutionHandler handler)</span><br></pre></td></tr></table></figure></p>
+<p>1) corePoolSize: 当提交一个任务时（即使其他空闲核心线程也能够执行新任务），线程池会创建一个新线程来执行任务，等到corePoolSize个线程被创建了，就不再创建了。如果要额外创建，就要看后面的参数。如果调用了线程的<figure class="highlight plain"><figcaption><span>方法，线程池会提前创建并启动所有核心线程</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2) maximumPoolSize: 线程池允许创建的最大线程数。如果队列满了，并且已经创建的线程数小于最大线程数，则线程池会再创建新的线程执行任务。如果使用了无界队列，该参数没什么效果</span><br><span class="line"></span><br><span class="line">3) keepAliveTime: 线程池的工作线程空闲后，保持存活的时间。如果每个线程执行时间较短，可以将该值调大，提高线程利用率</span><br><span class="line"></span><br><span class="line">4) unit: 时间单位</span><br><span class="line"></span><br><span class="line">5) workQueue: 用于保存等待执行的任务的阻塞队列，可以选择以下几个阻塞队列：</span><br><span class="line"></span><br><span class="line">    * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO原则队元素进行排序</span><br><span class="line">    * LinkedBlockingQueue: 一个基于链表结构的阻塞，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法Executors.newFixedThreadPool()使用了这个队列。</span><br><span class="line">    * SynchronousQueue: 一个不存储元素的队列。每个插入操作要必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法Executors.newCachedThreadPool使用了这个队列</span><br><span class="line">    * PriorityQueue: 一个具有优先级的无限阻塞队列</span><br><span class="line"></span><br><span class="line">6) handler: RejectPolicy默认有四种：</span><br><span class="line">    * AbortPolicy，直接抛出异常</span><br><span class="line">    * DiscardPolicy，丢弃该任务，放弃处理</span><br><span class="line">    * CallerRunsPolicy，只用调用者线程执行任务</span><br><span class="line">    * DiscardOldestPolicy，丢弃队列里的队首元素</span><br><span class="line"></span><br><span class="line">## 执行任务</span><br><span class="line">线程池提交任务有两个方法向线程池提交任务，分别为execute()和submit():</span><br><span class="line"></span><br><span class="line">* execute: 执行后没有返回值，无法判断任务是否被线程池执行成功</span><br><span class="line">* submit: 提交后会返回一个Future类型的对象，通过该Future对象可以判断执行是否成功。其中get方法可以阻塞当前线程直到任务完成，get(timeout, unit)方法可以阻塞当前线程一段时间后返回</span><br><span class="line"></span><br><span class="line">## 关闭线程</span><br><span class="line">关闭线程池有两个方法，分别为```shutdown()``` 和 ```shutdownNow()</span><br></pre></td></tr></table></figure></p>
+<p>共同点：<br>遍历线程池中的所有线程，然后逐个调用线程的<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">不同点：</span><br><span class="line">* shutdownNow首先将线程池的状态设置为STOP状态，然后尝试停止所有的正在执行或暂停任务的线程，并返回等待执行任务的列表</span><br><span class="line">* shutdown只是将线程池的状态设置成SHUTDOWN状态，然后中断所有没有正在执行任务的线程</span><br><span class="line"></span><br><span class="line">当任意一个关闭方法被调用时，isShutdown()方法就会返回true。当所有的任务关闭后，调用isTerminated()才会返回true。</span><br><span class="line"></span><br><span class="line">具体要调用```shutdown()```还是```shutdownNow()```，需要根据具体业务来判断(通常调用```shutdown()```)。如果任务不一定要执行完，可以用```shutdownNow()</span><br></pre></td></tr></table></figure></p>
+<h2 id="合理配置"><a href="#合理配置" class="headerlink" title="合理配置"></a>合理配置</h2><ul>
+<li>任务的性质：CPU密集型任务、IO密集型任务、混合型任务</li>
+<li>任务的优先级：高、中、低</li>
+<li>任务的执行时间：长、中、短</li>
+<li>任务的依赖性：是否依赖其他系统资源，如  数据库连接</li>
+</ul>
+<p>如何挑选：</p>
+<ul>
+<li>CPU密集型任务需要长时间用到CPU运算，所以线程数量最好配置: N<sub>cpu + 1</sub> </li>
+<li>IO密集型任务并不是一直占用CPU，则尽可能配置多的线程: 2 * N<sub>cpu</sub></li>
+<li>如果是混合型任务，尝试将其拆分为CPU密集型任务和IO密集型任务</li>
+<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲时间越长，那么线程数应该设置的越大，这样才能更好的利用CPU。</li>
+</ul>
+<p>注意：建议使用有界队列，因为如果线程池里的工作线程全部阻塞，任务挤压在线程池里，最终会导致整个系统不可用</p>
+<h2 id="监控要素"><a href="#监控要素" class="headerlink" title="监控要素"></a>监控要素</h2><ul>
+<li>taskCount: 线程池需要执行的任务数量</li>
+<li>completedTaskCount: 线程池在运行过程中已完成的任务数量，小于等于taskCount</li>
+<li>targetPoolSize: 线程池里曾将创建过的最大线程数。通过这个数据可以直到线程池是否曾经瞒过。</li>
+<li>getPoolSize: 线程池的线程数量。如果线程池不销毁，线程池里的线程不会自动销毁，所以该值只增不减</li>
+<li>getActiveCount: 获取活动的线程数</li>
+</ul>
+<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<code>beforeExecute()</code>, <code>afterExecute()</code>, <code>terminated()</code> 方法，也可以在任务执行前、后执行一些代码来监控。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该篇主要了解了线程池的使用已经各个元素的含义以及监控时的优化。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjhzxctcc000ockvj8vlibvk4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -434,7 +510,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhyuxfz1000w3svjmhi0f0os" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjhzxctca000jckvjtln1m560" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -477,7 +553,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhyuxfya00073svjlstus9dd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjhzxctbz0006ckvj2fe6b1li" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -574,7 +650,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjhyuxfyz000t3svjonb5iv07" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjhzxctcm0018ckvj7wonm8cf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -897,7 +973,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjhyuxfyp000g3svjo7y6nkzt" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjhzxctc9000gckvjdz704v90" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -962,58 +1038,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjhyuxfy700063svjt75b5347" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-了解AQS之SharedLock" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/" class="article-date">
-  <time datetime="2018-05-09T14:49:13.000Z" itemprop="datePublished">2018-05-09</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/">了解AQS之SharedLock</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>前面已经学习过AQS的exclusive和condition两个模式，现在要把最后的shared模式看完。此次从shared的实现类——ReentrantReadWriteLock 开始分析。</p>
-<p>共享的特性：</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/shareMode.png" alt=""><br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/exclusiveMode.png" alt=""></p>
-<p>如果先获取到线程锁，那么独占锁就要等待；如果先获取独占锁，那么共享锁就要进入等待。对于共享锁来说，顾名思义大家可以一起访问这个资源（读）；对于独占锁来说，要想访问只能一一排队，一个个来修改，保证每次修改后的可见性。</p>
-<p>前面提到AQS是通过同步队列来管理同步状态的，而状态state只有一个变量，要想记录读/写两个状态，就只能将state拆分成2个16位，如下图所示</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/reentrantreadwritelock_state.png" alt=""></p>
-<p>高16位表示读状态，低16位表示写状态。比如获取读状态：<figure class="highlight plain"><figcaption><span>>>> 16```，获取写状态：```state & 0X0000FFFF```，根据状态划分可以得出以下结论：</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">当state不为0时而state低16位为0，则表示读锁已经被获取；当state不为0而state高16为0时，则表示写锁已经被获取。</span><br><span class="line"></span><br><span class="line">## 写锁的获取与释放</span><br><span class="line">写锁是一个可重入的排他锁。如果当前线程已经获取了写锁，则增加写状态。如果当前线程在获取写锁时，读锁已经被获取了或者该线程不是持有写锁的线程，则当前线程进入等待状态。</span><br><span class="line">```java</span><br><span class="line">protected final boolean tryAcquire(int acquires) &#123;</span><br><span class="line">    Thread current = Thread.currentThread();</span><br><span class="line">    int c = getState();</span><br><span class="line">    int w = exclusiveCount(c);</span><br><span class="line">    if (c != 0) &#123;</span><br><span class="line">        if (w == 0 || current != getExclusiveOwnerThread())</span><br><span class="line">            // 读锁已经被获取</span><br><span class="line">            return false;</span><br><span class="line">        if (w + exclusiveCount(acquires) &gt; MAX_COUNT)</span><br><span class="line">            // 重入次数超过最大值</span><br><span class="line">            throw new Error(&quot;Maximum lock count exceeded&quot;);</span><br><span class="line">        // 重入</span><br><span class="line">        setState(c + acquires);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    // writerShouldBlock是由子类实现的策略</span><br><span class="line">    // 如果writer是非公平锁，那么就一直返回false</span><br><span class="line">    // 如果writer是公平锁，那么就通过hasQueuedPredecessors()判断</span><br><span class="line">    if (writerShouldBlock() ||</span><br><span class="line">        !compareAndSetState(c, c + acquires))</span><br><span class="line">        return false;</span><br><span class="line">    // 设置唯一</span><br><span class="line">    setExclusiveOwnerThread(current);</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>该方法除了重入溢出的判断外，还增加了是否已经存在读锁的条件判断。如果存在读锁，则写锁不能被获取，原因在于：读写锁要确保写锁的操作对读锁可见，如果允许读锁在已被获取的情况下对写锁的获取，那么正在运行的其他读线程无法得知当前写线程的操作。写锁的缩放和ReentrantLock的释放过程基本类似，每次释放减少写状态，当写状态为0时表示写锁已经被释放。</p>
-<h2 id="读锁的获取与释放"><a href="#读锁的获取与释放" class="headerlink" title="读锁的获取与释放"></a>读锁的获取与释放</h2><p>读锁时一个支持重入的锁，它能够被多个线程获取，在没有其他写线程的访问时，读线程总会被成功获取，而所做的也只是增加读状态。如果当前线程已经获取了读锁，则增加读状态。如果当前线程在获取读锁时，写锁被其他线程获取，则进入等待状态。读状态保存的是总的读次数，每个线程的读取状态由ThreadLocal进行保存。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">tryAcquireShared</span><span class="params">(<span class="keyword">int</span> unused)</span> </span>&#123;</span><br><span class="line">    Thread current = Thread.currentThread();</span><br><span class="line">    <span class="keyword">int</span> c = getState();</span><br><span class="line">    <span class="comment">// 写锁已经被获取，直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (exclusiveCount(c) != <span class="number">0</span> &amp;&amp;</span><br><span class="line">        getExclusiveOwnerThread() != current)</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> r = sharedCount(c);</span><br><span class="line">    <span class="comment">// 根据队列策略，参考写锁；</span></span><br><span class="line">    <span class="comment">// 读锁个数不超过最大值</span></span><br><span class="line">    <span class="keyword">if</span> (!readerShouldBlock() &amp;&amp;</span><br><span class="line">        r &lt; MAX_COUNT &amp;&amp;</span><br><span class="line">        compareAndSetState(c, c + SHARED_UNIT)) &#123;</span><br><span class="line">        <span class="comment">// 读锁个数等于0</span></span><br><span class="line">        <span class="keyword">if</span> (r == <span class="number">0</span>) &#123;</span><br><span class="line">            firstReader = current;</span><br><span class="line">            firstReaderHoldCount = <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (firstReader == current) &#123;</span><br><span class="line">            firstReaderHoldCount++;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            HoldCounter rh = cachedHoldCounter;</span><br><span class="line">            <span class="keyword">if</span> (rh == <span class="keyword">null</span> || rh.tid != getThreadId(current))</span><br><span class="line">                cachedHoldCounter = rh = readHolds.get();</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (rh.count == <span class="number">0</span>)</span><br><span class="line">                readHolds.set(rh);</span><br><span class="line">            rh.count++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果前面都不满足条件，进入该方法，自选到成功获取读锁</span></span><br><span class="line">    <span class="keyword">return</span> fullTryAcquireShared(current);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>如果这一步获取失败，那么就会转入<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">```java</span><br><span class="line">private void setHeadAndPropagate(Node node, int propagate) &#123;</span><br><span class="line">    // 保存头结点</span><br><span class="line">    Node h = head;</span><br><span class="line">    // 设置头结点</span><br><span class="line">    setHead(node);</span><br><span class="line">    // propagate大于0 OR 头结点为空 OR 头结点的状态 &lt; 0 OR 重新获取头结点时的状态</span><br><span class="line">    if (propagate &gt; 0 || h == null || h.waitStatus &lt; 0 ||</span><br><span class="line">        (h = head) == null || h.waitStatus &lt; 0) &#123;</span><br><span class="line">        // 获取当前结点的下个结点并唤醒它（因为独占锁，后面的共享锁阻塞；</span><br><span class="line">        // 当独占锁被释放后，共享锁的结点应该苏醒）</span><br><span class="line">        Node s = node.next;</span><br><span class="line">        // 该操作会唤醒不必要的结点，但是为了避免多线程发生竞争，所以需要尽可能快的通知其他线程</span><br><span class="line">        if (s == null || s.isShared())</span><br><span class="line">            doReleaseShared();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>读锁的每次释放会将读状态减去值<code>1 &lt;&lt; 16</code></p>
-<h2 id="锁降级"><a href="#锁降级" class="headerlink" title="锁降级"></a>锁降级</h2><p>锁降级不是获取写锁，释放，再获取读锁（不是分段的）；而是先获取写锁，再获取读锁，释放写锁（是交叉的）。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>ReentrantReadWriteLock是独占锁和共享锁的合体，在write方面是独占的，read方面是共享的，因为有两个锁，为了管理两个状态，提出了划分高16位作为读状态，低16位作为写状态</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjhyuxfzf001g3svjru8rfxfj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjhzxctc7000eckvj5s166e7p" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -1051,7 +1076,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 13.33px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -1073,23 +1098,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/03/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/04/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/03/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/03/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/03/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/06/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/03/了解阻塞队列之DelayQueue/">了解阻塞队列之DelayQueue</a>
+            <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/">《深入Java虚拟机》之GC Roots及拓展</a>
           </li>
         
       </ul>
