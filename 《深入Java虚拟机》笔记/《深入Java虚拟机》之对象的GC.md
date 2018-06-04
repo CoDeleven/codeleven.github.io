@@ -56,4 +56,3 @@ JVM用的不是引用计数法，证明方法就是 **循环引用** （注意�
 -XX:+TraceClassUnLoading  查看类的卸载信息
 -Xnoclassgc  关闭虚拟机对类的回收
 
-
