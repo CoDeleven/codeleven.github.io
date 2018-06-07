@@ -3,18 +3,19 @@
 <head>
   <meta charset="utf-8">
   
-  <title>CoDeleven的个人博客</title>
+  <title>《深入Java虚拟机》之堆 | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="Codeleven的博客">
+<meta name="keywords" content="JVM">
 <meta property="og:type" content="article">
-<meta property="og:title" content="CoDeleven的个人博客">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/06/04/(未埋)了解阻塞队列之PriorityBlockingQueue/index.html">
+<meta property="og:title" content="《深入Java虚拟机》之堆">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之堆/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
 <meta property="og:description" content="Codeleven的博客">
 <meta property="og:locale" content="zh">
-<meta property="og:updated_time" content="2018-05-12T03:27:46.804Z">
+<meta property="og:updated_time" content="2018-06-05T01:10:48.399Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CoDeleven的个人博客">
+<meta name="twitter:title" content="《深入Java虚拟机》之堆">
 <meta name="twitter:description" content="Codeleven的博客">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
@@ -64,15 +65,25 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-(未埋)了解阻塞队列之PriorityBlockingQueue" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-《深入Java虚拟机》之堆" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之PriorityBlockingQueue/" class="article-date">
-  <time datetime="2018-06-04T07:19:12.948Z" itemprop="datePublished">2018-06-04</time>
+    <a href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之堆/" class="article-date">
+  <time datetime="2018-06-05T01:10:41.000Z" itemprop="datePublished">2018-06-05</time>
 </a>
     
   </div>
   <div class="article-inner">
     
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《深入Java虚拟机》之堆
+    </h1>
+  
+
+      </header>
     
     <div class="article-entry" itemprop="articleBody">
       
@@ -80,28 +91,30 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/04/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjhzxctbi0002ckvjstwerm06" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之堆/" data-id="cji4fx93n0013l0vjxp9k0kpe" class="article-share-link">Share</a>
       
       
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
     </footer>
   </div>
   
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之LinkedTransferQueue/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          (no title)
+          《深入Java虚拟机》之回收策略及实践
         
       </div>
     </a>
   
   
-    <a href="/codeleven.github.io/2018/06/04/《七周七并发模型》第一章第一天/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">《七周七并发模型》第一章第一天</div>
+      <div class="article-nav-title">《深入Java虚拟机》之GC Roots及拓展</div>
     </a>
   
 </nav>
@@ -130,7 +143,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -152,23 +165,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/04/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/07/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/07/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/07/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/06/07/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/">《深入Java虚拟机》之GC Roots及拓展</a>
+            <a href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/">《深入Java虚拟机》之回收策略及实践</a>
           </li>
         
       </ul>
