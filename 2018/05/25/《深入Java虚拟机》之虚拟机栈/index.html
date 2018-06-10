@@ -16,7 +16,9 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/jvm-locals.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/operator_stack.png">
-<meta property="og:updated_time" content="2018-06-03T13:22:22.211Z">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1_method_ref.png">
+<meta property="og:updated_time" content="2018-06-09T08:03:47.443Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《深入Java虚拟机》之虚拟机栈">
 <meta name="twitter:description" content="Java内存区域图 注意：深底色为共享内存区域 先讲解虚拟机栈 虚拟机栈虚拟机是线程私有的，它的生命周期与线程相同，每个方法在执行的时候都会创建一个栈帧用于存储局部变量表、操作数栈、动态链接、方法出口等信息。每一个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程。 局部变量表用于存放方法参数和方法内部定义的局部变量。在编译后，局部变量表的大小就确定了，具体见代码和对应的字节">
@@ -123,6 +125,19 @@
 <li>解析，调用的方法版本一定是在编译期就确定下来的，比如静态方法、私有方法、实例构造器、父类方法四种</li>
 <li>分派，可能是静态也可能是动态，主要是重载和重写</li>
 </ol>
+<p>因为调用什么方法签名的方法在编译期就已经决定了，如下所示<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java代码</span></span><br><span class="line">Super aSuper = <span class="keyword">new</span> Sub();</span><br><span class="line">A a = <span class="keyword">new</span> B();</span><br><span class="line">aSuper.test(a);</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1.png" alt="上述代码的字节码"></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1_method_ref.png" alt="字节码#6的引用点"></p>
+<p>第11行已经决定了调用Super.test(A)方法，此时称该方法为 <code>Resolved Method</code>，但是具体调用哪个实例的test(A)，需要取决以下的规则</p>
+<blockquote>
+<p>假设C是一个对象的类，决定哪个方法被调用的规则如下所示：</p>
+<ol>
+<li>如果C声明了一个方法m并且覆盖了<code>Resolved Method</code>，那么方法m就会被调用</li>
+<li>否则，如果C有一个父类，那么搜索实现了 <code>Resolved Method</code> 的方法的直接父类，并向上递归查找。</li>
+<li>抛出异常</li>
+</ol>
+</blockquote>
+<p>综上所是，截至JDK7，java是静态多分派，动态单分派（多分派指需要参考多个元素）：方法重载要考虑调用者的类型，考虑方法的参数，这些都是在编译期就固定在字节码里面了。而动态分配要到运行时，才会去查找具体的实例。</p>
 <h3 id="方法返回地址"><a href="#方法返回地址" class="headerlink" title="方法返回地址"></a>方法返回地址</h3><ul>
 <li>正常返回，将返回值传递给上层的方法调用者</li>
 <li>异常完成出口，在方法执行过程中遇到了异常，并且这个异常没有在方法内得到处理</li>
@@ -133,7 +148,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cji4fx943001ll0vj4rl7w21b" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cji8vhlwy001itcvjxy5pi1em" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -175,7 +190,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/English/">English</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -185,7 +200,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/English/" style="font-size: 10px;">English</a> <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -207,23 +222,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/07/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/10/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/07/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/10/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/07/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/10/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/07/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/06/10/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/">《深入Java虚拟机》之回收策略及实践</a>
+            <a href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/">《深入Java虚拟机》之类加载</a>
           </li>
         
       </ul>
