@@ -14,7 +14,8 @@
 <meta property="og:description" content="类加载总共分为以下几个阶段：  加载 验证 准备 解析 初始化 使用 卸载   每个阶段并非按部就班的执行或完成，而是混合式进行的，通常会在一个阶段执行的过程中调用、激活。 类加载会在以下几种情况下被触发：  遇到new、putstatic、getstatic、invokestatic这四条字节码指令时，如果类没有进行过初始化，则需先触发其初始化。上述四条指令分别对应：创建新对象、 对静态字段赋值">
 <meta property="og:locale" content="zh">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/ClassLoading.png">
-<meta property="og:updated_time" content="2018-06-09T08:46:20.491Z">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/jvm/classload_summary.png">
+<meta property="og:updated_time" content="2018-06-14T08:07:31.843Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《深入Java虚拟机》之类加载">
 <meta name="twitter:description" content="类加载总共分为以下几个阶段：  加载 验证 准备 解析 初始化 使用 卸载   每个阶段并非按部就班的执行或完成，而是混合式进行的，通常会在一个阶段执行的过程中调用、激活。 类加载会在以下几种情况下被触发：  遇到new、putstatic、getstatic、invokestatic这四条字节码指令时，如果类没有进行过初始化，则需先触发其初始化。上述四条指令分别对应：创建新对象、 对静态字段赋值">
@@ -175,11 +176,96 @@
 <p>而如果该static域被final修饰了，那么当该属性所属的类在编译期就会产生一个ConstantValue。在类的加载过程中，static域就会被初始化为对应的ConstantValue</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">128</span>;</span><br><span class="line"><span class="comment">// 当在准备阶段时，该类的a属性被初始化为0</span></span><br></pre></td></tr></table></figure>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">128</span>;</span><br><span class="line"><span class="comment">// 在编译期时，128作为ConstantValue被存储到Class文件中</span></span><br><span class="line"><span class="comment">// 在准备阶段时，该类的a属性值立刻被初始化为128</span></span><br></pre></td></tr></table></figure>
-<h1 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h1>
+<h1 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h1><p>虚拟机将常量池内的符号引用转换成直接引用的过程，符号引用在Class文件中以 CONSTANT_Class_info 、CONSTANT_Methodref_info、CONSTANT_Field_info形式进行记录。</p>
+<ul>
+<li>符号引用：符号引用以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义地定位到目标即可。符号引用在各虚拟机里表现不同，内存布局也不同，但是虚拟机能够接受的符号引用都是一样的，因为这是java虚拟机规范</li>
+<li>直接引用：直接引用是一个在运行时的概念，可以是指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。直接引用和内存布局是相关的，同一个符号引用在不同虚拟机上会转换出的直接引用一般不同。如果有了直接引用，那引用目标必定已经存在内存里了。</li>
+</ul>
+<p>虚拟机会在遇到以下指令之前触发解析</p>
+<ul>
+<li>anewarray</li>
+<li>checkcast</li>
+<li>getfield</li>
+<li>getstatic</li>
+<li>instanceof</li>
+<li>invokedynamic</li>
+<li>invokeinterface</li>
+<li>invokespecial</li>
+<li>invokestatic</li>
+<li>invokevirtual</li>
+<li>ldc</li>
+<li>ldc_w</li>
+<li>multianewarray</li>
+<li>new </li>
+<li>putfield</li>
+<li>putstatic<br>这16个指令囊括一下就有以下的规律：</li>
+<li>创建的时候——anewarray、new、multianewarray、ldc、ldc_w（后两个创建字符串时会触发</li>
+<li>类型判断或转换的时候——checkcast、instanceof</li>
+<li>调用方法时——invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual</li>
+<li>获取字段/赋值——getfield、getstatic、putfield、putstatic</li>
+</ul>
+<p>触发解析阶段可能会在加载类时就触发，也可能运行到以上指令前触发，这是根据具体虚拟机的实现而定的。</p>
+<p>除invokedynamic指令以外的指令满足如下条件：<br>虚拟机可能会对同一个符号引用调用很多次，但是虚拟机通常会将第一次解析结果进行缓存（通过在运行时常量池记录直接引用以及标记符号引用已被解析），但是仍然会发生多次解析同一个符号引用的情形，那么虚拟机需要保证第一次解析成功，后续对其的解析也必须成功；同理，如果第一次解析失败，后续的解析都要抛出相同的异常。</p>
+<p>而invokedynamic之所以如此特别，主要在于它是用于动态语言的指令，它所对应的引用称为 <strong>动态调用限定符</strong>，这里动态的意思是指必须等到实际程序运行到该条命令时，解析动作才能进行。其余的指令，可以在运行到指令前（加载时）就可以触发解析。</p>
+<h2 id="类解析"><a href="#类解析" class="headerlink" title="类解析"></a>类解析</h2><p>当解析类或接口时，假设当前执行的代码类是D。<br>如果遇到了一个类，需要把一个从未解析过的符号引用N解析为一个类或接口C的直接引用，虚拟机要完成以下三个步骤：</p>
+<ol>
+<li>如果该类不是数组类，那虚拟机会将代表N的全限定名传给D的类加载器去加载该类或接口C。在加载过程中，无论哪个阶段抛出异常，解析过程就宣告失败。</li>
+<li>如果该类是数组类，并且数组元素的类型为对象，也就是N的描述符是类似”[java/lang/String”的形式，那么会采用第一点的规则加载数组元素类型。假设N的描述符和上述一样，那么需要加载的数组元素类型就是”java.lang.String”，接着会由虚拟机生成一个代表此维度和元素的数组对象</li>
+<li>如果上面的步骤没有问题，那么C已经成为一个有效的类或接口，但在解析完成之前还要进行符号引用验证，即确认D是否具备对C的访问权限。如果发现不具备，将抛出java.lang.IllegalAccessError。</li>
+</ol>
+<h2 id="字段解析"><a href="#字段解析" class="headerlink" title="字段解析"></a>字段解析</h2><p>要解析一个未被解析过的字段符号引用，首先需要对该字段所处的类进行解析，也就是类或接口的符号引用。如果在解析这个类或接口过程中失败，都会导致字段符号引用的解析失败。如果解析成功完成，那将这个字段所属的类或接口用C表示，虚拟机会后续对字段符号引用进行如下查找：</p>
+<ol>
+<li>如果C本身就是该字段的引用类型，且简单名称和字段描述符都与目标字段相匹配，则返回这个字段的直接引用，查找结束</li>
+<li>否则，如果C实现了接口，那么就从接口里（递归查找）进行查找，如果接口中包含了简单名称和字段描述都与目标字段相匹配，则返回这个字段的直接引用。</li>
+<li>否则，如果C继承了父类，那么就从父类进行递归查找，如果在父类中包含了简单名称和字段描述符都与目标字段相匹配的字段，则返回这个字段的直接引用。</li>
+<li>否则查找失败，抛出NoSuchFieldError异常</li>
+<li>查找成功后，进行访问权限的校验</li>
+</ol>
+<p>注意，实际虚拟机的编译器实现会比上述更严格一些，即实现的接口、继承的类都声明了同个字段，可能会提示字段混淆的异常。</p>
+<h2 id="类方法解析"><a href="#类方法解析" class="headerlink" title="类方法解析"></a>类方法解析</h2><p>对于被调用的方法，先解析它所属类或接口的符号引用，如果解析成功，我们依然用C表示这个类，接下来会按以下的规则进行查找：</p>
+<ol>
+<li>类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError</li>
+<li>如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则在C的父类中递归查找是否有简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则在C实现的接口列表及它们的父接口中递归查找简单名称和描述符都匹配的目标方法，如果存在匹配方法，说明类C是抽象类方法（因为前面的可能都不存在），抛出AbstractMethodError</li>
+<li>否则，抛出NoSuchMethodError</li>
+<li>返回直接引用时，并对这个方法进行权限校验</li>
+</ol>
+<blockquote>
+<p>Your newly packaged library is not backward binary compatible (BC) with old version. For this reason some of the library clients that are not recompiled may throw the exception.<br>This is a complete list of changes in Java library API that may cause clients built with an old version of the library to throw java.lang.IncompatibleClassChangeError if they run on a new one (i.e. breaking BC):<br>Non-final field become static,</p>
+</blockquote>
+<blockquote>
+<p>Non-constant field become non-static,</p>
+</blockquote>
+<blockquote>
+<p>Class become interface,</p>
+</blockquote>
+<blockquote>
+<p>Interface become class,</p>
+</blockquote>
+<blockquote>
+<p>if you add a new field to class/interface (or add new super-class/super-interface) then a static field from a super-interface of a client class C may hide an added field (with the same name) inherited from the super-class of C (very rare case).</p>
+</blockquote>
+<h2 id="接口方法解析"><a href="#接口方法解析" class="headerlink" title="接口方法解析"></a>接口方法解析</h2><p>对于被调用的接口，先查找该方法所属的接口，如果解析成功，我们用C表示这个类，接下来按以下的规则进行查找：</p>
+<ol>
+<li>类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError</li>
+<li>如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则查找C的父类接口，直到java.lang.Object，如果找到简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则抛出，NoSuchMethodError<br>由于interface里面都是public方法，所以不用校验权限</li>
+</ol>
+<h1 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h1><p>类加载阶段里的准备阶段已经将常量（final修饰）的变量进行初始化为给定数值，把非常量的静态变量初始化为默认值。而该阶段就是将非常量的静态变量按照开发人员的意图进行初始化：</p>
+<ol>
+<li>编译期收集一个类的全部静态类型（包括static字段、static块）</li>
+<li>按收集顺序（程序里的排列顺序）依次排序到 <cinit></cinit></li>
+</ol>
+<p><cinit>不是必须的，如果父类或者接口类没有静态字段或者静态块，编译期就不会生成<cinit>方法。另外，与类不同的是，接口的静态字段需要等到用户真正调用时才会初始化。遇到多个线程初始化同一个类的情况时，虚拟机会保证只有一个线程执行<cinit>，其他线程就会进入阻塞状态直到该线程执行完初始化；</cinit></cinit></cinit></p>
+<p>虚拟机会保证先执行父类的<cinit>，再执行子类的<cinit>，所以java.lang.Object一定是第一个被初始化的类。</cinit></cinit></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/classload_summary.png" alt=""></p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cji8vhlwy001gtcvjvta9rklz" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjikafqpi001iawvjr81yc8c6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -190,11 +276,11 @@
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/06/10/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          《七周七并发模型》第一章第一天
+          《深入剖析Tomcat》之第一章
         
       </div>
     </a>
@@ -221,7 +307,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/English/">English</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -231,7 +317,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/English/" style="font-size: 10px;">English</a> <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -253,23 +339,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/06/18/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/">《深入Java虚拟机》之类加载</a>
+            <a href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/">《深入剖析Tomcat》之第一章</a>
           </li>
         
       </ul>

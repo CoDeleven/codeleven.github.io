@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>《深入剖析Tomcat》之第一章 | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="本章主要学习了如何自己搭建简易的Socket服务器/客户端。内容从以下几个部分展开：  HTTP请求结构 Socket/ServerSocket 结构剖析  HTTP请求结构HTTP允许WEB服务器和浏览器通过Internet发送并接收数据，是一种基于“请求-响应”的 协议。客户端请求一个文件，HTTP服务器会对该请求进行响应。HTTP使用可靠的TCP链接，默认端口为80. 在搭建自己的简易服务器">
+<meta name="keywords" content="Tomcat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《深入剖析Tomcat》之第一章">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/06/18/《深入剖析Tomcat》之第一章/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="本章主要学习了如何自己搭建简易的Socket服务器/客户端。内容从以下几个部分展开：  HTTP请求结构 Socket/ServerSocket 结构剖析  HTTP请求结构HTTP允许WEB服务器和浏览器通过Internet发送并接收数据，是一种基于“请求-响应”的 协议。客户端请求一个文件，HTTP服务器会对该请求进行响应。HTTP使用可靠的TCP链接，默认端口为80. 在搭建自己的简易服务器">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2018-06-18T13:19:31.029Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《深入剖析Tomcat》之第一章">
+<meta name="twitter:description" content="本章主要学习了如何自己搭建简易的Socket服务器/客户端。内容从以下几个部分展开：  HTTP请求结构 Socket/ServerSocket 结构剖析  HTTP请求结构HTTP允许WEB服务器和浏览器通过Internet发送并接收数据，是一种基于“请求-响应”的 协议。客户端请求一个文件，HTTP服务器会对该请求进行响应。HTTP使用可靠的TCP链接，默认端口为80. 在搭建自己的简易服务器">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-《深入剖析Tomcat》之第一章" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/" class="article-date">
+  <time datetime="2018-06-18T08:06:17.000Z" itemprop="datePublished">2018-06-18</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      《深入剖析Tomcat》之第一章
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>本章主要学习了如何自己搭建简易的Socket服务器/客户端。内容从以下几个部分展开：</p>
+<ul>
+<li>HTTP请求结构</li>
+<li>Socket/ServerSocket</li>
+<li>结构剖析</li>
+</ul>
+<h1 id="HTTP请求结构"><a href="#HTTP请求结构" class="headerlink" title="HTTP请求结构"></a>HTTP请求结构</h1><p>HTTP允许WEB服务器和浏览器通过Internet发送并接收数据，是一种基于“请求-响应”的 <strong>协议</strong>。客户端请求一个文件，HTTP服务器会对该请求进行响应。HTTP使用可靠的TCP链接，默认端口为80.</p>
+<p>在搭建自己的简易服务器之前，我们需要了解一下<a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5" target="_blank" rel="noopener">HTTP的规范</a>。</p>
+<p>在这里简单的介绍一下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// Method是指请求方法、space是空格、Request-Uri是请求的Uri、Http-Version是指Http版本、CRLF是\r\n</span><br><span class="line">Method space Request-Uri space Http-Version CRLF</span><br><span class="line">// 代表通用的header，比如Cache-Control、Connection、Date等可以在请求、响应里使用的</span><br><span class="line">[general-header]&#123;0,&#125; CRLF</span><br><span class="line">// 请求专用的头部</span><br><span class="line">[request-header]&#123;0,&#125; CRLF</span><br><span class="line">// 实体头部，通常是带有实体时才会存在该部分</span><br><span class="line">[entity-header] CRLF</span><br><span class="line">CRLF</span><br><span class="line">[message-body]</span><br></pre></td></tr></table></figure></p>
+<p>响应请求也是差不多的结构，就是request-header 改成 response-header</p>
+<h1 id="Socket-ServerSocket"><a href="#Socket-ServerSocket" class="headerlink" title="Socket/ServerSocket"></a>Socket/ServerSocket</h1><p>这两个API统称为 <strong>套接字</strong>，套接字能让应用程序从网络中读取数据，也可以向网络中写入数据。</p>
+<h2 id="Socket"><a href="#Socket" class="headerlink" title="Socket"></a>Socket</h2><p>客户端需要使用Socket连接服务器，以下是其众多构造函数之一，第一个参数是主机名（或IP地址），参数port是连接远程应用程序的端口。<br><code>public Socket(java.lang.String host, int port)</code></p>
+<p>比如要连接 <strong>bilibili.com</strong>，可以使用下面的语句创建Socket：<br><code>new Socket(&quot;bilibili.com&quot;, 80);</code></p>
+<p>一旦成功创建了Socket类的实例，就可以使用该实例发送或接收字节流。要发送字节流，需要调用Socket类的getOutputStream()获取输出流，如果要接收另一端的数据，则需要调用getInputStream()获取输入流。</p>
+<h2 id="ServerSocket"><a href="#ServerSocket" class="headerlink" title="ServerSocket"></a>ServerSocket</h2><p>服务端需要使用ServerSocket监听机器上的某个端口是否有请求到达，ServerSocket提供了4种构造函数，我们使用其中任意一个即可：<br><code>public ServerSocket(int port, int backLog, InetAddress bindingAddress)</code><br>第一个参数表示要监听的端口，第二个参数表示最大可接受的连接请求队列，第三个为想要绑定的IP地址（适用于多网卡的主机）</p>
+<p>更加具体的可以看<a href="">Socket和ServerSocket详解</a>;</p>
+<h1 id="结构剖析"><a href="#结构剖析" class="headerlink" title="结构剖析"></a>结构剖析</h1><p>该Web应用主要包括3个类：</p>
+<ul>
+<li>Server</li>
+<li>Request</li>
+<li>Response</li>
+</ul>
+<p>该章学习到的结构方面的内容如下所示：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取InputStream封装到Request里</span></span><br><span class="line">Request request = <span class="keyword">new</span> Request(conn.getInputStream());</span><br><span class="line"><span class="comment">// 对接收到的内容进行解析</span></span><br><span class="line">request.parse();</span><br><span class="line"><span class="comment">// 获取OutputStream封装到Response里</span></span><br><span class="line">Response response = <span class="keyword">new</span> Response(conn.getOutputStream());</span><br><span class="line"><span class="comment">// 将Request设置给Response，Response需要知道Request的内容</span></span><br><span class="line">response.setRequest(request);</span><br><span class="line"><span class="comment">// 发送响应</span></span><br><span class="line">response.sendStaticResource();</span><br></pre></td></tr></table></figure></p>
+<p>该结构其实就是Tomcat以宏观角度看到的情形，将接收的请求数据封装到Request，将输出流封装到Response里，然后将Request和Response均交给service()方法处理。</p>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><p><a href="https://github.com/CoDeleven/Immerse2Tomcat/tree/master/ch01-SimpleHttp" target="_blank" rel="noopener">代码</a></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/06/18/《深入剖析Tomcat》之第一章/" data-id="cjikafqpy0020awvj9ncr1ci0" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/06/18/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">《深入Java虚拟机》之类加载</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/18/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/">《深入剖析Tomcat》之第一章</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

@@ -65,6 +65,103 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《Java并发编程的艺术》之阻塞队列" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/" class="article-date">
+  <time datetime="2018-05-12T01:48:01.000Z" itemprop="datePublished">2018-05-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/">《Java并发编程的艺术》之阻塞队列</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>阻塞队列是一个支持两个附加操作的队列。这两个附加的操作支持阻塞的插入和移除方法：</p>
+<p>1) 支持阻塞的插入方法：当队列满时，队列会阻塞执行插入的线程<br>2) 支持阻塞的移除方法：当队列空时，队列会阻塞执行移除的线程</p>
+<p>方法总结：</p>
+<table>
+<thead>
+<tr>
+<th>方法/处理方式</th>
+<th>抛出异常</th>
+<th>返回特殊值</th>
+<th>一直阻塞</th>
+<th>超时退出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>插入方法</td>
+<td>add(e)</td>
+<td>offer(e)</td>
+<td>put(e)</td>
+<td>offer(e, time, unit)</td>
+</tr>
+<tr>
+<td>移除方法</td>
+<td>无</td>
+<td>poll()</td>
+<td>take()</td>
+<td>poll(time, unit)</td>
+</tr>
+<tr>
+<td>检测方法</td>
+<td>element()</td>
+<td>peek()</td>
+<td>无</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>抛出异常：当队列满时，插入元素会抛出<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">* 返回特殊值：offer()是入队方法，当插入成功时返回true，插入失败返回false；poll()是出队方法，当出队成功时返回元素的值，队列为空时返回null</span><br><span class="line">* 一直阻塞：当队列满时，阻塞执行插入方法的线程；当队列空时，阻塞执行出队方法的线程</span><br><span class="line">* 超时退出：顾名思义</span><br><span class="line"></span><br><span class="line">在JDK7里，Java的阻塞队列总共有七个，每个类都继承```AbstractQueue```：</span><br><span class="line"></span><br><span class="line">* ArrayBlockingQueue</span><br><span class="line">* LinkedTransferQueue</span><br><span class="line">* SynchronousQueue</span><br><span class="line">* DelayQueue</span><br><span class="line">* LinkedBlockingDeque</span><br><span class="line">* LinkedBlockingQueue</span><br><span class="line">* PriorityBlockingQueue</span><br><span class="line"></span><br><span class="line">## ArrayBlockingQueue</span><br><span class="line">该类是通过数组实现的有界阻塞队列，此队列按照FIFO的原则对元素进行排列。默认情况下不保证线程公平的访问队列，所谓公平访问是指阻塞的线程，可以按照阻塞的先后顺序访问队列，即先阻塞的先访问。公平访问是由ReentrantLock的公平锁实现的：</span><br><span class="line">```java</span><br><span class="line">public ArrayBlockingQueue(int capacity, boolean fair) &#123;</span><br><span class="line">    if (capacity &lt;= 0)</span><br><span class="line">        throw new IllegalArgumentException();</span><br><span class="line">    this.items = new Object[capacity];</span><br><span class="line">    lock = new ReentrantLock(fair);</span><br><span class="line">    notEmpty = lock.newCondition();</span><br><span class="line">    notFull =  lock.newCondition();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<ol>
+<li>因为直接创建的数组，ArrayBlockingQueue的长度无法更改，</li>
+<li>当ReentrantLock设置为公平锁后，后续所有Lock竞争中都会是公平竞争，没看过Condition原理的小伙伴会想，那和Condition有什么关系呢？答案是Condition在被唤醒时也要参与竞争Lock，那么在Lock竞争中都会遵守公平竞争。</li>
+</ol>
+<h2 id="LinkedBlockingQueue"><a href="#LinkedBlockingQueue" class="headerlink" title="LinkedBlockingQueue"></a>LinkedBlockingQueue</h2><p>该类是一个用链表实现的有界阻塞队列（也不算有界，只是因为计数器最多只能计Integer.MAX_VALUE)。此队列的默认和最大长度为Integer.MAX_VALUE。按照先进先出的原则对元素进行排列。</p>
+<h2 id="PriorityBlockingQueue"><a href="#PriorityBlockingQueue" class="headerlink" title="PriorityBlockingQueue"></a>PriorityBlockingQueue</h2><p>该类是一个支持优先级的无界阻塞队列。默认情况下元素采取自然升序的排序方式。也可以自定义类实现compareTo()来指定元素排序规则，或者初始化时指定Comparator来对元素排序。<br>详见：<a href="">坑还没填，迟点填</a></p>
+<h2 id="DelayQueue"><a href="#DelayQueue" class="headerlink" title="DelayQueue"></a>DelayQueue</h2><p>支持延时获取元素的无界阻塞队列。队列使用<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">运用场景：</span><br><span class="line">* 缓存系统的设计：可以用DelayQueue保存缓存元素的有效期，使用一个线程循环查询DelayQueue，一旦能从DelayQueue中获取元素，表示缓存有效期到了</span><br><span class="line">* 定时任务调度：使用DelayQueue保存当天将会执行的任务和执行时间，一旦从DelayQueue中获取到任务就开始执行，比如TimerQueue</span><br><span class="line"></span><br><span class="line">执行流程如下所示：</span><br><span class="line"></span><br><span class="line"> 首先实现```Delayed```接口：</span><br><span class="line"> ```java</span><br><span class="line"> @Override</span><br><span class="line"> public long getDelay(TimeUnit unit)&#123;</span><br><span class="line">     // 返回当前元素还需要等待多久，当返回&lt;0的值时，表示可以出队；&gt;0时，表示仍需要等待</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>第二步，每次offer()时，往<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第三步，每次获取时(调用take()，才能有阻塞的功能)，如果时间未满会先阻塞</span><br><span class="line">```java</span><br><span class="line">for (;;) &#123;</span><br><span class="line">    E first = q.peek();</span><br><span class="line">    if (first == null)</span><br><span class="line">        available.await();</span><br><span class="line">    else &#123;</span><br><span class="line">        long delay = first.getDelay(NANOSECONDS);</span><br><span class="line">        if (delay &lt;= 0)</span><br><span class="line">            return q.poll();</span><br><span class="line">        first = null; // don&apos;t retain ref while waiting</span><br><span class="line">        if (leader != null)</span><br><span class="line">            available.await();</span><br><span class="line">        else &#123;</span><br><span class="line">            Thread thisThread = Thread.currentThread();</span><br><span class="line">            leader = thisThread;</span><br><span class="line">            try &#123;</span><br><span class="line">                available.awaitNanos(delay);</span><br><span class="line">            &#125; finally &#123;</span><br><span class="line">                if (leader == thisThread)</span><br><span class="line">                    leader = null;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>具体的可以看： <a href="">了解之DelayQueue</a></p>
+<h2 id="SynchronousQueue"><a href="#SynchronousQueue" class="headerlink" title="SynchronousQueue"></a>SynchronousQueue</h2><p>一个不存储元素的队列，生产者生产一个，消费者消费一个，每一个put操作都需要等待一个take操作。该队列主要负责生产者线程处理的数据传递给消费者线程。比较适合传递性场景。其吞吐量高于ArrayBlockingQueue和LinkedBlockingQueue</p>
+<h2 id="LinkedTransferQueue"><a href="#LinkedTransferQueue" class="headerlink" title="LinkedTransferQueue"></a>LinkedTransferQueue</h2><p>该类主要添加了两个方法：<code>transfer()</code>和<code>tryTransfer()</code><br><code>transfer()</code> 主要是当消费者线程在等待的时候，生产者一产生元素，就立刻交给消费者，不需要再进行额外的入队操作；如果没有消费者在等待，就先进入队尾。<br><code>tryTransfer()</code> 用来试探生产者传入的元素是否能直接传给消费者。</p>
+<p>具体的可以看：<a href="">了解之LinkedTansferQueue</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>ArrayBlockingQueue</li>
+<li>LinkedBlockingQueue</li>
+<li>LinkedBlockingDeque</li>
+<li>SynchronousQueue<br>上面四个是较为简单的，数据结构和各个方法都较为简单就不一一阐述了。剩下三个则是比较大头的，而且比较新颖，打算单独拎出来讲解</li>
+</ul>
+<p>该章主要是粗略的了解一下其他阻塞队列的功能，对于一些不常见的类，后续会补上详细的分析（其实是先补充一波数据结构和算法）</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjikafqpi001aawvj3y428jnl" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《Java并发编程的艺术》之ConcurrentLinkedQueue" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" class="article-date">
@@ -376,7 +473,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cji8vhlwi000utcvjtuqsj1k3" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjikafqp1000bawvjbudx40dv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -441,7 +538,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cji8vhlw20008tcvjr7qc60ys" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjikafqow0006awvjdphf856j" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -492,7 +589,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cji8vhlxd001utcvjlap366nz" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjikafqqd002aawvjqy0jhu6p" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -554,7 +651,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cji8vhlwi000rtcvjb0937at5" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjikafqp2000lawvj8yqxog5b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -634,7 +731,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cji8vhlw2000btcvjbvoukx0k" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cjikafqp2000cawvjxkt9dby4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -695,7 +792,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cji8vhlwi000dtcvjhaipzybr" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjikafqp2000tawvjon8hsp8r" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -788,7 +885,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cji8vhlwi000gtcvjolpzqn5q" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjikafqp2000hawvj5km7234q" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -891,7 +988,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cji8vhlwi000ptcvj0n5h917j" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjikafqp2000qawvjbcu16f49" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -1033,65 +1130,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cji8vhlwi000mtcvjwrjbofyh" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjikafqoy0008awvj1ralqn1s" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-9" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/9/" class="article-date">
-  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/9/">2018年6月9日英语学习笔记</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <ul>
-<li><strong>architect</strong><br>  He is an architect of the future</li>
-<li><strong>stuff</strong><br>  this stuff don’t grow on trees.  这东西不是从天上掉下来的</li>
-<li><strong>genius</strong><br>  Einstein is a genius.</li>
-<li><strong>correspondence</strong><br>  he also is celebrated for his correspondence.</li>
-<li><strong>perpetual</strong><br>  a contented mind is a perpetual feast.</li>
-<li><strong>chaos</strong><br>  混乱</li>
-<li><strong>cosmos</strong><br>  宇宙、秩序</li>
-<li><strong>organize</strong><br>  Liu want to organize a party in june</li>
-<li><strong>destructive</strong><br>  means destroying or creating chaos</li>
-<li><strong>racial</strong></li>
-<li><strong>disturbance</strong></li>
-<li><strong>breathe</strong></li>
-<li><strong>weary</strong></li>
-<li><strong>exploit</strong></li>
-<li><strong>stripe</strong></li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/9/" data-id="cji8vhlw20006tcvjji2igckz" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/English/">English</a></li></ul>
 
     </footer>
   </div>
@@ -1116,7 +1158,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/English/">English</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
     </div>
   </div>
 
@@ -1126,7 +1168,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/English/" style="font-size: 10px;">English</a> <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 13.33px;">Java集合</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 10px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a>
     </div>
   </div>
 
@@ -1148,23 +1190,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/06/18/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/10/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/06/18/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/">《深入Java虚拟机》之类加载</a>
+            <a href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/">《深入剖析Tomcat》之第一章</a>
           </li>
         
       </ul>
