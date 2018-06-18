@@ -164,3 +164,95 @@ public static final int a = 128;
 ```
 
 # 解析
+虚拟机将常量池内的符号引用转换成直接引用的过程，符号引用在Class文件中以 CONSTANT_Class_info 、CONSTANT_Methodref_info、CONSTANT_Field_info形式进行记录。
+
+* 符号引用：符号引用以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义地定位到目标即可。符号引用在各虚拟机里表现不同，内存布局也不同，但是虚拟机能够接受的符号引用都是一样的，因为这是java虚拟机规范
+* 直接引用：直接引用是一个在运行时的概念，可以是指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。直接引用和内存布局是相关的，同一个符号引用在不同虚拟机上会转换出的直接引用一般不同。如果有了直接引用，那引用目标必定已经存在内存里了。
+
+虚拟机会在遇到以下指令之前触发解析
+* anewarray
+* checkcast
+* getfield
+* getstatic
+* instanceof
+* invokedynamic
+* invokeinterface
+* invokespecial
+* invokestatic
+* invokevirtual
+* ldc
+* ldc_w
+* multianewarray
+* new 
+* putfield
+* putstatic
+这16个指令囊括一下就有以下的规律：
+* 创建的时候——anewarray、new、multianewarray、ldc、ldc_w（后两个创建字符串时会触发
+* 类型判断或转换的时候——checkcast、instanceof
+* 调用方法时——invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual
+* 获取字段/赋值——getfield、getstatic、putfield、putstatic
+
+触发解析阶段可能会在加载类时就触发，也可能运行到以上指令前触发，这是根据具体虚拟机的实现而定的。
+
+除invokedynamic指令以外的指令满足如下条件：
+虚拟机可能会对同一个符号引用调用很多次，但是虚拟机通常会将第一次解析结果进行缓存（通过在运行时常量池记录直接引用以及标记符号引用已被解析），但是仍然会发生多次解析同一个符号引用的情形，那么虚拟机需要保证第一次解析成功，后续对其的解析也必须成功；同理，如果第一次解析失败，后续的解析都要抛出相同的异常。
+
+而invokedynamic之所以如此特别，主要在于它是用于动态语言的指令，它所对应的引用称为 **动态调用限定符**，这里动态的意思是指必须等到实际程序运行到该条命令时，解析动作才能进行。其余的指令，可以在运行到指令前（加载时）就可以触发解析。
+
+## 类解析
+当解析类或接口时，假设当前执行的代码类是D。
+如果遇到了一个类，需要把一个从未解析过的符号引用N解析为一个类或接口C的直接引用，虚拟机要完成以下三个步骤：
+1. 如果该类不是数组类，那虚拟机会将代表N的全限定名传给D的类加载器去加载该类或接口C。在加载过程中，无论哪个阶段抛出异常，解析过程就宣告失败。
+2. 如果该类是数组类，并且数组元素的类型为对象，也就是N的描述符是类似"[java/lang/String"的形式，那么会采用第一点的规则加载数组元素类型。假设N的描述符和上述一样，那么需要加载的数组元素类型就是"java.lang.String"，接着会由虚拟机生成一个代表此维度和元素的数组对象
+3. 如果上面的步骤没有问题，那么C已经成为一个有效的类或接口，但在解析完成之前还要进行符号引用验证，即确认D是否具备对C的访问权限。如果发现不具备，将抛出java.lang.IllegalAccessError。
+
+## 字段解析
+要解析一个未被解析过的字段符号引用，首先需要对该字段所处的类进行解析，也就是类或接口的符号引用。如果在解析这个类或接口过程中失败，都会导致字段符号引用的解析失败。如果解析成功完成，那将这个字段所属的类或接口用C表示，虚拟机会后续对字段符号引用进行如下查找：
+1. 如果C本身就是该字段的引用类型，且简单名称和字段描述符都与目标字段相匹配，则返回这个字段的直接引用，查找结束
+2. 否则，如果C实现了接口，那么就从接口里（递归查找）进行查找，如果接口中包含了简单名称和字段描述都与目标字段相匹配，则返回这个字段的直接引用。
+3. 否则，如果C继承了父类，那么就从父类进行递归查找，如果在父类中包含了简单名称和字段描述符都与目标字段相匹配的字段，则返回这个字段的直接引用。
+4. 否则查找失败，抛出NoSuchFieldError异常
+5. 查找成功后，进行访问权限的校验
+
+注意，实际虚拟机的编译器实现会比上述更严格一些，即实现的接口、继承的类都声明了同个字段，可能会提示字段混淆的异常。
+
+## 类方法解析
+对于被调用的方法，先解析它所属类或接口的符号引用，如果解析成功，我们依然用C表示这个类，接下来会按以下的规则进行查找：
+1. 类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError
+2. 如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用
+3. 否则在C的父类中递归查找是否有简单名称和描述符都匹配的目标方法，找到则返回其直接引用
+4. 否则在C实现的接口列表及它们的父接口中递归查找简单名称和描述符都匹配的目标方法，如果存在匹配方法，说明类C是抽象类方法（因为前面的可能都不存在），抛出AbstractMethodError
+5. 否则，抛出NoSuchMethodError
+6. 返回直接引用时，并对这个方法进行权限校验
+
+>Your newly packaged library is not backward binary compatible (BC) with old version. For this reason some of the library clients that are not recompiled may throw the exception.
+>This is a complete list of changes in Java library API that may cause clients built with an old version of the library to throw java.lang.IncompatibleClassChangeError if they run on a new one (i.e. breaking BC):
+> Non-final field become static,
+
+> Non-constant field become non-static,
+
+> Class become interface,
+
+> Interface become class,
+
+> if you add a new field to class/interface (or add new super-class/super-interface) then a static field from a super-interface of a client class C may hide an added field (with the same name) inherited from the super-class of C (very rare case).
+
+
+## 接口方法解析
+对于被调用的接口，先查找该方法所属的接口，如果解析成功，我们用C表示这个类，接下来按以下的规则进行查找：
+1. 类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError
+2. 如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用
+3. 否则查找C的父类接口，直到java.lang.Object，如果找到简单名称和描述符都匹配的目标方法，找到则返回其直接引用
+4. 否则抛出，NoSuchMethodError
+由于interface里面都是public方法，所以不用校验权限
+
+# 初始化
+类加载阶段里的准备阶段已经将常量（final修饰）的变量进行初始化为给定数值，把非常量的静态变量初始化为默认值。而该阶段就是将非常量的静态变量按照开发人员的意图进行初始化：
+1. 编译期收集一个类的全部静态类型（包括static字段、static块）
+2. 按收集顺序（程序里的排列顺序）依次排序到 <cinit>
+
+<cinit>不是必须的，如果父类或者接口类没有静态字段或者静态块，编译期就不会生成<cinit>方法。另外，与类不同的是，接口的静态字段需要等到用户真正调用时才会初始化。遇到多个线程初始化同一个类的情况时，虚拟机会保证只有一个线程执行<cinit>，其他线程就会进入阻塞状态直到该线程执行完初始化；
+
+虚拟机会保证先执行父类的<cinit>，再执行子类的<cinit>，所以java.lang.Object一定是第一个被初始化的类。
+
+![](https://blog-1252749790.file.myqcloud.com/jvm/classload_summary.png)
