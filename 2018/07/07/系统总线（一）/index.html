@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>系统总线（一） | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="心情有个小家伙吃了我做的酸奶，上吐下泻，担心晚上她会需要我帮忙，所以在至凌晨一点前写一下今天学的系统总线。  概要计算机系统的五大不见之间的互连方式通常有 分散链接、 总线连接两种。 分散连接 由图可以看到它是以运算器为中心的结构，  连线十分复杂，尤其是当I/O与存储器交换信息，都需要经过运算器，致使运算器停止运算，严重影响运行效率。后来虽然改进为以存储器为中心的结构，I/O与主存交换信息也可以">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统总线（一）">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="心情有个小家伙吃了我做的酸奶，上吐下泻，担心晚上她会需要我帮忙，所以在至凌晨一点前写一下今天学的系统总线。  概要计算机系统的五大不见之间的互连方式通常有 分散链接、 总线连接两种。 分散连接 由图可以看到它是以运算器为中心的结构，  连线十分复杂，尤其是当I/O与存储器交换信息，都需要经过运算器，致使运算器停止运算，严重影响运行效率。后来虽然改进为以存储器为中心的结构，I/O与主存交换信息也可以">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png">
+<meta property="og:updated_time" content="2018-07-09T02:34:59.036Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="系统总线（一）">
+<meta name="twitter:description" content="心情有个小家伙吃了我做的酸奶，上吐下泻，担心晚上她会需要我帮忙，所以在至凌晨一点前写一下今天学的系统总线。  概要计算机系统的五大不见之间的互连方式通常有 分散链接、 总线连接两种。 分散连接 由图可以看到它是以运算器为中心的结构，  连线十分复杂，尤其是当I/O与存储器交换信息，都需要经过运算器，致使运算器停止运算，严重影响运行效率。后来虽然改进为以存储器为中心的结构，I/O与主存交换信息也可以">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-系统总线（一）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/07/系统总线（一）/" class="article-date">
+  <time datetime="2018-07-07T15:38:05.000Z" itemprop="datePublished">2018-07-07</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      系统总线（一）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="心情"><a href="#心情" class="headerlink" title="心情"></a>心情</h1><p>有个小家伙吃了我做的酸奶，上吐下泻，担心晚上她会需要我帮忙，所以在至凌晨一点前写一下今天学的系统总线。</p>
+<hr>
+<h1 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h1><p>计算机系统的五大不见之间的互连方式通常有 <strong>分散链接</strong>、 <strong>总线连接</strong>两种。</p>
+<h2 id="分散连接"><a href="#分散连接" class="headerlink" title="分散连接"></a>分散连接</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png" alt="分散连接"></p>
+<p>由图可以看到它是以运算器为中心的结构，  <strong>连线十分复杂</strong>，尤其是当I/O与存储器交换信息，都需要经过运算器，致使运算器停止运算，严重影响运行效率。后来虽然改进为以存储器为中心的结构，I/O与主存交换信息也可以不经过运算器，但是仍 <strong>无法解决I/O设备与主机之间的灵活性</strong>，<strong>不能随时添减设备</strong>。所以出现了总线连接方式</p>
+<h2 id="总线连接方式"><a href="#总线连接方式" class="headerlink" title="总线连接方式"></a>总线连接方式</h2><p>总线是连接多个部件的信息传输线，是各个部件共享的传输介质（所以总线又称bus）。当多个部件与总线相连时，<strong>如果出现两个及以上的部件同时向总线发送请求就会产生冲突，传输无效</strong>。因此，<strong>在某一时刻，只允许一个部件向总线发送消息</strong>，而 <strong>多个部件可以同时从总线上接收消息</strong>。</p>
+<p>总线由许多传输线或通路组成，每条线可一位一位的串行传输。若干条传输线可以同时传输若干位二进制代码，例如16条传输线组成的总线可在一个时刻传输16位二进制代码。</p>
+<h1 id="总线分类"><a href="#总线分类" class="headerlink" title="总线分类"></a>总线分类</h1><p><strong>按连接部件不同</strong>，分为三种总线。（当然也可以根据其他方面进行分类，比如使用范围）</p>
+<h2 id="片内总线"><a href="#片内总线" class="headerlink" title="片内总线"></a>片内总线</h2><p>片内总线是指芯片内的总线，如在CPU种，寄存器与运算逻辑单元ALU之间、寄存器与寄存器之间。</p>
+<h2 id="系统总线"><a href="#系统总线" class="headerlink" title="系统总线"></a>系统总线</h2><p>系统总线是指CPU、主存、I/O设备等各大部件之间的信息传输线。由于各个部件通常安放在主板或各个插板上，故又称板级总线（在一块电路板上各芯片间的连线）或板间总线。<br>系统总线按传输的信息分为三类：数据总线、地址总线和控制总线</p>
+<h3 id="数据总线"><a href="#数据总线" class="headerlink" title="数据总线"></a>数据总线</h3><p>传输各功能部件之间的数据信息，它是双向传输总线（CPU传出数据，CPU接收数据），其位数与机器字长、存储字长有关。数据总线的位数称为数据总线宽度。如果数据总线的宽度为8位，指令字长为16位，那么CPU在取指阶段必须两次访问主存。</p>
+<p>数据的含义是广义的，它可以是真正的数据，也可以是指令代码或状态信息，有时甚至是一个控制信息。</p>
+<h3 id="地址总线"><a href="#地址总线" class="headerlink" title="地址总线"></a>地址总线</h3><p>地址总线只要用来指出数据总线上的源数据或目的数据在主存单元的地址或I/O设备的地址。例如向从存储器中读取一个数据，需要将该数据所在存储单元的地址送到地址线上；如果想将数据经I/O设备输出，则CPU除了需将数据送到数据总线外，还需将该输出设备的地址送到地址总线上。可见，地址总线上的代码是指明CPU欲访问的存储单元或I/O端口的地址，由CPU输出，单项传输。</p>
+<h3 id="控制总线"><a href="#控制总线" class="headerlink" title="控制总线"></a>控制总线</h3><p>由于数据总线、地址总线都是被挂在总线上被所有部件共享的，所以若想要控制各个部件对总线的使用，就需要依靠控制总线来完成，因此控制总线是用来发出各种控制信号的传输线。一条控制总线是单向的，但控制总线这个集合可以是双向的，比如CPU向寄存器发出读取命令；某个设备准备就绪时，向CPU发出中断请求。</p>
+<p>常见的控制信号如下：</p>
+<ul>
+<li>时钟：用来同步各种操作</li>
+<li>复位：初始化所有部件</li>
+<li>总线请求：表示某部件需要获得总线的使用权</li>
+<li>总线允许：表示需要获得总线使用权的部件已获得了控制权</li>
+<li>中断请求：表示某部件提出中断请求</li>
+<li>中断响应：表示中断请求已被接收</li>
+<li>存储器写：将数据总线上得数据写到存储器指定得地址单元中</li>
+<li>存储器读：将指定存储单元中的数据读到数据总线上</li>
+<li>I/O读：从指定的I/O端口将数据读到数据总线上</li>
+<li>I/O写：将数据总线上的数据传输到指定的I/O端口内</li>
+<li>传输响应：表示数据已经被接收，或已将数据送至数据总线上</li>
+</ul>
+<h2 id="通信总线"><a href="#通信总线" class="headerlink" title="通信总线"></a>通信总线</h2><p>这类总线用于计算机系统之间或计算系统与其他系统之间的通信。传输方式可以分为两种：串行通信和并行通信。</p>
+<h3 id="串行通信"><a href="#串行通信" class="headerlink" title="串行通信"></a>串行通信</h3><p>指数据在单条1位宽的传输线上，一位一位地按顺序分时传输。<br>该通信方式相比并行通信适合长距离传输，因为通信线路费用趋高，采用串行通信费用远比并行通信费用低。</p>
+<h3 id="并行通信"><a href="#并行通信" class="headerlink" title="并行通信"></a>并行通信</h3><p>指在多条并行1位宽地传输线上，同时由源送到目的地址，如一字节地数据，在并行传输过程中，要通过8条并行传输线同时由源传送到目的地。<br>该通信方式适宜短距离传输，通常小于30m。</p>
+<h1 id="总线特性"><a href="#总线特性" class="headerlink" title="总线特性"></a>总线特性</h1><h2 id="机械特性"><a href="#机械特性" class="headerlink" title="机械特性"></a>机械特性</h2><p>总线在机械连接方式上的一些性能，如插头与插座的标准，它们的几何尺寸、形状、引脚的个数以及排列的顺序等。</p>
+<h2 id="电气特性"><a href="#电气特性" class="headerlink" title="电气特性"></a>电气特性</h2><p>指总线的每一个传输线上信号的传递方向和有效的电平范围。通常规定由CPU发出的信号为输出信号，送入CPU的为输入信号。高电平为“1”， 低电平为“0”。</p>
+<h2 id="功能特性"><a href="#功能特性" class="headerlink" title="功能特性"></a>功能特性</h2><p>指总线中每根传输线的功能，例如：地址总线用来指出地址；数据总线用来传输数据；控制总线用来发出控制信号。</p>
+<h2 id="时间特性"><a href="#时间特性" class="headerlink" title="时间特性"></a>时间特性</h2><p>指总线中的任一根线在什么时间内有效</p>
+<h1 id="总线性能指标"><a href="#总线性能指标" class="headerlink" title="总线性能指标"></a>总线性能指标</h1><h2 id="总线宽度"><a href="#总线宽度" class="headerlink" title="总线宽度"></a>总线宽度</h2><p>指数据总线的根数，用bit表示，如8位、16位</p>
+<h2 id="总线带宽"><a href="#总线带宽" class="headerlink" title="总线带宽"></a>总线带宽</h2><p>可以理解为总线的传输速率，即单位时间内总线上传输数据的位数。</p>
+<h2 id="时钟同步-异步"><a href="#时钟同步-异步" class="headerlink" title="时钟同步/异步"></a>时钟同步/异步</h2><p>总线上的数据与时钟同步工作的总线称为同步总线，与时钟不同步工作的总线称为异步总线。</p>
+<h2 id="总线复用"><a href="#总线复用" class="headerlink" title="总线复用"></a>总线复用</h2><p>一条信号线上分时传送两种信号。例如，通常地址总线与数据总线在物理上是分开的两种总线，为了提高总线利用率，地址总线可以和数据总线共用一组物理线路。在这组物理线路上分时传输地址信号和数据信号，即为总线的多路复用。</p>
+<h2 id="信号线数"><a href="#信号线数" class="headerlink" title="信号线数"></a>信号线数</h2><p>地址总线、数据总线和控制总线三种总线数的总和</p>
+<h2 id="总线控制方式"><a href="#总线控制方式" class="headerlink" title="总线控制方式"></a>总线控制方式</h2><ul>
+<li>突发工作</li>
+<li>自动配置</li>
+<li>仲裁方式</li>
+<li>逻辑方式</li>
+<li>计数方式</li>
+<li>…<h2 id="其他指标"><a href="#其他指标" class="headerlink" title="其他指标"></a>其他指标</h2>负载能力、电源电压、总线宽度是否可扩展等</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjjeazmfv002lt4vjihsmg3ri" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/09/系统总线（二）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          系统总线(二)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/03/处理器/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">处理器（一）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Test/">Test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 18px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 18px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 16px;">Java集合</a> <a href="/codeleven.github.io/tags/Test/" style="font-size: 10px;">Test</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 12px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 14px;">计算机组成</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/输入输出设备/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

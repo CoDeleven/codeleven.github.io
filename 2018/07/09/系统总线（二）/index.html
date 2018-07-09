@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>系统总线(二) | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="总线标准前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。 ISA总线优点：  ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高缺点： 没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统 ISA上的所有数据都需要经过CPU或DMA接口来">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="系统总线(二)">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="总线标准前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。 ISA总线优点：  ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高缺点： 没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统 ISA上的所有数据都需要经过CPU或DMA接口来">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8F%8C%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84%E5%8F%98%E7%A7%8D.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%9B%9B%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%A1%E6%95%B0%E5%99%A8%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%8B%AC%E7%AB%8B%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F.png">
+<meta property="og:updated_time" content="2018-07-09T13:28:48.875Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="系统总线(二)">
+<meta name="twitter:description" content="总线标准前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。 ISA总线优点：  ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高缺点： 没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统 ISA上的所有数据都需要经过CPU或DMA接口来">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-系统总线（二）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/09/系统总线（二）/" class="article-date">
+  <time datetime="2018-07-09T02:34:44.000Z" itemprop="datePublished">2018-07-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      系统总线(二)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="总线标准"><a href="#总线标准" class="headerlink" title="总线标准"></a>总线标准</h1><p>前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。</p>
+<h2 id="ISA总线"><a href="#ISA总线" class="headerlink" title="ISA总线"></a>ISA总线</h2><p>优点：</p>
+<ul>
+<li>ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高<br>缺点：</li>
+<li>没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统</li>
+<li>ISA上的所有数据都需要经过CPU或DMA接口来管理，因此CPU需要花费大量时间来控制与外部设备交换数据。</li>
+<li>ISA时钟频率为8MHZ，最大传输率为16MBps，数据线为16位，地址线为24位。</li>
+</ul>
+<h2 id="EISA总线"><a href="#EISA总线" class="headerlink" title="EISA总线"></a>EISA总线</h2><p>优点：</p>
+<ul>
+<li>ISA的优点</li>
+<li>能支持多个总线主控器和突发方式的传输</li>
+</ul>
+<h2 id="VESA总线"><a href="#VESA总线" class="headerlink" title="VESA总线"></a>VESA总线</h2><h1 id="总线结构"><a href="#总线结构" class="headerlink" title="总线结构"></a>总线结构</h1><h2 id="单总线结构"><a href="#单总线结构" class="headerlink" title="单总线结构"></a>单总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png" alt="总线连接之单总线结构"></p>
+<p>将CPU、主存、I/O设备都挂在一组总线上，这种结构 <strong>简单</strong>、 <strong>易于扩充</strong>，它 <strong>不允许两个以上得部件在同一时刻向总线传输信息</strong>。这类总线多数被小型计算机或微型计算机采用。而且当I/O设备数量足够多得时候，总线发出得控制信号从一端顺序的传到第n个设备，其 <strong>传播延时会严重地影响系统的工作效率</strong>；</p>
+<p>当数据传输需求量和传输速度要求不太高的情况下，为克服总线瓶颈问题，尽可能增加总线宽度和提高传输速率来解决；</p>
+<p>当数据传输需求量和传输速度要求较高时，单总线结构不能满足系统工作的需要，因此不得不采用多总线结构。</p>
+<h2 id="多总线结构"><a href="#多总线结构" class="headerlink" title="多总线结构"></a>多总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8F%8C%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="双总线结构"></p>
+<p>双总线结构的特点 <strong>是将速度较低的I/O设备从单总线上分离出来</strong>，形成主存总线与I/O总线分开的结构。低俗I/O由通道这个特殊的处理器进行管理。将速率不同的组件进行分类，然后将它们连接在不同的通道上，那么计算机系统的工作效率就会得到提升。</p>
+<h3 id="通道"><a href="#通道" class="headerlink" title="通道"></a>通道</h3><p>该部件主要时为了 <strong>使一些原来由CPU处理的I/O人物转由通道来承担，从而把CPU从繁杂的I/O任务解脱出来，仅当通道完成了规定的I/O任务后，才向CPU发中断信号</strong>。实际上，I/O通道是一种特殊的处理机，它具有 <strong>执行I/O指令的能力</strong>，并通过执行 <strong>通道（I/O）程序来控制I/O操作</strong>。</p>
+<p>I/O通道的特点有以下两个方面：</p>
+<ul>
+<li>指令类型单一，只能处理I/O方面的内容</li>
+<li>通道没有自己的内存，只能和CPU共享主存</li>
+</ul>
+<h2 id="三总线结构"><a href="#三总线结构" class="headerlink" title="三总线结构"></a>三总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="三总线结构"></p>
+<p>该结构多了主存总线和DMA总线，在三种总线里，任意时刻只能使用一种总线：使用DMA总线时，无法使用主存总线；I/O总线只有在CPU执行I/O指令时才能用得到。</p>
+<h2 id="三总线结构变种"><a href="#三总线结构变种" class="headerlink" title="三总线结构变种"></a>三总线结构变种</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84%E5%8F%98%E7%A7%8D.png" alt="三总线结构变种"></p>
+<p>CPU和Cache之间有一个局部总线，我们可以挂载多个I/O设备在局部总线上。Cache直接连接到系统总线上，这样Cache就可以和主存互相交换数据,而且I/O设备和主存间的交换也不需要经过CPU。还有一条扩展总线，他将局域网、SCSI、Modem等等都串联在一起，扩展总线通过扩展总线接口与系统总线相连，由此便可实现两者的数据传输。</p>
+<h2 id="四总线结构"><a href="#四总线结构" class="headerlink" title="四总线结构"></a>四总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%9B%9B%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="四总线结构"><br>该结构相比三总线结构多了一层高速总线，在高速总线上会挂接一些高速的I/O设备。它们通过Cache控制机构中的高速总线或高速缓冲 和 局部总线相连，使得这些高速设备与CPU更密切。而一些低速设备仍然挂载在扩展总线上。这种结构的优点就是高速设备不需要过多依赖CPU的功能，同时高速设备相比扩展总线上的设备更接近CPU，各自的效率会更高。</p>
+<h1 id="总线控制"><a href="#总线控制" class="headerlink" title="总线控制"></a>总线控制</h1><h2 id="集中控制优先仲裁方式"><a href="#集中控制优先仲裁方式" class="headerlink" title="集中控制优先仲裁方式"></a>集中控制优先仲裁方式</h2><ul>
+<li>链式查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png" alt="链式查询"></li>
+</ul>
+<p>BR是接口向总线控制部件发起占用请求</p>
+<p>BG到达的接口有总线请求，BG信号就不再往下传了，意味着该接口获得了总线使用权。</p>
+<p>BS是接口获得了总线使用权后，和总线控制部件建立的总线繁忙信号，表示它占用了总线。</p>
+<p>该种查询方式中，离总线控制部件最近的设备具有最高的优先级。</p>
+<p>这种方式的特点是：只需要很少几根线就能按一定优先次序实现总线控制，并且很容易扩充设备，但对电路故障很敏感，且优先级别低的设备可能很难获取请求。</p>
+<ul>
+<li>计数器定时查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%A1%E6%95%B0%E5%99%A8%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2.png" alt="计数器定时查询"></li>
+</ul>
+<p>该种查询方式相比前面的查询多了一条设备地址线，少了一根BG线，总线控制部件接收到BR送来的总线请求信号后，在总线未被使用（BS=0）的情况下，总线控制部件中的计数器开始计数，并通过设备地址线，向各设备发出一组地址信号。当某个 <em>请求占用总线</em> 的设备地址与计数器一致时，该设备就获得总线使用权。</p>
+<p>计数可以从“0”开始，也可以从上一次计数的终止点开始，当然也可以由程序设置。这种方式对电路故障不如 <em>链式查询</em> 敏感，但增加了设备地址数，控制也较复杂。</p>
+<ul>
+<li>独立请求方式<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%8B%AC%E7%AB%8B%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F.png" alt="独立请求方式"></li>
+</ul>
+<p>该种查询方式内，每台设备均有一对总线请求先BR<sub>i</sub>和总线同意线BG<sub>i</sub>。当设备要求使用总线时，便发出该设备的请求信号。总线控制部件中有一排队电路，可根据优先次序确定响应哪一台设备的请求。该方式响应速度快，优先次序控制灵活，但控制线数量多。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjjeazmfo002ct4vjbt7fcorx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/09/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/07/系统总线（一）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">系统总线（一）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Test/">Test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 18px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 18px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 16px;">Java集合</a> <a href="/codeleven.github.io/tags/Test/" style="font-size: 10px;">Test</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 12px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 14px;">计算机组成</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/输入输出设备/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/09/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
