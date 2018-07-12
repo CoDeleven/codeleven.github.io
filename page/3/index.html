@@ -65,95 +65,6 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-《深入Java虚拟机》之虚拟机栈" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/" class="article-date">
-  <time datetime="2018-05-25T03:50:04.000Z" itemprop="datePublished">2018-05-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Java内存区域图<br><img src="https://blog-1252749790.file.myqcloud.com/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.png" alt="Java内存区域"></p>
-<p>注意：深底色为共享内存区域</p>
-<p>先讲解虚拟机栈</p>
-<h2 id="虚拟机栈"><a href="#虚拟机栈" class="headerlink" title="虚拟机栈"></a>虚拟机栈</h2><p>虚拟机是线程私有的，<strong>它的生命周期与线程相同</strong>，每个方法在执行的时候都会创建一个栈帧用于存储局部变量表、操作数栈、动态链接、方法出口等信息。<strong>每一个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程</strong>。</p>
-<h3 id="局部变量表"><a href="#局部变量表" class="headerlink" title="局部变量表"></a>局部变量表</h3><p>用于存放方法参数和方法内部定义的局部变量。在编译后，局部变量表的大小就确定了，具体见代码和对应的字节码：</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对应的java代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1000</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/jvm-locals.png" alt=""><br>其中<code>locals=2</code> 即代表本地局部变量有两个</p>
-<p>局部变量表的容量以变量槽（Slot）为最小单位，虚拟机规范表示 <strong>boolean、byte、char、short、int、float、reference或returnAddress类型的数据都应该占用1个Slot</strong>。注意，只要保证slot实现的效果和32位虚拟机中的一致即可，比如，在64位虚拟机中，使用了64位物理内存空间去实现一个Slot，虚拟机上仍要使用对齐和补白让Slot看起来和32位虚拟机中的一样。</p>
-<p>其中介绍一下<code>reference</code> 这个数据类型：</p>
-<ul>
-<li>此引用应该直接或间接地查找到对象在Java堆中的数据存放的起始地址索引</li>
-<li>此引用应该直接或间接地查找到对象所属数据类型在方法区中地存储类型信息</li>
-</ul>
-<p>对于64位的数据类型（double、long），虚拟机会以高位对齐的方式为其分配两个连续的Slot空间。注意，在局部变量表里，无论是否分两次读32位数据，都不会引起数据安全问题。</p>
-<p>局部变量表的索引值范围是从0开始直最大的Slot数量，如果是 <strong>非static</strong> 方法，下标为0的位置默认是this引用。因为方法局部变量表在编译时就确定了，所以调用方法传入数据时，其实是传入了一个引用（待确定。</p>
-<p>同时为了尽可能节省 <strong>栈帧空间</strong>，局部变量表中的Slot是可以重用的，方法体中定义的变量，其作用域不一定会覆盖整个方法，如果该变量超出作用范围，那个变量的slot就会交给其他变量使用。这个规则也会带来一定副作用，因为超出范围后，局部变量表不会主动断开和引用的联系，就导致某个对象一直被局部变量表持有着，可以参考下面的例子</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 共享变量 */</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> K = <span class="number">1024</span>;</span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> M = <span class="number">1024</span> * K;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况一，回收失败 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M]</span><br><span class="line">&#125;</span><br><span class="line">System.gc();</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况二，回收成功 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">0</span>;</span><br><span class="line">System.gc();</span><br></pre></td></tr></table></figure>
-<p>《Practical Java》里面讲到“把不使用的对象设置为null” 是有一定道理的，但是不推荐这样做，理由如下：</p>
-<ul>
-<li>代码不整洁，应该以恰当的变量作用域来控制回收才是最优雅的</li>
-<li>JIT会堆null赋值进行优化</li>
-</ul>
-<p>但是遇到这样的极端条件，还是可以一试的：对象占用内存大，此方法执行时间长，方法调用次数达不到JIT优化的的编译条件</p>
-<h3 id="操作数栈"><a href="#操作数栈" class="headerlink" title="操作数栈"></a>操作数栈</h3><p><img src="https://blog-1252749790.file.myqcloud.com/jvm/operator_stack.png" alt=""></p>
-<p>就是一个处理运算的中转站，如果有做过逆波兰序数的应该可以理解，将操作数压入栈，然后遇到操作符时，弹出两个操作数进行运算。</p>
-<h3 id="动态连接"><a href="#动态连接" class="headerlink" title="动态连接"></a>动态连接</h3><p>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，持有这个引用是为了支持方法调用过程中的动态连接。在类加载阶段或者第一次使用就转换为引用，这种转换被称为静态解析。另一部分要等到每一次运行期间转换为直接引用，这部分称为动态连接。</p>
-<p>方法调用不等同于方法执行，方法调用唯一的作用就是确定被调用方法的版本（调用哪个方法），不涉及具体运行过程。Class文件的编译过程不包含传统的连接步骤，一切方法调用在Class文件里都是符号引用，而不是方法在实际运行时内存布局中的入口地址（直接引用）。</p>
-<p>在把符号引用转换成直接引用的过程有两种：</p>
-<ol>
-<li>解析，调用的方法版本一定是在编译期就确定下来的，比如静态方法、私有方法、实例构造器、父类方法四种</li>
-<li>分派，可能是静态也可能是动态，主要是重载和重写</li>
-</ol>
-<p>因为调用什么方法签名的方法在编译期就已经决定了，如下所示<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java代码</span></span><br><span class="line">Super aSuper = <span class="keyword">new</span> Sub();</span><br><span class="line">A a = <span class="keyword">new</span> B();</span><br><span class="line">aSuper.test(a);</span><br></pre></td></tr></table></figure></p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1.png" alt="上述代码的字节码"></p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1_method_ref.png" alt="字节码#6的引用点"></p>
-<p>第11行已经决定了调用Super.test(A)方法，此时称该方法为 <code>Resolved Method</code>，但是具体调用哪个实例的test(A)，需要取决以下的规则</p>
-<blockquote>
-<p>假设C是一个对象的类，决定哪个方法被调用的规则如下所示：</p>
-<ol>
-<li>如果C声明了一个方法m并且覆盖了<code>Resolved Method</code>，那么方法m就会被调用</li>
-<li>否则，如果C有一个父类，那么搜索实现了 <code>Resolved Method</code> 的方法的直接父类，并向上递归查找。</li>
-<li>抛出异常</li>
-</ol>
-</blockquote>
-<p>综上所是，截至JDK7，java是静态多分派，动态单分派（多分派指需要参考多个元素）：方法重载要考虑调用者的类型，考虑方法的参数，这些都是在编译期就固定在字节码里面了。而动态分配要到运行时，才会去查找具体的实例。</p>
-<h3 id="方法返回地址"><a href="#方法返回地址" class="headerlink" title="方法返回地址"></a>方法返回地址</h3><ul>
-<li>正常返回，将返回值传递给上层的方法调用者</li>
-<li>异常完成出口，在方法执行过程中遇到了异常，并且这个异常没有在方法内得到处理</li>
-</ul>
-<p>无论采用哪种方式退出，都需要返回到方法被调用的位置，程序才能继续执行，方法返回时可能需要在栈帧中保存一些信息，用来帮助恢复它的上层方法的执行状态。一般来说，方法正常退出时，调用者的PC计数器的值可以作为返回地址；方法异常退出时，返回地址是要通过异常处理器表来确定的</p>
-<p>方法退出的过程实际上就等同于把栈帧出栈，因此退出时可能执行的操作有：恢复上层方法的局部变量表和操作数栈，把返回值（如果有的话）压入调用者栈帧的操作数栈中，调整PC计数器的值来指向方法调用指令后的一条指令。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjjeazmf8001qt4vjtz8jjrog" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
     <article id="post-(未埋)《算法》之堆排序" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/17/(未埋)《算法》之堆排序/" class="article-date">
@@ -181,7 +92,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjjeazmdk0004t4vj63x4yn2f" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjji7myam0007mwvjllbmw3ae" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
@@ -282,7 +193,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjjeazmfw002nt4vjea7l5t98" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjji7mydx002smwvja2fzrkgn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -366,7 +277,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjjeazmef000pt4vjhn4knyys" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjji7myc9001lmwvj2dzw3p59" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -469,7 +380,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjjeazmeu0019t4vjpulhal7r" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjji7myc1001cmwvjwvqal349" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -523,7 +434,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjjeazmed000nt4vjus2ifbe0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjji7mybs0011mwvj67w1ia8s" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -566,7 +477,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjjeazmdx0008t4vju50rj9f0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjji7myag0005mwvjjfvntkxk" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -663,7 +574,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjjeazmek000wt4vjd5fznd0c" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjji7mybv0013mwvje53mmd8k" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -986,7 +897,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjjeazme6000gt4vjeii2bsxu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjji7myaz000emwvj09p52td6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -1051,7 +962,58 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjjeazme1000ct4vjrq7gekqe" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjji7myap0008mwvjlhvqep6n" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-了解AQS之SharedLock" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/" class="article-date">
+  <time datetime="2018-05-09T14:49:13.000Z" itemprop="datePublished">2018-05-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/09/了解AQS之SharedLock/">了解AQS之SharedLock</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>前面已经学习过AQS的exclusive和condition两个模式，现在要把最后的shared模式看完。此次从shared的实现类——ReentrantReadWriteLock 开始分析。</p>
+<p>共享的特性：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/shareMode.png" alt=""><br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/exclusiveMode.png" alt=""></p>
+<p>如果先获取到线程锁，那么独占锁就要等待；如果先获取独占锁，那么共享锁就要进入等待。对于共享锁来说，顾名思义大家可以一起访问这个资源（读）；对于独占锁来说，要想访问只能一一排队，一个个来修改，保证每次修改后的可见性。</p>
+<p>前面提到AQS是通过同步队列来管理同步状态的，而状态state只有一个变量，要想记录读/写两个状态，就只能将state拆分成2个16位，如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/reentrantreadwritelock_state.png" alt=""></p>
+<p>高16位表示读状态，低16位表示写状态。比如获取读状态：<figure class="highlight plain"><figcaption><span>>>> 16```，获取写状态：```state & 0X0000FFFF```，根据状态划分可以得出以下结论：</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">当state不为0时而state低16位为0，则表示读锁已经被获取；当state不为0而state高16为0时，则表示写锁已经被获取。</span><br><span class="line"></span><br><span class="line">## 写锁的获取与释放</span><br><span class="line">写锁是一个可重入的排他锁。如果当前线程已经获取了写锁，则增加写状态。如果当前线程在获取写锁时，读锁已经被获取了或者该线程不是持有写锁的线程，则当前线程进入等待状态。</span><br><span class="line">```java</span><br><span class="line">protected final boolean tryAcquire(int acquires) &#123;</span><br><span class="line">    Thread current = Thread.currentThread();</span><br><span class="line">    int c = getState();</span><br><span class="line">    int w = exclusiveCount(c);</span><br><span class="line">    if (c != 0) &#123;</span><br><span class="line">        if (w == 0 || current != getExclusiveOwnerThread())</span><br><span class="line">            // 读锁已经被获取</span><br><span class="line">            return false;</span><br><span class="line">        if (w + exclusiveCount(acquires) &gt; MAX_COUNT)</span><br><span class="line">            // 重入次数超过最大值</span><br><span class="line">            throw new Error(&quot;Maximum lock count exceeded&quot;);</span><br><span class="line">        // 重入</span><br><span class="line">        setState(c + acquires);</span><br><span class="line">        return true;</span><br><span class="line">    &#125;</span><br><span class="line">    // writerShouldBlock是由子类实现的策略</span><br><span class="line">    // 如果writer是非公平锁，那么就一直返回false</span><br><span class="line">    // 如果writer是公平锁，那么就通过hasQueuedPredecessors()判断</span><br><span class="line">    if (writerShouldBlock() ||</span><br><span class="line">        !compareAndSetState(c, c + acquires))</span><br><span class="line">        return false;</span><br><span class="line">    // 设置唯一</span><br><span class="line">    setExclusiveOwnerThread(current);</span><br><span class="line">    return true;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>该方法除了重入溢出的判断外，还增加了是否已经存在读锁的条件判断。如果存在读锁，则写锁不能被获取，原因在于：读写锁要确保写锁的操作对读锁可见，如果允许读锁在已被获取的情况下对写锁的获取，那么正在运行的其他读线程无法得知当前写线程的操作。写锁的缩放和ReentrantLock的释放过程基本类似，每次释放减少写状态，当写状态为0时表示写锁已经被释放。</p>
+<h2 id="读锁的获取与释放"><a href="#读锁的获取与释放" class="headerlink" title="读锁的获取与释放"></a>读锁的获取与释放</h2><p>读锁时一个支持重入的锁，它能够被多个线程获取，在没有其他写线程的访问时，读线程总会被成功获取，而所做的也只是增加读状态。如果当前线程已经获取了读锁，则增加读状态。如果当前线程在获取读锁时，写锁被其他线程获取，则进入等待状态。读状态保存的是总的读次数，每个线程的读取状态由ThreadLocal进行保存。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">final</span> <span class="keyword">int</span> <span class="title">tryAcquireShared</span><span class="params">(<span class="keyword">int</span> unused)</span> </span>&#123;</span><br><span class="line">    Thread current = Thread.currentThread();</span><br><span class="line">    <span class="keyword">int</span> c = getState();</span><br><span class="line">    <span class="comment">// 写锁已经被获取，直接返回</span></span><br><span class="line">    <span class="keyword">if</span> (exclusiveCount(c) != <span class="number">0</span> &amp;&amp;</span><br><span class="line">        getExclusiveOwnerThread() != current)</span><br><span class="line">        <span class="keyword">return</span> -<span class="number">1</span>;</span><br><span class="line">    <span class="keyword">int</span> r = sharedCount(c);</span><br><span class="line">    <span class="comment">// 根据队列策略，参考写锁；</span></span><br><span class="line">    <span class="comment">// 读锁个数不超过最大值</span></span><br><span class="line">    <span class="keyword">if</span> (!readerShouldBlock() &amp;&amp;</span><br><span class="line">        r &lt; MAX_COUNT &amp;&amp;</span><br><span class="line">        compareAndSetState(c, c + SHARED_UNIT)) &#123;</span><br><span class="line">        <span class="comment">// 读锁个数等于0</span></span><br><span class="line">        <span class="keyword">if</span> (r == <span class="number">0</span>) &#123;</span><br><span class="line">            firstReader = current;</span><br><span class="line">            firstReaderHoldCount = <span class="number">1</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (firstReader == current) &#123;</span><br><span class="line">            firstReaderHoldCount++;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            HoldCounter rh = cachedHoldCounter;</span><br><span class="line">            <span class="keyword">if</span> (rh == <span class="keyword">null</span> || rh.tid != getThreadId(current))</span><br><span class="line">                cachedHoldCounter = rh = readHolds.get();</span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (rh.count == <span class="number">0</span>)</span><br><span class="line">                readHolds.set(rh);</span><br><span class="line">            rh.count++;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果前面都不满足条件，进入该方法，自选到成功获取读锁</span></span><br><span class="line">    <span class="keyword">return</span> fullTryAcquireShared(current);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>如果这一步获取失败，那么就会转入<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">```java</span><br><span class="line">private void setHeadAndPropagate(Node node, int propagate) &#123;</span><br><span class="line">    // 保存头结点</span><br><span class="line">    Node h = head;</span><br><span class="line">    // 设置头结点</span><br><span class="line">    setHead(node);</span><br><span class="line">    // propagate大于0 OR 头结点为空 OR 头结点的状态 &lt; 0 OR 重新获取头结点时的状态</span><br><span class="line">    if (propagate &gt; 0 || h == null || h.waitStatus &lt; 0 ||</span><br><span class="line">        (h = head) == null || h.waitStatus &lt; 0) &#123;</span><br><span class="line">        // 获取当前结点的下个结点并唤醒它（因为独占锁，后面的共享锁阻塞；</span><br><span class="line">        // 当独占锁被释放后，共享锁的结点应该苏醒）</span><br><span class="line">        Node s = node.next;</span><br><span class="line">        // 该操作会唤醒不必要的结点，但是为了避免多线程发生竞争，所以需要尽可能快的通知其他线程</span><br><span class="line">        if (s == null || s.isShared())</span><br><span class="line">            doReleaseShared();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>读锁的每次释放会将读状态减去值<code>1 &lt;&lt; 16</code></p>
+<h2 id="锁降级"><a href="#锁降级" class="headerlink" title="锁降级"></a>锁降级</h2><p>锁降级不是获取写锁，释放，再获取读锁（不是分段的）；而是先获取写锁，再获取读锁，释放写锁（是交叉的）。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>ReentrantReadWriteLock是独占锁和共享锁的合体，在write方面是独占的，read方面是共享的，因为有两个锁，为了管理两个状态，提出了划分高16位作为读状态，低16位作为写状态</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjji7myda002amwvjfm5zs2qq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -1079,7 +1041,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Test/">Test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
     </div>
   </div>
 
@@ -1089,7 +1051,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 18px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 18px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 16px;">Java集合</a> <a href="/codeleven.github.io/tags/Test/" style="font-size: 10px;">Test</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 12px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 14px;">计算机组成</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 17.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 12.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
     </div>
   </div>
 
@@ -1111,23 +1073,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/12/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>

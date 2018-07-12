@@ -5,27 +5,23 @@
   
   <title>系统总线(二) | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="总线标准前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。 ISA总线优点：  ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高缺点： 没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统 ISA上的所有数据都需要经过CPU或DMA接口来">
+  <meta name="description" content="总线控制集中控制优先仲裁方式 链式查询  BR是接口向总线控制部件发起占用请求 BG到达的接口有总线请求，BG信号就不再往下传了，意味着该接口获得了总线使用权。 BS是接口获得了总线使用权后，和总线控制部件建立的总线繁忙信号，表示它占用了总线。 该种查询方式中，离总线控制部件最近的设备具有最高的优先级。 这种方式的特点是：只需要很少几根线就能按一定优先次序实现总线控制，并且很容易扩充设备，但对电路">
 <meta name="keywords" content="计算机组成">
 <meta property="og:type" content="article">
 <meta property="og:title" content="系统总线(二)">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/index.html">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="总线标准前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。 ISA总线优点：  ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高缺点： 没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统 ISA上的所有数据都需要经过CPU或DMA接口来">
+<meta property="og:description" content="总线控制集中控制优先仲裁方式 链式查询  BR是接口向总线控制部件发起占用请求 BG到达的接口有总线请求，BG信号就不再往下传了，意味着该接口获得了总线使用权。 BS是接口获得了总线使用权后，和总线控制部件建立的总线繁忙信号，表示它占用了总线。 该种查询方式中，离总线控制部件最近的设备具有最高的优先级。 这种方式的特点是：只需要很少几根线就能按一定优先次序实现总线控制，并且很容易扩充设备，但对电路">
 <meta property="og:locale" content="zh">
-<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png">
-<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8F%8C%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png">
-<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png">
-<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84%E5%8F%98%E7%A7%8D.png">
-<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%9B%9B%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%A1%E6%95%B0%E5%99%A8%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%8B%AC%E7%AB%8B%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F.png">
-<meta property="og:updated_time" content="2018-07-09T13:28:48.875Z">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1.png">
+<meta property="og:updated_time" content="2018-07-10T14:51:12.204Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="系统总线(二)">
-<meta name="twitter:description" content="总线标准前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。 ISA总线优点：  ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高缺点： 没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统 ISA上的所有数据都需要经过CPU或DMA接口来">
-<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png">
+<meta name="twitter:description" content="总线控制集中控制优先仲裁方式 链式查询  BR是接口向总线控制部件发起占用请求 BG到达的接口有总线请求，BG信号就不再往下传了，意味着该接口获得了总线使用权。 BS是接口获得了总线使用权后，和总线控制部件建立的总线繁忙信号，表示它占用了总线。 该种查询方式中，离总线控制部件最近的设备具有最高的优先级。 这种方式的特点是：只需要很少几根线就能按一定优先次序实现总线控制，并且很容易扩充设备，但对电路">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -74,10 +70,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-系统总线（二）" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-系统总线（三）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/09/系统总线（二）/" class="article-date">
-  <time datetime="2018-07-09T02:34:44.000Z" itemprop="datePublished">2018-07-09</time>
+    <a href="/codeleven.github.io/2018/07/10/系统总线（三）/" class="article-date">
+  <time datetime="2018-07-10T12:34:44.000Z" itemprop="datePublished">2018-07-10</time>
 </a>
     
   </div>
@@ -96,37 +92,7 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h1 id="总线标准"><a href="#总线标准" class="headerlink" title="总线标准"></a>总线标准</h1><p>前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。</p>
-<h2 id="ISA总线"><a href="#ISA总线" class="headerlink" title="ISA总线"></a>ISA总线</h2><p>优点：</p>
-<ul>
-<li>ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高<br>缺点：</li>
-<li>没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统</li>
-<li>ISA上的所有数据都需要经过CPU或DMA接口来管理，因此CPU需要花费大量时间来控制与外部设备交换数据。</li>
-<li>ISA时钟频率为8MHZ，最大传输率为16MBps，数据线为16位，地址线为24位。</li>
-</ul>
-<h2 id="EISA总线"><a href="#EISA总线" class="headerlink" title="EISA总线"></a>EISA总线</h2><p>优点：</p>
-<ul>
-<li>ISA的优点</li>
-<li>能支持多个总线主控器和突发方式的传输</li>
-</ul>
-<h2 id="VESA总线"><a href="#VESA总线" class="headerlink" title="VESA总线"></a>VESA总线</h2><h1 id="总线结构"><a href="#总线结构" class="headerlink" title="总线结构"></a>总线结构</h1><h2 id="单总线结构"><a href="#单总线结构" class="headerlink" title="单总线结构"></a>单总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png" alt="总线连接之单总线结构"></p>
-<p>将CPU、主存、I/O设备都挂在一组总线上，这种结构 <strong>简单</strong>、 <strong>易于扩充</strong>，它 <strong>不允许两个以上得部件在同一时刻向总线传输信息</strong>。这类总线多数被小型计算机或微型计算机采用。而且当I/O设备数量足够多得时候，总线发出得控制信号从一端顺序的传到第n个设备，其 <strong>传播延时会严重地影响系统的工作效率</strong>；</p>
-<p>当数据传输需求量和传输速度要求不太高的情况下，为克服总线瓶颈问题，尽可能增加总线宽度和提高传输速率来解决；</p>
-<p>当数据传输需求量和传输速度要求较高时，单总线结构不能满足系统工作的需要，因此不得不采用多总线结构。</p>
-<h2 id="多总线结构"><a href="#多总线结构" class="headerlink" title="多总线结构"></a>多总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8F%8C%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="双总线结构"></p>
-<p>双总线结构的特点 <strong>是将速度较低的I/O设备从单总线上分离出来</strong>，形成主存总线与I/O总线分开的结构。低俗I/O由通道这个特殊的处理器进行管理。将速率不同的组件进行分类，然后将它们连接在不同的通道上，那么计算机系统的工作效率就会得到提升。</p>
-<h3 id="通道"><a href="#通道" class="headerlink" title="通道"></a>通道</h3><p>该部件主要时为了 <strong>使一些原来由CPU处理的I/O人物转由通道来承担，从而把CPU从繁杂的I/O任务解脱出来，仅当通道完成了规定的I/O任务后，才向CPU发中断信号</strong>。实际上，I/O通道是一种特殊的处理机，它具有 <strong>执行I/O指令的能力</strong>，并通过执行 <strong>通道（I/O）程序来控制I/O操作</strong>。</p>
-<p>I/O通道的特点有以下两个方面：</p>
-<ul>
-<li>指令类型单一，只能处理I/O方面的内容</li>
-<li>通道没有自己的内存，只能和CPU共享主存</li>
-</ul>
-<h2 id="三总线结构"><a href="#三总线结构" class="headerlink" title="三总线结构"></a>三总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="三总线结构"></p>
-<p>该结构多了主存总线和DMA总线，在三种总线里，任意时刻只能使用一种总线：使用DMA总线时，无法使用主存总线；I/O总线只有在CPU执行I/O指令时才能用得到。</p>
-<h2 id="三总线结构变种"><a href="#三总线结构变种" class="headerlink" title="三总线结构变种"></a>三总线结构变种</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84%E5%8F%98%E7%A7%8D.png" alt="三总线结构变种"></p>
-<p>CPU和Cache之间有一个局部总线，我们可以挂载多个I/O设备在局部总线上。Cache直接连接到系统总线上，这样Cache就可以和主存互相交换数据,而且I/O设备和主存间的交换也不需要经过CPU。还有一条扩展总线，他将局域网、SCSI、Modem等等都串联在一起，扩展总线通过扩展总线接口与系统总线相连，由此便可实现两者的数据传输。</p>
-<h2 id="四总线结构"><a href="#四总线结构" class="headerlink" title="四总线结构"></a>四总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%9B%9B%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="四总线结构"><br>该结构相比三总线结构多了一层高速总线，在高速总线上会挂接一些高速的I/O设备。它们通过Cache控制机构中的高速总线或高速缓冲 和 局部总线相连，使得这些高速设备与CPU更密切。而一些低速设备仍然挂载在扩展总线上。这种结构的优点就是高速设备不需要过多依赖CPU的功能，同时高速设备相比扩展总线上的设备更接近CPU，各自的效率会更高。</p>
-<h1 id="总线控制"><a href="#总线控制" class="headerlink" title="总线控制"></a>总线控制</h1><h2 id="集中控制优先仲裁方式"><a href="#集中控制优先仲裁方式" class="headerlink" title="集中控制优先仲裁方式"></a>集中控制优先仲裁方式</h2><ul>
+        <h1 id="总线控制"><a href="#总线控制" class="headerlink" title="总线控制"></a>总线控制</h1><h2 id="集中控制优先仲裁方式"><a href="#集中控制优先仲裁方式" class="headerlink" title="集中控制优先仲裁方式"></a>集中控制优先仲裁方式</h2><ul>
 <li>链式查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png" alt="链式查询"></li>
 </ul>
 <p>BR是接口向总线控制部件发起占用请求</p>
@@ -143,11 +109,51 @@
 <li>独立请求方式<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%8B%AC%E7%AB%8B%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F.png" alt="独立请求方式"></li>
 </ul>
 <p>该种查询方式内，每台设备均有一对总线请求先BR<sub>i</sub>和总线同意线BG<sub>i</sub>。当设备要求使用总线时，便发出该设备的请求信号。总线控制部件中有一排队电路，可根据优先次序确定响应哪一台设备的请求。该方式响应速度快，优先次序控制灵活，但控制线数量多。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>链式查询中仅用两根线确定总线使用权属于哪个设备；在计数器查询中大致用log<sub>2</sub>n根线，其中n是允许接纳的最大设备数，而独立请求方式需要采用2n根线。如果问几根控制线，还要再加上2。</p>
+<h1 id="总线通信控制"><a href="#总线通信控制" class="headerlink" title="总线通信控制"></a>总线通信控制</h1><p>众多部件共享总线，在争夺总线使用权时，应按各部件的优先等级来解决。而在通讯时间上，则应按分时方式来处理，即哪一个部件获得使用权，此刻就由他传送，等到该部件释放总先后，下个部件继续获得总线。这样一个个轮流交替。<br>总线周期通常分为四个阶段；</p>
+<ul>
+<li>申请分配阶段：由需要使用设备的主模块提出申请，经过仲裁后授予某一部件权限</li>
+<li>寻址阶段：取得了使用权的主模块通过总线发出本次要访问的从模块的地址</li>
+<li>传输阶段：数据由源模块发出，经数据总线流入目的模块</li>
+<li>结束阶段：主模块的有关信息均从系统总线上撤除，让出总线使用权</li>
+</ul>
+<h2 id="同步通信"><a href="#同步通信" class="headerlink" title="同步通信"></a>同步通信</h2><p>通信双方由统一时标控制数据传输 称为 同步通信。时钟通常由CPU的总线控制部件发出，送到总线上的所有部件；也可以由每个部件各自的时序发生器发出，但必须由总线控制部件发出的时钟信号对它们进行同步。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1.png" alt="同步通信"></p>
+<p>这里的读指令总共分为4个阶段（假设申请总线成功）：</p>
+<ol>
+<li>寻址阶段，取得了使用权的主模块通过总线发出要读取的设备地址，从T1上沿持续到T4结束</li>
+<li>传输阶段，主模块向从模块发送读取命令，从T2上沿持续到T3结束</li>
+<li>传输阶段2，从模块准备数据，持续一个T3</li>
+<li>结束阶段，主模块撤销读取命令，从模块撤销数据</li>
+</ol>
+<p>而对于写指令，也分为4个阶段：</p>
+<ol>
+<li>寻址阶段，取得了使用权的主模块通过总线发出要读取的设备地址，从T1上沿持续到T4结束</li>
+<li>传输阶段，主模块提供数据</li>
+<li>传输阶段2，主模块发出写命令，从模块收到命令后，得在指定时间内将数据写到从模块里。</li>
+<li>结束阶段，主模块撤销写入命令、撤销数据</li>
+</ol>
+<p>优点：</p>
+<ul>
+<li>简单、好配合</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>需要强制主、从模块的时间“同步”，必须在规定时间内完成要求</li>
+<li>需要对所有从模块都用同一限时，所以必须得考虑最慢得设备</li>
+</ul>
+<h2 id="异步通信"><a href="#异步通信" class="headerlink" title="异步通信"></a>异步通信</h2><p>异步通信相比同步通信，对时间要求没有这么严格，允许各个部件得速度不一致。异步通信采用应答得方式实现，主模块发出请求信号时，一直等待从模块反馈“响应”信号后才开始通信。不过这就要求主、从模块间增加两条应答线。</p>
+<p>异步通信分为不互锁、半互锁、全互锁三种。</p>
+<h3 id="不互锁"><a href="#不互锁" class="headerlink" title="不互锁"></a>不互锁</h3><p>主模块发出请求后，不必等待从模块得响应信号，而是经过一段时间后撤销请求信号；从模块接收到请求信号后，在条件允许得情况下发出回答信号，一段时间后撤销回答信号。这个过程双方并无互锁关系。</p>
+<h3 id="半互锁"><a href="#半互锁" class="headerlink" title="半互锁"></a>半互锁</h3><p>主模块发出请求信号，必须待接到从模块得回答信号后再撤销其请求信号，有互锁关系。而从模块在发送完回答信号后不必等待主模块撤销请求信号，而是隔一段时间自动撤销回答信号</p>
+<h3 id="全互锁"><a href="#全互锁" class="headerlink" title="全互锁"></a>全互锁</h3><p>主模块发出请求信号，从模块需要发出回答信号，等主模块撤销了请求信号后，从模块才能撤销回答信号。</p>
+<p>// 这里有几个例子</p>
+<h2 id="半同步通信"><a href="#半同步通信" class="headerlink" title="半同步通信"></a>半同步通信</h2><p>为了让同步通信也能像异步通信这样允许不同速度得模块和谐工作，为此增设了一条“WAIT”响应信号线，采用插入时钟（等待）周期得措施来协调通信双方得配合问题。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjji7mydg002gmwvjvxp65ioz" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjji7mydv002rmwvjpks8qoax" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -158,19 +164,19 @@
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/07/10/系统总线（三）/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/12/观察者模式/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          系统总线(二)
+          观察者模式
         
       </div>
     </a>
   
   
-    <a href="/codeleven.github.io/2018/07/07/系统总线（一）/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/09/系统总线（二）/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">系统总线（一）</div>
+      <div class="article-nav-title">系统总线(二)</div>
     </a>
   
 </nav>

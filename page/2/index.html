@@ -93,73 +93,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjjeazmfq002et4vj08f8wt0t" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjji7mydn002kmwvj7hx2mq6m" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《深入剖析Tomcat》之第一章" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/" class="article-date">
-  <time datetime="2018-06-18T08:06:17.000Z" itemprop="datePublished">2018-06-18</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/18/《深入剖析Tomcat》之第一章/">《深入剖析Tomcat》之第一章</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>本章主要学习了如何自己搭建简易的Socket服务器/客户端。内容从以下几个部分展开：</p>
-<ul>
-<li>HTTP请求结构</li>
-<li>Socket/ServerSocket</li>
-<li>结构剖析</li>
-</ul>
-<h1 id="HTTP请求结构"><a href="#HTTP请求结构" class="headerlink" title="HTTP请求结构"></a>HTTP请求结构</h1><p>HTTP允许WEB服务器和浏览器通过Internet发送并接收数据，是一种基于“请求-响应”的 <strong>协议</strong>。客户端请求一个文件，HTTP服务器会对该请求进行响应。HTTP使用可靠的TCP链接，默认端口为80.</p>
-<p>在搭建自己的简易服务器之前，我们需要了解一下<a href="https://www.w3.org/Protocols/rfc2616/rfc2616-sec5.html#sec5" target="_blank" rel="noopener">HTTP的规范</a>。</p>
-<p>在这里简单的介绍一下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">// Method是指请求方法、space是空格、Request-Uri是请求的Uri、Http-Version是指Http版本、CRLF是\r\n</span><br><span class="line">Method space Request-Uri space Http-Version CRLF</span><br><span class="line">// 代表通用的header，比如Cache-Control、Connection、Date等可以在请求、响应里使用的</span><br><span class="line">[general-header]&#123;0,&#125; CRLF</span><br><span class="line">// 请求专用的头部</span><br><span class="line">[request-header]&#123;0,&#125; CRLF</span><br><span class="line">// 实体头部，通常是带有实体时才会存在该部分</span><br><span class="line">[entity-header] CRLF</span><br><span class="line">CRLF</span><br><span class="line">[message-body]</span><br></pre></td></tr></table></figure></p>
-<p>响应请求也是差不多的结构，就是request-header 改成 response-header</p>
-<h1 id="Socket-ServerSocket"><a href="#Socket-ServerSocket" class="headerlink" title="Socket/ServerSocket"></a>Socket/ServerSocket</h1><p>这两个API统称为 <strong>套接字</strong>，套接字能让应用程序从网络中读取数据，也可以向网络中写入数据。</p>
-<h2 id="Socket"><a href="#Socket" class="headerlink" title="Socket"></a>Socket</h2><p>客户端需要使用Socket连接服务器，以下是其众多构造函数之一，第一个参数是主机名（或IP地址），参数port是连接远程应用程序的端口。<br><code>public Socket(java.lang.String host, int port)</code></p>
-<p>比如要连接 <strong>bilibili.com</strong>，可以使用下面的语句创建Socket：<br><code>new Socket(&quot;bilibili.com&quot;, 80);</code></p>
-<p>一旦成功创建了Socket类的实例，就可以使用该实例发送或接收字节流。要发送字节流，需要调用Socket类的getOutputStream()获取输出流，如果要接收另一端的数据，则需要调用getInputStream()获取输入流。</p>
-<h2 id="ServerSocket"><a href="#ServerSocket" class="headerlink" title="ServerSocket"></a>ServerSocket</h2><p>服务端需要使用ServerSocket监听机器上的某个端口是否有请求到达，ServerSocket提供了4种构造函数，我们使用其中任意一个即可：<br><code>public ServerSocket(int port, int backLog, InetAddress bindingAddress)</code><br>第一个参数表示要监听的端口，第二个参数表示最大可接受的连接请求队列，第三个为想要绑定的IP地址（适用于多网卡的主机）</p>
-<p>更加具体的可以看<a href="">Socket和ServerSocket详解</a>;</p>
-<h1 id="结构剖析"><a href="#结构剖析" class="headerlink" title="结构剖析"></a>结构剖析</h1><p>该Web应用主要包括3个类：</p>
-<ul>
-<li>Server</li>
-<li>Request</li>
-<li>Response</li>
-</ul>
-<p>该章学习到的结构方面的内容如下所示：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取InputStream封装到Request里</span></span><br><span class="line">Request request = <span class="keyword">new</span> Request(conn.getInputStream());</span><br><span class="line"><span class="comment">// 对接收到的内容进行解析</span></span><br><span class="line">request.parse();</span><br><span class="line"><span class="comment">// 获取OutputStream封装到Response里</span></span><br><span class="line">Response response = <span class="keyword">new</span> Response(conn.getOutputStream());</span><br><span class="line"><span class="comment">// 将Request设置给Response，Response需要知道Request的内容</span></span><br><span class="line">response.setRequest(request);</span><br><span class="line"><span class="comment">// 发送响应</span></span><br><span class="line">response.sendStaticResource();</span><br></pre></td></tr></table></figure></p>
-<p>该结构其实就是Tomcat以宏观角度看到的情形，将接收的请求数据封装到Request，将输出流封装到Response里，然后将Request和Response均交给service()方法处理。</p>
-<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><p><a href="https://github.com/CoDeleven/Immerse2Tomcat/tree/master/ch01-SimpleHttp" target="_blank" rel="noopener">代码</a></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/18/《深入剖析Tomcat》之第一章/" data-id="cjjeazmez001gt4vj0xnw3g3d" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li></ul>
 
     </footer>
   </div>
@@ -365,7 +302,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjjeazmf3001lt4vjmrwsy2nd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjji7myce001rmwvjjs5c2zsf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -432,7 +369,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjjeazmey001dt4vjz6ksozdl" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjji7myc3001emwvj08mnnop6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -521,7 +458,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjjeazmem000zt4vjqoarky0n" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjji7mybz001amwvj222dgbw6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -591,7 +528,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjjeazmfn0029t4vj7baqbx7l" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjji7mydj002imwvj7yw9cnr7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -634,7 +571,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjjeazmft002jt4vj09da32pf" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjji7mydc002cmwvjuibzlek1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -703,7 +640,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjjeazmeq0014t4vjzf2tbsht" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjji7mybw0015mwvjwp84qf7b" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -774,7 +711,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象的GC/" data-id="cjjeazmf1001it4vjd3kfsrs9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象的GC/" data-id="cjji7myc7001jmwvj93w8vg5u" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -872,7 +809,96 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/" data-id="cjjeazmer0016t4vjoxgt84az" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/" data-id="cjji7myc5001hmwvjkksj9uz3" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《深入Java虚拟机》之虚拟机栈" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/" class="article-date">
+  <time datetime="2018-05-25T03:50:04.000Z" itemprop="datePublished">2018-05-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/25/《深入Java虚拟机》之虚拟机栈/">《深入Java虚拟机》之虚拟机栈</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>Java内存区域图<br><img src="https://blog-1252749790.file.myqcloud.com/jvm/Java%E5%86%85%E5%AD%98%E5%8C%BA%E5%9F%9F.png" alt="Java内存区域"></p>
+<p>注意：深底色为共享内存区域</p>
+<p>先讲解虚拟机栈</p>
+<h2 id="虚拟机栈"><a href="#虚拟机栈" class="headerlink" title="虚拟机栈"></a>虚拟机栈</h2><p>虚拟机是线程私有的，<strong>它的生命周期与线程相同</strong>，每个方法在执行的时候都会创建一个栈帧用于存储局部变量表、操作数栈、动态链接、方法出口等信息。<strong>每一个方法从调用到执行完成的过程，就对应着一个栈帧在虚拟机栈中入栈到出栈的过程</strong>。</p>
+<h3 id="局部变量表"><a href="#局部变量表" class="headerlink" title="局部变量表"></a>局部变量表</h3><p>用于存放方法参数和方法内部定义的局部变量。在编译后，局部变量表的大小就确定了，具体见代码和对应的字节码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 对应的java代码</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> a = <span class="number">1000</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/jvm-locals.png" alt=""><br>其中<code>locals=2</code> 即代表本地局部变量有两个</p>
+<p>局部变量表的容量以变量槽（Slot）为最小单位，虚拟机规范表示 <strong>boolean、byte、char、short、int、float、reference或returnAddress类型的数据都应该占用1个Slot</strong>。注意，只要保证slot实现的效果和32位虚拟机中的一致即可，比如，在64位虚拟机中，使用了64位物理内存空间去实现一个Slot，虚拟机上仍要使用对齐和补白让Slot看起来和32位虚拟机中的一样。</p>
+<p>其中介绍一下<code>reference</code> 这个数据类型：</p>
+<ul>
+<li>此引用应该直接或间接地查找到对象在Java堆中的数据存放的起始地址索引</li>
+<li>此引用应该直接或间接地查找到对象所属数据类型在方法区中地存储类型信息</li>
+</ul>
+<p>对于64位的数据类型（double、long），虚拟机会以高位对齐的方式为其分配两个连续的Slot空间。注意，在局部变量表里，无论是否分两次读32位数据，都不会引起数据安全问题。</p>
+<p>局部变量表的索引值范围是从0开始直最大的Slot数量，如果是 <strong>非static</strong> 方法，下标为0的位置默认是this引用。因为方法局部变量表在编译时就确定了，所以调用方法传入数据时，其实是传入了一个引用（待确定。</p>
+<p>同时为了尽可能节省 <strong>栈帧空间</strong>，局部变量表中的Slot是可以重用的，方法体中定义的变量，其作用域不一定会覆盖整个方法，如果该变量超出作用范围，那个变量的slot就会交给其他变量使用。这个规则也会带来一定副作用，因为超出范围后，局部变量表不会主动断开和引用的联系，就导致某个对象一直被局部变量表持有着，可以参考下面的例子</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/* 共享变量 */</span></span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> K = <span class="number">1024</span>;</span><br><span class="line"><span class="keyword">final</span> <span class="keyword">int</span> M = <span class="number">1024</span> * K;</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况一，回收失败 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M]</span><br><span class="line">&#125;</span><br><span class="line">System.gc();</span><br><span class="line"></span><br><span class="line"><span class="comment">/* 情况二，回收成功 */</span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">byte</span>[] bytes = <span class="keyword">new</span> <span class="keyword">byte</span>[<span class="number">10</span> * M];</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">int</span> a = <span class="number">0</span>;</span><br><span class="line">System.gc();</span><br></pre></td></tr></table></figure>
+<p>《Practical Java》里面讲到“把不使用的对象设置为null” 是有一定道理的，但是不推荐这样做，理由如下：</p>
+<ul>
+<li>代码不整洁，应该以恰当的变量作用域来控制回收才是最优雅的</li>
+<li>JIT会堆null赋值进行优化</li>
+</ul>
+<p>但是遇到这样的极端条件，还是可以一试的：对象占用内存大，此方法执行时间长，方法调用次数达不到JIT优化的的编译条件</p>
+<h3 id="操作数栈"><a href="#操作数栈" class="headerlink" title="操作数栈"></a>操作数栈</h3><p><img src="https://blog-1252749790.file.myqcloud.com/jvm/operator_stack.png" alt=""></p>
+<p>就是一个处理运算的中转站，如果有做过逆波兰序数的应该可以理解，将操作数压入栈，然后遇到操作符时，弹出两个操作数进行运算。</p>
+<h3 id="动态连接"><a href="#动态连接" class="headerlink" title="动态连接"></a>动态连接</h3><p>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，持有这个引用是为了支持方法调用过程中的动态连接。在类加载阶段或者第一次使用就转换为引用，这种转换被称为静态解析。另一部分要等到每一次运行期间转换为直接引用，这部分称为动态连接。</p>
+<p>方法调用不等同于方法执行，方法调用唯一的作用就是确定被调用方法的版本（调用哪个方法），不涉及具体运行过程。Class文件的编译过程不包含传统的连接步骤，一切方法调用在Class文件里都是符号引用，而不是方法在实际运行时内存布局中的入口地址（直接引用）。</p>
+<p>在把符号引用转换成直接引用的过程有两种：</p>
+<ol>
+<li>解析，调用的方法版本一定是在编译期就确定下来的，比如静态方法、私有方法、实例构造器、父类方法四种</li>
+<li>分派，可能是静态也可能是动态，主要是重载和重写</li>
+</ol>
+<p>因为调用什么方法签名的方法在编译期就已经决定了，如下所示<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// java代码</span></span><br><span class="line">Super aSuper = <span class="keyword">new</span> Sub();</span><br><span class="line">A a = <span class="keyword">new</span> B();</span><br><span class="line">aSuper.test(a);</span><br></pre></td></tr></table></figure></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1.png" alt="上述代码的字节码"></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/bytecode_example1_method_ref.png" alt="字节码#6的引用点"></p>
+<p>第11行已经决定了调用Super.test(A)方法，此时称该方法为 <code>Resolved Method</code>，但是具体调用哪个实例的test(A)，需要取决以下的规则</p>
+<blockquote>
+<p>假设C是一个对象的类，决定哪个方法被调用的规则如下所示：</p>
+<ol>
+<li>如果C声明了一个方法m并且覆盖了<code>Resolved Method</code>，那么方法m就会被调用</li>
+<li>否则，如果C有一个父类，那么搜索实现了 <code>Resolved Method</code> 的方法的直接父类，并向上递归查找。</li>
+<li>抛出异常</li>
+</ol>
+</blockquote>
+<p>综上所是，截至JDK7，java是静态多分派，动态单分派（多分派指需要参考多个元素）：方法重载要考虑调用者的类型，考虑方法的参数，这些都是在编译期就固定在字节码里面了。而动态分配要到运行时，才会去查找具体的实例。</p>
+<h3 id="方法返回地址"><a href="#方法返回地址" class="headerlink" title="方法返回地址"></a>方法返回地址</h3><ul>
+<li>正常返回，将返回值传递给上层的方法调用者</li>
+<li>异常完成出口，在方法执行过程中遇到了异常，并且这个异常没有在方法内得到处理</li>
+</ul>
+<p>无论采用哪种方式退出，都需要返回到方法被调用的位置，程序才能继续执行，方法返回时可能需要在栈帧中保存一些信息，用来帮助恢复它的上层方法的执行状态。一般来说，方法正常退出时，调用者的PC计数器的值可以作为返回地址；方法异常退出时，返回地址是要通过异常处理器表来确定的</p>
+<p>方法退出的过程实际上就等同于把栈帧出栈，因此退出时可能执行的操作有：恢复上层方法的局部变量表和操作数栈，把返回值（如果有的话）压入调用者栈帧的操作数栈中，调整PC计数器的值来指向方法调用指令后的一条指令。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjji7mycc001pmwvj2o2zqtmu" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -900,7 +926,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tags</h3>
     <div class="widget">
-      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Test/">Test</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Tomcat/">Tomcat</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
     </div>
   </div>
 
@@ -910,7 +936,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 18px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 18px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 16px;">Java集合</a> <a href="/codeleven.github.io/tags/Test/" style="font-size: 10px;">Test</a> <a href="/codeleven.github.io/tags/Tomcat/" style="font-size: 12px;">Tomcat</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 14px;">计算机组成</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 17.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 12.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
     </div>
   </div>
 
@@ -932,23 +958,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/12/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/09/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/12/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>
