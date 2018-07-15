@@ -65,6 +65,91 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-系统总线（二）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/09/系统总线（二）/" class="article-date">
+  <time datetime="2018-07-09T02:34:44.000Z" itemprop="datePublished">2018-07-09</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/09/系统总线（二）/">系统总线(二)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="总线标准"><a href="#总线标准" class="headerlink" title="总线标准"></a>总线标准</h1><p>前面在总线结构里介绍的系统总线、存储总线都是抽象的，没有具体说明采用什么技术来实现。本小节就是为了说明总线的具体实现标准。</p>
+<h2 id="ISA总线"><a href="#ISA总线" class="headerlink" title="ISA总线"></a>ISA总线</h2><p>优点：</p>
+<ul>
+<li>ISA总线是使用独立于CPU的总线时钟，因此CPU可以使用高于总线频率的时钟。有利于CPU性能的提高<br>缺点：</li>
+<li>没有总线仲裁的硬件逻辑，因此它不能支持多台主设备（不支持多台具有申请总线控制权的设备）系统</li>
+<li>ISA上的所有数据都需要经过CPU或DMA接口来管理，因此CPU需要花费大量时间来控制与外部设备交换数据。</li>
+<li>ISA时钟频率为8MHZ，最大传输率为16MBps，数据线为16位，地址线为24位。</li>
+</ul>
+<h2 id="EISA总线"><a href="#EISA总线" class="headerlink" title="EISA总线"></a>EISA总线</h2><p>优点：</p>
+<ul>
+<li>ISA的优点</li>
+<li>能支持多个总线主控器和突发方式的传输</li>
+</ul>
+<h2 id="VESA总线"><a href="#VESA总线" class="headerlink" title="VESA总线"></a>VESA总线</h2><h1 id="总线结构"><a href="#总线结构" class="headerlink" title="总线结构"></a>总线结构</h1><h2 id="单总线结构"><a href="#单总线结构" class="headerlink" title="单总线结构"></a>单总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png" alt="总线连接之单总线结构"></p>
+<p>将CPU、主存、I/O设备都挂在一组总线上，这种结构 <strong>简单</strong>、 <strong>易于扩充</strong>，它 <strong>不允许两个以上得部件在同一时刻向总线传输信息</strong>。这类总线多数被小型计算机或微型计算机采用。而且当I/O设备数量足够多得时候，总线发出得控制信号从一端顺序的传到第n个设备，其 <strong>传播延时会严重地影响系统的工作效率</strong>；</p>
+<p>当数据传输需求量和传输速度要求不太高的情况下，为克服总线瓶颈问题，尽可能增加总线宽度和提高传输速率来解决；</p>
+<p>当数据传输需求量和传输速度要求较高时，单总线结构不能满足系统工作的需要，因此不得不采用多总线结构。</p>
+<h2 id="多总线结构"><a href="#多总线结构" class="headerlink" title="多总线结构"></a>多总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8F%8C%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="双总线结构"></p>
+<p>双总线结构的特点 <strong>是将速度较低的I/O设备从单总线上分离出来</strong>，形成主存总线与I/O总线分开的结构。低俗I/O由通道这个特殊的处理器进行管理。将速率不同的组件进行分类，然后将它们连接在不同的通道上，那么计算机系统的工作效率就会得到提升。</p>
+<h3 id="通道"><a href="#通道" class="headerlink" title="通道"></a>通道</h3><p>该部件主要时为了 <strong>使一些原来由CPU处理的I/O人物转由通道来承担，从而把CPU从繁杂的I/O任务解脱出来，仅当通道完成了规定的I/O任务后，才向CPU发中断信号</strong>。实际上，I/O通道是一种特殊的处理机，它具有 <strong>执行I/O指令的能力</strong>，并通过执行 <strong>通道（I/O）程序来控制I/O操作</strong>。</p>
+<p>I/O通道的特点有以下两个方面：</p>
+<ul>
+<li>指令类型单一，只能处理I/O方面的内容</li>
+<li>通道没有自己的内存，只能和CPU共享主存</li>
+</ul>
+<h2 id="三总线结构"><a href="#三总线结构" class="headerlink" title="三总线结构"></a>三总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="三总线结构"></p>
+<p>该结构多了主存总线和DMA总线，在三种总线里，任意时刻只能使用一种总线：使用DMA总线时，无法使用主存总线；I/O总线只有在CPU执行I/O指令时才能用得到。</p>
+<h2 id="三总线结构变种"><a href="#三总线结构变种" class="headerlink" title="三总线结构变种"></a>三总线结构变种</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84%E5%8F%98%E7%A7%8D.png" alt="三总线结构变种"></p>
+<p>CPU和Cache之间有一个局部总线，我们可以挂载多个I/O设备在局部总线上。Cache直接连接到系统总线上，这样Cache就可以和主存互相交换数据,而且I/O设备和主存间的交换也不需要经过CPU。还有一条扩展总线，他将局域网、SCSI、Modem等等都串联在一起，扩展总线通过扩展总线接口与系统总线相连，由此便可实现两者的数据传输。</p>
+<h2 id="四总线结构"><a href="#四总线结构" class="headerlink" title="四总线结构"></a>四总线结构</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%9B%9B%E6%80%BB%E7%BA%BF%E7%BB%93%E6%9E%84.png" alt="四总线结构"><br>该结构相比三总线结构多了一层高速总线，在高速总线上会挂接一些高速的I/O设备。它们通过Cache控制机构中的高速总线或高速缓冲 和 局部总线相连，使得这些高速设备与CPU更密切。而一些低速设备仍然挂载在扩展总线上。这种结构的优点就是高速设备不需要过多依赖CPU的功能，同时高速设备相比扩展总线上的设备更接近CPU，各自的效率会更高。</p>
+<h1 id="总线控制"><a href="#总线控制" class="headerlink" title="总线控制"></a>总线控制</h1><h2 id="集中控制优先仲裁方式"><a href="#集中控制优先仲裁方式" class="headerlink" title="集中控制优先仲裁方式"></a>集中控制优先仲裁方式</h2><ul>
+<li>链式查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png" alt="链式查询"></li>
+</ul>
+<p>BR是接口向总线控制部件发起占用请求</p>
+<p>BG到达的接口有总线请求，BG信号就不再往下传了，意味着该接口获得了总线使用权。</p>
+<p>BS是接口获得了总线使用权后，和总线控制部件建立的总线繁忙信号，表示它占用了总线。</p>
+<p>该种查询方式中，离总线控制部件最近的设备具有最高的优先级。</p>
+<p>这种方式的特点是：只需要很少几根线就能按一定优先次序实现总线控制，并且很容易扩充设备，但对电路故障很敏感，且优先级别低的设备可能很难获取请求。</p>
+<ul>
+<li>计数器定时查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%A1%E6%95%B0%E5%99%A8%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2.png" alt="计数器定时查询"></li>
+</ul>
+<p>该种查询方式相比前面的查询多了一条设备地址线，少了一根BG线，总线控制部件接收到BR送来的总线请求信号后，在总线未被使用（BS=0）的情况下，总线控制部件中的计数器开始计数，并通过设备地址线，向各设备发出一组地址信号。当某个 <em>请求占用总线</em> 的设备地址与计数器一致时，该设备就获得总线使用权。</p>
+<p>计数可以从“0”开始，也可以从上一次计数的终止点开始，当然也可以由程序设置。这种方式对电路故障不如 <em>链式查询</em> 敏感，但增加了设备地址数，控制也较复杂。</p>
+<ul>
+<li>独立请求方式<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%8B%AC%E7%AB%8B%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F.png" alt="独立请求方式"></li>
+</ul>
+<p>该种查询方式内，每台设备均有一对总线请求先BR<sub>i</sub>和总线同意线BG<sub>i</sub>。当设备要求使用总线时，便发出该设备的请求信号。总线控制部件中有一排队电路，可根据优先次序确定响应哪一台设备的请求。该方式响应速度快，优先次序控制灵活，但控制线数量多。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjjmyj645002vqwvjz2zsjgln" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-系统总线（一）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/07/07/系统总线（一）/" class="article-date">
@@ -139,7 +224,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjjk1zzzh002zzkvj8ui44e0d" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjjmyj641002jqwvj4xibomf4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -177,7 +262,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjjk1zzz2002ezkvj5pjsmcu6" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjjmyj63r0022qwvj3upz9t6f" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -217,7 +302,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjjk1zzzh002szkvj6bctqp3p" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjjmyj645002oqwvjtbkk0b07" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li></ul>
@@ -426,7 +511,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjjk1zzz2001xzkvj06zgxd06" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjjmyj63l001pqwvj5gqnsfcl" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -493,7 +578,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjjk1zzy6000xzkvjfzp0nej2" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjjmyj63h001aqwvjwbtm9yem" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -582,7 +667,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjjk1zzy6000zzkvjfr9jd7vd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjjmyj63b0013qwvj061hmbdh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -652,7 +737,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjjk1zzz20025zkvjnlg6yl1s" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjjmyj63r0027qwvjj8p3rk05" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -695,7 +780,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjjk1zzz2002bzkvjgt6hxonv" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjjmyj641002fqwvjy35zmmue" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -764,78 +849,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjjk1zzz2001mzkvjxui34udw" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《深入Java虚拟机》之对象的GC" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象的GC/" class="article-date">
-  <time datetime="2018-05-27T13:28:00.000Z" itemprop="datePublished">2018-05-27</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/27/《深入Java虚拟机》之对象的GC/">《深入Java虚拟机》之对象的GC</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="Q1-在堆上的对象什么时候被回收"><a href="#Q1-在堆上的对象什么时候被回收" class="headerlink" title="Q1. 在堆上的对象什么时候被回收"></a>Q1. 在堆上的对象什么时候被回收</h1><p>当对象不被任何变量引用的时候</p>
-<h1 id="Q2-怎么样检测对象不被引用"><a href="#Q2-怎么样检测对象不被引用" class="headerlink" title="Q2. 怎么样检测对象不被引用"></a>Q2. 怎么样检测对象不被引用</h1><h2 id="引用计数法"><a href="#引用计数法" class="headerlink" title="引用计数法"></a>引用计数法</h2><p>给对象添加一个引用计数器，每当有一个地方引用它时，计数器就加1；当引用器为0时，该对象就变为不可用。<br>JVM用的不是引用计数法，证明方法就是 <strong>循环引用</strong> （注意将GC Roots 设置为null，GC Roots是什么参考下文），然后主动调用<code>System.gc()</code></p>
-<h2 id="可达性分析算法"><a href="#可达性分析算法" class="headerlink" title="可达性分析算法"></a>可达性分析算法</h2><p>主流的商用程序语言的主流实现中，都是通过可达性分析来判定对象是否存活的。这个算法的基本思想就是通过一系列的称为 <strong>GC Roots</strong> 的对象作为起始点，从这些结点开始向下搜索，搜索所走过的路径称为 <strong>引用链</strong>，当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/reachabiliy_analysis.png" alt=""></p>
-<p>红色区域的对象就会被视为 <strong>可回收对象</strong></p>
-<p>能作为GC Roots的对象有以下几个：</p>
-<ol>
-<li>局部变量表中引用的对象</li>
-<li>方法区中类静态属性引用的对象</li>
-<li>方法区中常量引用的对象</li>
-<li>JNI引用的对象</li>
-</ol>
-<h1 id="Q3-引用的定义"><a href="#Q3-引用的定义" class="headerlink" title="Q3. 引用的定义"></a>Q3. 引用的定义</h1><p>在JDK1.2前，引用的定义：如果reference类型的数据中存储的数值代表的是另外一块内存的起始地址，就称这块内存代表着一个引用。这种定义下，只有引用或没被引用两种情况。对于一些“食之无味，弃之可惜”的对象，作用就比较单薄。所以后来为了 <strong>当内存空间还足够时，则能保存在内存之中；如果内存空间在进行垃圾收集后还是非常紧张，则可以抛弃对象</strong> 这一理念，JDK1.2后，对引用的概念进行了扩充，将引用分为 <strong>强引用</strong>、 <strong>软引用</strong>、 <strong>弱引用</strong>、 <strong>虚引用</strong> 四种。</p>
-<ul>
-<li>强引用：和普通的赋值<code>A a = new A()</code> 一样，只有不可达之后才会被回收</li>
-<li>软引用：在内存溢出前，回收所有的软引用引用的对象，如果此时仍然溢出，再抛出OOM异常</li>
-<li>弱引用：发生GC时，不管内存是否足够，回收弱引用引用的对象</li>
-<li>虚引用：无法通过虚引用获取对象，只会在发生GC时，将虚引用放入Queue中（一定要传入queue）</li>
-</ul>
-<p>这里说明下ReferenceQueue的作用，对象被回收后，我们需要对引用对象（即SoftReference、WeakReference等）进行处理，这就是ReferenceQueue的作用。这个类的很多属性都是由JVM进行控制的，比如<code>ReferenceQueue.discovered</code>、<code>ReferenceQueue.pending</code>等属性</p>
-<h1 id="Q4-无引用的对象是如何一步步被回收的"><a href="#Q4-无引用的对象是如何一步步被回收的" class="headerlink" title="Q4. 无引用的对象是如何一步步被回收的"></a>Q4. 无引用的对象是如何一步步被回收的</h1><p>第一次GC发现不可达对象时，先判断其“有没有必要执行finalize()方法”，有必要执行时给该对象打上一个标记，并放入一个称为<code>F-Queue</code>的队列，等待执行<code>finalize()</code>。<code>F-Queue</code>不保证每个对象的<code>finalize()</code>都执行完毕（因为如果finalize里有死循环之类的就凉了），过段时间，GC会对<code>F-Queue</code>进行第二次标记，如果想拯救里面的对象，只要将对象和GC Roots链相连即可。</p>
-<p>没有必要执行的判断依据如下：</p>
-<ul>
-<li>对象没有覆盖finalize()</li>
-<li>finalize()已经被虚拟机调用过了 </li>
-</ul>
-<h1 id="Q5-方法区的回收"><a href="#Q5-方法区的回收" class="headerlink" title="Q5. 方法区的回收"></a>Q5. 方法区的回收</h1><p>方法区回收的效率一般比较低，方法区回收的主要对象是：废弃常量和无用的类。<br>比如一个字符串“abc”进入了常量池，但是当前没有任何一个String对象引用该常量，如果此时发生内存回收，如果必要的话，这个“abc”常量会被清除出常量池。其他类（接口）、方法、字段的符号引用也与此类似。<br>满足以下三个条件算是“无用的类”：</p>
-<ol>
-<li>该类的所有实例都被回收</li>
-<li>加载该类的ClassLoader被回收</li>
-<li>该类的Class对象没有在任何地方被引用或使用</li>
-</ol>
-<p>-verbose:class  查看类的加载信息<br>-XX:+TraceClassLoading  查看类的加载信息<br>-XX:+TraceClassUnLoading  查看类的卸载信息<br>-Xnoclassgc  关闭虚拟机对类的回收</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象的GC/" data-id="cjjk1zzz2001pzkvjfhuv5ois" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjjmyj63h0018qwvj8nho1qg0" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -895,23 +909,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/13/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/15/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/13/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/15/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/13/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/15/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/13/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/15/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/13/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/15/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>
