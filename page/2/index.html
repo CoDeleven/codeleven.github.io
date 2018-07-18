@@ -65,6 +65,239 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-存储器（一）之概述" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/存储器（一）之概述/" class="article-date">
+  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器（一）之概述/">存储器</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8C%89%E4%BD%9C%E7%94%A8%E5%88%86%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="按作用分的存储结构"></p>
+<ul>
+<li>主存：可以和CPU直接交换信息</li>
+<li>辅存：是主存的后援存储器，用来存放当前暂时不用的程序和数据。它不能和CPU直接交换信息。</li>
+<li>缓存：用在两个速度不同的部件之中</li>
+<li>闪速存储器：类似于辅存，用于保存数据的媒介</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjjqhctfc002no4vjhh4gv8bk" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-（未埋）存储器（四）之CPU和存储器的链接" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" class="article-date">
+  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/">存储器</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8C%89%E4%BD%9C%E7%94%A8%E5%88%86%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="按作用分的存储结构"></p>
+<ul>
+<li>主存：可以和CPU直接交换信息</li>
+<li>辅存：是主存的后援存储器，用来存放当前暂时不用的程序和数据。它不能和CPU直接交换信息。</li>
+<li>缓存：用在两个速度不同的部件之中</li>
+<li>闪速存储器：类似于辅存，用于保存数据的媒介</li>
+</ul>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjjqhctft0033o4vjwdn71lvs" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-观察者模式" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/12/观察者模式/" class="article-date">
+  <time datetime="2018-07-12T06:18:06.000Z" itemprop="datePublished">2018-07-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/12/观察者模式/">观察者模式</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="例子及分析"><a href="#例子及分析" class="headerlink" title="例子及分析"></a>例子及分析</h1><p>观察者就好比一个可以检测身体信息的手环，该手环每各一段时间会更新一下你的数据，并通过震动（或语音播报）提示你查看数据。</p>
+<p>在上面这个例子中，手环就是起到观测者（Observer）的作用，身体是被观测者（Observed），我们将 <strong>观测者</strong> 注册到（戴到） <strong>被观测者</strong> 上， <strong>被观测者</strong>的数据发生了变化后主动去告诉 <strong>观测者</strong>。</p>
+<h1 id="类图"><a href="#类图" class="headerlink" title="类图"></a>类图</h1><p><img src="https://blog-1252749790.file.myqcloud.com/DesignPattern/Pattern_Observer.png" alt="类图"></p>
+<p>IObserver是观察者的接口，IObserverd是被观察者的接口。<br>Observed实现IObserved接口，ConcreteObserver实现IObserver接口。</p>
+<h1 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 观察者接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IObserver</span></span>&#123;</span><br><span class="line">    <span class="comment">// 这里需要传个参数，否则不知道更新了啥</span></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">update</span><span class="params">(<span class="keyword">float</span> newVal)</span></span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 被观察者接口</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">IObserved</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">addObserver</span><span class="params">(IObserver observer)</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">removeObserver</span><span class="params">(IObserver observer)</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 被观察者实现，这里拿上面的例子举例</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Body</span> <span class="keyword">implements</span> <span class="title">IObserved</span>, <span class="title">Runnable</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">float</span> heartRate;</span><br><span class="line">    <span class="keyword">private</span> List&lt;IObserver&gt; observers;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">            <span class="comment">// 不断更新数据</span></span><br><span class="line">            <span class="comment">// ......</span></span><br><span class="line"></span><br><span class="line">            <span class="keyword">try</span>&#123;</span><br><span class="line">                Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">            &#125;<span class="keyword">catch</span>(Exception e)&#123;</span><br><span class="line">                e.printStackTrace();</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 添加观察者</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> observer 观察者实例</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addObserver</span><span class="params">(IObserver observer)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.observers.add(observer);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 移除观察者</span></span><br><span class="line"><span class="comment">     * <span class="doctag">@param</span> observer 观察者实例</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">removeObserver</span><span class="params">(IObserver observer)</span></span>&#123;</span><br><span class="line">        <span class="keyword">this</span>.observers.remove(observer);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/**</span></span><br><span class="line"><span class="comment">     * 通知观察者</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">notifyObserver</span><span class="params">()</span></span>&#123;</span><br><span class="line">        <span class="comment">// 防止在通知过程中，心率数值发生改变</span></span><br><span class="line">        <span class="keyword">float</span> heartRate = <span class="keyword">this</span>.heartRate;</span><br><span class="line">        <span class="keyword">for</span>(IObserver observer: observers)&#123;</span><br><span class="line">            observer.update(heartRate);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 观察者具体实现</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Band</span> <span class="keyword">implements</span> <span class="title">IObserver</span></span>&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 当心率数据发生变化时，通知该观察者</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">update</span><span class="params">(<span class="keyword">float</span> newVal)</span></span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"语音播报：心率发生变化 -----&gt; "</span> + newVal);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RealWorld</span></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">        <span class="comment">// 实例化一个人</span></span><br><span class="line">        Body body = <span class="keyword">new</span> Body();</span><br><span class="line">        <span class="comment">// 实例化一个智能手环</span></span><br><span class="line">        Band band = <span class="keyword">new</span> Band();</span><br><span class="line">        <span class="comment">// 把手环戴手腕上</span></span><br><span class="line">        body.addObserver(band);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>观察者模式在软件架构中，通常是用在数据监听方面，当数据改变后实时进行通知，这里的数据定义比较广泛，有时候是状态——比如Tomcat的Lifecycle组件：当一个容器进入某个状态，会通知所有的组件“我已经进入XXX状态，你们要做什么快做！”；有时候也真的是数据——比如Android上的LoadingProgress，每处理完一部分通知它重新绘制一下。</p>
+<p>总的来说，观察者模式的核心在于回调。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjjqhctfn002xo4vjps4ld9o9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-系统总线（三）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/10/系统总线（三）/" class="article-date">
+  <time datetime="2018-07-10T12:34:44.000Z" itemprop="datePublished">2018-07-10</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/10/系统总线（三）/">系统总线(二)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="总线控制"><a href="#总线控制" class="headerlink" title="总线控制"></a>总线控制</h1><h2 id="集中控制优先仲裁方式"><a href="#集中控制优先仲裁方式" class="headerlink" title="集中控制优先仲裁方式"></a>集中控制优先仲裁方式</h2><ul>
+<li>链式查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%93%BE%E5%BC%8F%E6%9F%A5%E8%AF%A2.png" alt="链式查询"></li>
+</ul>
+<p>BR是接口向总线控制部件发起占用请求</p>
+<p>BG到达的接口有总线请求，BG信号就不再往下传了，意味着该接口获得了总线使用权。</p>
+<p>BS是接口获得了总线使用权后，和总线控制部件建立的总线繁忙信号，表示它占用了总线。</p>
+<p>该种查询方式中，离总线控制部件最近的设备具有最高的优先级。</p>
+<p>这种方式的特点是：只需要很少几根线就能按一定优先次序实现总线控制，并且很容易扩充设备，但对电路故障很敏感，且优先级别低的设备可能很难获取请求。</p>
+<ul>
+<li>计数器定时查询<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%A1%E6%95%B0%E5%99%A8%E5%AE%9A%E6%97%B6%E6%9F%A5%E8%AF%A2.png" alt="计数器定时查询"></li>
+</ul>
+<p>该种查询方式相比前面的查询多了一条设备地址线，少了一根BG线，总线控制部件接收到BR送来的总线请求信号后，在总线未被使用（BS=0）的情况下，总线控制部件中的计数器开始计数，并通过设备地址线，向各设备发出一组地址信号。当某个 <em>请求占用总线</em> 的设备地址与计数器一致时，该设备就获得总线使用权。</p>
+<p>计数可以从“0”开始，也可以从上一次计数的终止点开始，当然也可以由程序设置。这种方式对电路故障不如 <em>链式查询</em> 敏感，但增加了设备地址数，控制也较复杂。</p>
+<ul>
+<li>独立请求方式<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%8B%AC%E7%AB%8B%E8%AF%B7%E6%B1%82%E6%96%B9%E5%BC%8F.png" alt="独立请求方式"></li>
+</ul>
+<p>该种查询方式内，每台设备均有一对总线请求先BR<sub>i</sub>和总线同意线BG<sub>i</sub>。当设备要求使用总线时，便发出该设备的请求信号。总线控制部件中有一排队电路，可根据优先次序确定响应哪一台设备的请求。该方式响应速度快，优先次序控制灵活，但控制线数量多。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>链式查询中仅用两根线确定总线使用权属于哪个设备；在计数器查询中大致用log<sub>2</sub>n根线，其中n是允许接纳的最大设备数，而独立请求方式需要采用2n根线。如果问几根控制线，还要再加上2。</p>
+<h1 id="总线通信控制"><a href="#总线通信控制" class="headerlink" title="总线通信控制"></a>总线通信控制</h1><p>众多部件共享总线，在争夺总线使用权时，应按各部件的优先等级来解决。而在通讯时间上，则应按分时方式来处理，即哪一个部件获得使用权，此刻就由他传送，等到该部件释放总先后，下个部件继续获得总线。这样一个个轮流交替。<br>总线周期通常分为四个阶段；</p>
+<ul>
+<li>申请分配阶段：由需要使用设备的主模块提出申请，经过仲裁后授予某一部件权限</li>
+<li>寻址阶段：取得了使用权的主模块通过总线发出本次要访问的从模块的地址</li>
+<li>传输阶段：数据由源模块发出，经数据总线流入目的模块</li>
+<li>结束阶段：主模块的有关信息均从系统总线上撤除，让出总线使用权</li>
+</ul>
+<h2 id="同步通信"><a href="#同步通信" class="headerlink" title="同步通信"></a>同步通信</h2><p>通信双方由统一时标控制数据传输 称为 同步通信。时钟通常由CPU的总线控制部件发出，送到总线上的所有部件；也可以由每个部件各自的时序发生器发出，但必须由总线控制部件发出的时钟信号对它们进行同步。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%90%8C%E6%AD%A5%E9%80%9A%E4%BF%A1.png" alt="同步通信"></p>
+<p>这里的读指令总共分为4个阶段（假设申请总线成功）：</p>
+<ol>
+<li>寻址阶段，取得了使用权的主模块通过总线发出要读取的设备地址，从T1上沿持续到T4结束</li>
+<li>传输阶段，主模块向从模块发送读取命令，从T2上沿持续到T3结束</li>
+<li>传输阶段2，从模块准备数据，持续一个T3</li>
+<li>结束阶段，主模块撤销读取命令，从模块撤销数据</li>
+</ol>
+<p>而对于写指令，也分为4个阶段：</p>
+<ol>
+<li>寻址阶段，取得了使用权的主模块通过总线发出要读取的设备地址，从T1上沿持续到T4结束</li>
+<li>传输阶段，主模块提供数据</li>
+<li>传输阶段2，主模块发出写命令，从模块收到命令后，得在指定时间内将数据写到从模块里。</li>
+<li>结束阶段，主模块撤销写入命令、撤销数据</li>
+</ol>
+<p>优点：</p>
+<ul>
+<li>简单、好配合</li>
+</ul>
+<p>缺点：</p>
+<ul>
+<li>需要强制主、从模块的时间“同步”，必须在规定时间内完成要求</li>
+<li>需要对所有从模块都用同一限时，所以必须得考虑最慢得设备</li>
+</ul>
+<h2 id="异步通信"><a href="#异步通信" class="headerlink" title="异步通信"></a>异步通信</h2><p>异步通信相比同步通信，对时间要求没有这么严格，允许各个部件得速度不一致。异步通信采用应答得方式实现，主模块发出请求信号时，一直等待从模块反馈“响应”信号后才开始通信。不过这就要求主、从模块间增加两条应答线。</p>
+<p>异步通信分为不互锁、半互锁、全互锁三种。</p>
+<h3 id="不互锁"><a href="#不互锁" class="headerlink" title="不互锁"></a>不互锁</h3><p>主模块发出请求后，不必等待从模块得响应信号，而是经过一段时间后撤销请求信号；从模块接收到请求信号后，在条件允许得情况下发出回答信号，一段时间后撤销回答信号。这个过程双方并无互锁关系。</p>
+<h3 id="半互锁"><a href="#半互锁" class="headerlink" title="半互锁"></a>半互锁</h3><p>主模块发出请求信号，必须待接到从模块得回答信号后再撤销其请求信号，有互锁关系。而从模块在发送完回答信号后不必等待主模块撤销请求信号，而是隔一段时间自动撤销回答信号</p>
+<h3 id="全互锁"><a href="#全互锁" class="headerlink" title="全互锁"></a>全互锁</h3><p>主模块发出请求信号，从模块需要发出回答信号，等主模块撤销了请求信号后，从模块才能撤销回答信号。</p>
+<p>// 这里有几个例子</p>
+<h2 id="半同步通信"><a href="#半同步通信" class="headerlink" title="半同步通信"></a>半同步通信</h2><p>为了让同步通信也能像异步通信这样允许不同速度得模块和谐工作，为此增设了一条“WAIT”响应信号线，采用插入时钟（等待）周期得措施来协调通信双方得配合问题。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjjqhctfv0034o4vj9bioibnv" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-系统总线（二）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/07/09/系统总线（二）/" class="article-date">
@@ -138,7 +371,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjjmyj645002vqwvjz2zsjgln" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjjqhctfq002zo4vjjc47idp2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -224,7 +457,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjjmyj641002jqwvj4xibomf4" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjjqhctfl002vo4vjnwdvyt8z" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -262,7 +495,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjjmyj63r0022qwvj3upz9t6f" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjjqhcted001zo4vj7092p6ea" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -302,7 +535,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjjmyj645002oqwvjtbkk0b07" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjjqhctfr0031o4vjjdmrginh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li></ul>
@@ -511,7 +744,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjjmyj63l001pqwvj5gqnsfcl" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjjqhcte7001to4vj25dq2poy" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -578,278 +811,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjjmyj63h001aqwvjwbtm9yem" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《深入Java虚拟机》之GC Roots及拓展" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" class="article-date">
-  <time datetime="2018-06-04T06:30:51.000Z" itemprop="datePublished">2018-06-04</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/">《深入Java虚拟机》之GC Roots及拓展</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>这篇文章本来是想写在《对象内存布局及使用》篇的，但是无意间发现了R大的<a href="http://rednaxelafx.iteye.com/blog/1044951" target="_blank" rel="noopener">《找出栈、堆上的引用》</a>，决定对其进行拓展。单独写了一篇笔记。</p>
-<hr>
-<p>根据可达性分析算法，GC Roots节点是查找引用链的关键，所以需要知道每个GC Roots在什么地方（一个个枚举得话很消耗时间）。而且回收时得知道某个时刻，所有的GC Roots及引用链。换句话说在某个时刻，大家都应该停下来等待统计引用（好比扫地，一边扫一边丢垃圾，最终是扫不干净得）。</p>
-<p>简而言之，现在的问题是：</p>
-<ul>
-<li>JVM如何知道哪些位置有引用类型的变量？</li>
-<li>如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？</li>
-</ul>
-<h1 id="Q1-JVM如何知道哪些位置有引用类型的变量？"><a href="#Q1-JVM如何知道哪些位置有引用类型的变量？" class="headerlink" title="Q1. JVM如何知道哪些位置有引用类型的变量？"></a>Q1. JVM如何知道哪些位置有引用类型的变量？</h1><p>这要由 <strong>虚拟机是否记录类型信息</strong> 而决定的，而且该决定会影响GC的实现方式和引用方式（这也是为什么存在句柄引用和直接引用得原因）。通常按准确程度划分为以下三种：</p>
-<ul>
-<li>保守式</li>
-<li>半保守式</li>
-<li>准确式</li>
-</ul>
-<h3 id="保守式"><a href="#保守式" class="headerlink" title="保守式"></a>保守式</h3><p>当无法区分内存上某个位置的数据究竟是引用类型还是整数类型时（或其他类型），我们称它为保守式GC。当发生GC时，JVM从一些已知的位置开始扫描内存（比如栈，如果是堆就查找对象里面是否有引用类型的属性）并递归深入，如果满足下面的条件就认为它是一个引用类型：</p>
-<ul>
-<li>四字节对齐</li>
-<li>里面的数值在堆范围内（比如数值为100，堆的范围为0-1000，那么就认为是在堆里面）</li>
-<li>The allocbit is set. The allocbit is a flag indicating whether the memory location corresponding to it is allocated or not.</li>
-</ul>
-<p>缺点：</p>
-<ul>
-<li>部分应该死的对象没死；当内存需求量大时，这些本应该释放掉的内存没被释放，总归不是一件好事</li>
-<li>由于无法确切的知道一个变量究竟是基本类型还是引用类型，所以对象发生移动时，无法确切的得知哪些变量应该被修改。简单来说，保守式GC里的对象无法被移动；若是想要移动对象，必须增加一个中间层，即 <strong>句柄</strong>。所有指针都先指向句柄池，再从句柄里找到对象。这样要移动对象就只需要修改句柄表的内容即可。</li>
-</ul>
-<h3 id="半保守式"><a href="#半保守式" class="headerlink" title="半保守式"></a>半保守式</h3><p>由于JVM要支持丰富的反射功能，本来对象就会带上一堆元数据，所以自己所有属性的类型信息都可以一目了然。<br>所以在扫描堆时，JVM可以直接根据对象带有的信息判断 <strong>该对象内什么位置是什么类型的变量</strong><br>而在扫描栈时，仍然需要一个个扫描，且无法判断某个位置上具体是什么变量</p>
-<p>改进：</p>
-<ul>
-<li>由于半保守式在堆内部的数据类型是准确可知的，所以大部分情况下可以采用 <strong>直接引用</strong>，也就可以支持部分对象的移动（对在栈上扫描出来的对象进行标记，表示 “不可移动对象”，而对象属性里的引用仍可以移动）</li>
-</ul>
-<h3 id="准确式"><a href="#准确式" class="headerlink" title="准确式"></a>准确式</h3><p>和保守式相反——能区分内存（包括栈和堆）上任意位置的数据类型。HotSpot里采用 <strong>从外部记录类型信息，存成映射表</strong>，在HotSpot里该映射表被叫做 <code>OopMap</code>。要实现这项功能，需要虚拟机里的解释器和JIT编译器共同的支持，由它们来生成足够的元数据信息。</p>
-<p>使用这样的映射表一般有两种方式：<br>1、每次都遍历原始的映射表，循环的一个个偏移量扫描过去；这种用法也叫“解释式”；<br>2、为每个映射表生成一块定制的扫描代码（想像扫描映射表的循环被展开的样子），以后每次要用映射表就直接执行生成的扫描代码；这种用法也叫“编译式”。 </p>
-<p>对于堆里的对象，<code>OopMap</code>里记录了该类型的对象内什么偏移量上是什么类型的数据。这些数据是在类的加载过程中计算出来的。</p>
-<p>对于栈来说就会比较麻烦。每个被JIT编译后的方法都会在一些 <strong>特定的位置</strong>记录下<code>OopMap</code>，记录了执行到该方法的某条指令的时候，栈上和寄存器里哪些位置是引用。特定位置主要在：</p>
-<ul>
-<li>循环的末尾</li>
-<li>方法临返回前/调用方法的call指令后</li>
-<li>可能抛出异常的位置</li>
-</ul>
-<p>这些位置被成为 <strong>安全点</strong>。由于每个位置都记录 <code>OopMap</code> 很浪费空间，所以选择几个关键的位置就能有效缩减需要记录的数据量，但仍然能达到区分数据类型的作用。安全点数量既不能太多以至于增大运行时得负荷；也不能太少以至于GC间隔很长。</p>
-<p>在解释器中执行的方法则可以通过解释器自动生成出 <code>OopMap</code>出来给GC用。</p>
-<p>注意，这里分成了两部分，一部分是解释器的操作，一部分是JIT编译的操作。<br>两个什么区别可以看<a href="https://blog.csdn.net/sunxianghuang/article/details/52094859" target="_blank" rel="noopener">这篇文章</a></p>
-<h1 id="Q2-如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？"><a href="#Q2-如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？" class="headerlink" title="Q2. 如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？"></a>Q2. 如何让大家都停下来，拍个快照，获取某一个瞬间的引用链？</h1><p>这个问题也可以理解为 <strong>GC如何来获取OopMap信息</strong>。</p>
-<p>停下来得方式分为两种：</p>
-<ul>
-<li>抢先式中断，发生GC时，让所有线程暂停，不在安全点上得线程恢复运行，直到运行到安全点。</li>
-<li>主动式中断，发生GC时，给所有线程一个标记，每个线程运行时不断去轮询该标记，当发现标记为真时，运行到安全点并暂停本线程</li>
-</ul>
-<p>然而安全点还不够，因为如果线程没有分配到CPU时间，那么根本不会运行到安全点，典型得例子就是 Sleeping 或 Blocking 状态得线程，它们无法走到安全点上挂起。所有得线程也不可能已知等待这条线程走到安全点上，所以推出了一个 <strong>安全区域</strong> 的点。</p>
-<p>安全区域是指在一段代码片段里，引用关系不会发生变化。在这个区域的任意地方发生GC都是安全的。</p>
-<p>在线程进入 <strong>安全区域</strong>时，会给自己打上一个标记。那样在这段时间里即使JVM发生GC，就不用管在 <strong>安全区域</strong>的线程了；当线程要离开 <strong>安全区域</strong>时，判断一下JVM是否正在GC，如果是，就等待直到收到 <strong>可以安全离开安全区域的信号</strong>为止；反之，线程继续执行。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjjmyj63b0013qwvj061hmbdh" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-了解阻塞队列之DelayQueue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/03/了解阻塞队列之DelayQueue/" class="article-date">
-  <time datetime="2018-06-03T04:10:50.000Z" itemprop="datePublished">2018-06-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/03/了解阻塞队列之DelayQueue/">了解阻塞队列之DelayQueue</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>DelayQueue的主要功能是取出超出时间期限的元素，在缓存方面能发挥较好的效果。<br>DelayQueue包含以下几个属性：</p>
-<ul>
-<li>lock:ReentrantLock —– 不解释</li>
-<li>q:PriorityQueue —– 存放元素的队列，该队列会根据比较器进行排序，在DelayQueue里就是按剩余时间进行排序</li>
-<li>leader:Thread —– Leader-Follower线程模型，主要用于降低锁力度，不需要消息队列。</li>
-<li>available:Condition —– 不解释</li>
-</ul>
-<p>DelayQueue的整体结构采用代理模式，如图所示：<br><img src="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_Structure.jpg" alt="DelayQueue的继承关系图"></p>
-<p>其中有一种新的线程设计模式叫 <a href="http://ifeve.com/leader-follower-thread-model/" target="_blank" rel="noopener">Leader-Follower</a>：</p>
-<ul>
-<li>有一条线程负责监视是否有任务到达，该线程叫Leader</li>
-<li>其余线程处于Follower状态（await状态），时刻准备着被唤醒成为下一个Leader</li>
-<li>当Leader线程检测到任务到达后 <strong>进入处理状态</strong> 并 <strong>唤醒等待的Follower线程之一</strong></li>
-<li>当老Leader线程（现在处于Process状态）处理完毕后，进入Follower状态，等待新Leader的唤醒</li>
-</ul>
-<p>其出现是为了 </p>
-<ul>
-<li><strong>解决单线程接受请求线程池线程处理请求下线程上下文切换</strong></li>
-<li><strong>线程间通信数据拷贝的开销</strong></li>
-<li><strong>不需要维护一个队列</strong></li>
-</ul>
-<hr>
-<p>DelayQueue的offer()方法如下所示：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">final</span> ReentrantLock lock = <span class="keyword">this</span>.lock;</span><br><span class="line">    lock.lock();</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">// 调用PriorityQueue.offer()</span></span><br><span class="line">        q.offer(e);</span><br><span class="line">        <span class="comment">// 判断如果队首元素为新进入的元素</span></span><br><span class="line">        <span class="keyword">if</span> (q.peek() == e) &#123;</span><br><span class="line">            <span class="comment">// 设置leader为null</span></span><br><span class="line">            leader = <span class="keyword">null</span>;</span><br><span class="line">            <span class="comment">// 唤醒其他线程</span></span><br><span class="line">            available.signal();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        lock.unlock();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>Q1. 为什么要额外判断下<code>peek() == e</code>？<br>因为当一个线程进入leader状态时，仍会释放锁进入一段睡眠。那么此时如果新添加的offer优先度很高，就可以唤醒其他线程准备竞争任务。</p>
-<hr>
-<p>DelayQueue的take()方法流程图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_take.png" alt="take方法流程图"></p>
-<p>这里的逻辑简单来看就是如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/collections/DelayQueue_take2.png" alt="take方法白话文流程图"></p>
-<p>Q1. 为什么要特意设置 <code>first = null</code><br>当消费者数量大于生产者，那么会有多个消费者线程持有队首元素的引用，然后在竞争锁的过程中，个别消费者长时间处于等待状态，那么GC发生时，队首元素就不会被回收（因为还是可达的），就发生了内存泄露。</p>
-<p>Q2. 为什么要特意设置leader？根据Leader-Follower模式，似乎ReentrantLock已经能够满足只有一个线程在处理且其他线程进入等待<br>因为即使线程拿到了Lock锁，但是其中的await()也会释放锁进入等待状态。那么其他线程拿到锁后该如何知道是否有线程正在等待呢？那么就是靠这个leader变量。</p>
-<p>Q3. 为什么设置了leader最后还要设置回null？<br>因为leader-follower，处理完后重新进入Follower状态</p>
-<hr>
-<p>总结<br>DelayQueue涉及到了Leader-Follower模型，该模型的优势在于 <strong>线程上下文开销</strong>  相比  <strong>单线程接受任务再交给多线程处理来说</strong> 更低。<br>该类可以理解为代理类，它覆写的那些方法实际上调用的都是PriorityQueue的API。DelayQueue是线程安全的，PriorityQueue是线程不安全的。<br>要谨记await()方法会释放锁并进入等待</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjjmyj63r0027qwvjj8p3rk05" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-深入JDK之Queue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/03/深入JDK之Queue/" class="article-date">
-  <time datetime="2018-06-03T02:45:13.000Z" itemprop="datePublished">2018-06-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/03/深入JDK之Queue/">JDK之Queue专题之概览</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>Queue是消费-生产的重要组件，它能将消费者和生产者进行解耦，生产者和消费者只需要依赖队列即可。</p>
-<ul>
-<li><a href="./队列之PriorityQueue.md">队列之Priority</a></li>
-<li><a href="./了解阻塞队列之DelayQueue.md">了解阻塞队列之DelayQueue</a></li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjjmyj641002fqwvjy35zmmue" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《深入Java虚拟机》之垃圾收集算法" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" class="article-date">
-  <time datetime="2018-05-29T12:59:46.000Z" itemprop="datePublished">2018-05-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/29/《深入Java虚拟机》之垃圾收集算法/">《深入Java虚拟机》之垃圾收集算法</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="标记-清除算法"><a href="#标记-清除算法" class="headerlink" title="标记-清除算法"></a>标记-清除算法</h2><p>算法分两个阶段：</p>
-<ul>
-<li>标记：将所有不可达对象进行标记</li>
-<li>清除：清除所有标记的对象</li>
-</ul>
-<p>当标记的对象满足以下条件，那么会加入<code>F-Queue</code>中等待第二次标记</p>
-<ul>
-<li>对象覆写finalize()且finalize()没有被虚拟机调用过</li>
-</ul>
-<p>该算法有以下两个问题：</p>
-<ul>
-<li>效率：标记和清除的效率都不高</li>
-<li>空间：标记-清除后，内存里会产生大量不连续的空间，空间碎片太多会导致分配大对象时，再次触发GC</li>
-</ul>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/gc_mark_sweep.png" alt="标记-清除算法示意图"></p>
-<h2 id="复制算法"><a href="#复制算法" class="headerlink" title="复制算法"></a>复制算法</h2><p>将内存空间划分为两个部分，每次都只往一个部分里写入对象。当这块（写入对象的那块）的内存空间用完，就将存活着的对象复制到另外一部分空间里面，然后把原来那部分清理掉。这样每次都只是对整个半区进行内存回收，内存分配时也不用考虑空间碎片等问题，只需移动堆顶指针，按顺序分配即可。</p>
-<p>该算法的问题：</p>
-<ul>
-<li>空间：将内存缩小为原来的一半，代价太高</li>
-</ul>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/gc_copy.png" alt="复制算法示意图"></p>
-<p>现代主流的虚拟机都采用这种收集算法来 <strong>回收新生代</strong>，但是在空间分配上进行了调整，根据研究结果——“新生代中的98%的对象是朝生夕死”的，所以不需要缩小一半；现在的主流做法是将内存分为一块较大的 <strong>Eden</strong>空间和两块较小的 <strong>Survivor</strong>空间，每次使用Eden和其中一块Survivor（Eden:Survivor1:Survivor2 = 8:1:1）。</p>
-<p>当发生GC时，将Edent和Survivor中还存活的对象一次性复制到另外一块Survivor空间上，然后清理掉Eden和刚刚用过的Survivor空间。然而不是所有场景下，存活的对象都不超过10%，所以当Survivor空间不足时，需要依赖其他内存空间（老年代）。</p>
-<p>修改空间比例后的算法问题：</p>
-<ul>
-<li>效率问题：对象存活率较高时就要进行较多的复制，效率会变低</li>
-<li>极端情况：为应对对象100%存活的情况，需要有额外的空间进行担保</li>
-</ul>
-<h2 id="标记-整理算法"><a href="#标记-整理算法" class="headerlink" title="标记-整理算法"></a>标记-整理算法</h2><p>根据老年代的特点，有人提出了标记-整理算法（mark-compact)，标记过程和前面一致，在清理过程时，让所有存活的对象都向一端移动，然后直接清理掉边界以外的内存</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/gc_mark_compact.png" alt="标记-整理算法示意图"></p>
-<h2 id="分代收集算法"><a href="#分代收集算法" class="headerlink" title="分代收集算法"></a>分代收集算法</h2><p>根据对象存活周期将内存划分为几块。一般是分为 <strong>新生代</strong> 和 <strong>老年代</strong>。说通俗点就是分而治之，新生代因为对象创建和回收都比较频繁，每次只有少量存活就可以采用复制算法；老年代因为对象存活率高、没有额外空间对他进行分配担保，就必须使用 <strong>标记-清除</strong> 或 <strong>标记-整理</strong> 算法。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjjmyj63h0018qwvj8nho1qg0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjjqhctdj000yo4vjg1y290gr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -864,7 +826,7 @@
 
 
   <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/codeleven.github.io/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><span class="page-number current">2</span><a class="page-number" href="/codeleven.github.io/page/3/">3</a><a class="page-number" href="/codeleven.github.io/page/4/">4</a><a class="page-number" href="/codeleven.github.io/page/5/">5</a><a class="extend next" rel="next" href="/codeleven.github.io/page/3/">__('next') &raquo;</a>
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><span class="page-number current">2</span><a class="page-number" href="/codeleven.github.io/page/3/">3</a><a class="page-number" href="/codeleven.github.io/page/4/">4</a><span class="space">&hellip;</span><a class="page-number" href="/codeleven.github.io/page/6/">6</a><a class="extend next" rel="next" href="/codeleven.github.io/page/3/">__('next') &raquo;</a>
   </nav>
 </section>
         
@@ -887,7 +849,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 17.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 15px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 15px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 17.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
     </div>
   </div>
 
@@ -909,23 +871,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/18/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>

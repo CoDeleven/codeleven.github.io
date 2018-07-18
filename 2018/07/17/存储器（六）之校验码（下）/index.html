@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>存储器之校验码（上） | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="前言额，主要是校验码上篇好像布局有点问题。就拆了一个下篇。 海明码（又称汉明码）根据上篇，我们可以得知海明码主要解决的是“规则”这个问题，主要从以下几个角度进行分析：  一串数据需要几个检测位 检测位加在什么地方 检测位需要监督哪些位置的数据 如何验证检测位和数据位的关系  一串数据需要几个检测位设欲检测的二进制代码有n位，为使其具有纠错能力，需增加k位，组成n + k的代码。为了能准确对错误定位">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="存储器之校验码（上）">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="前言额，主要是校验码上篇好像布局有点问题。就拆了一个下篇。 海明码（又称汉明码）根据上篇，我们可以得知海明码主要解决的是“规则”这个问题，主要从以下几个角度进行分析：  一串数据需要几个检测位 检测位加在什么地方 检测位需要监督哪些位置的数据 如何验证检测位和数据位的关系  一串数据需要几个检测位设欲检测的二进制代码有n位，为使其具有纠错能力，需增加k位，组成n + k的代码。为了能准确对错误定位">
+<meta property="og:locale" content="zh">
+<meta property="og:updated_time" content="2018-07-17T08:51:49.112Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="存储器之校验码（上）">
+<meta name="twitter:description" content="前言额，主要是校验码上篇好像布局有点问题。就拆了一个下篇。 海明码（又称汉明码）根据上篇，我们可以得知海明码主要解决的是“规则”这个问题，主要从以下几个角度进行分析：  一串数据需要几个检测位 检测位加在什么地方 检测位需要监督哪些位置的数据 如何验证检测位和数据位的关系  一串数据需要几个检测位设欲检测的二进制代码有n位，为使其具有纠错能力，需增加k位，组成n + k的代码。为了能准确对错误定位">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-存储器（六）之校验码（下）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/17/存储器（六）之校验码（下）/" class="article-date">
+  <time datetime="2018-07-17T07:41:07.000Z" itemprop="datePublished">2018-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      存储器之校验码（上）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>额，主要是校验码上篇好像布局有点问题。就拆了一个下篇。</p>
+<h1 id="海明码（又称汉明码）"><a href="#海明码（又称汉明码）" class="headerlink" title="海明码（又称汉明码）"></a>海明码（又称汉明码）</h1><p>根据上篇，我们可以得知海明码主要解决的是“规则”这个问题，主要从以下几个角度进行分析：</p>
+<ul>
+<li>一串数据需要几个检测位</li>
+<li>检测位加在什么地方</li>
+<li>检测位需要监督哪些位置的数据</li>
+<li>如何验证检测位和数据位的关系</li>
+</ul>
+<h2 id="一串数据需要几个检测位"><a href="#一串数据需要几个检测位" class="headerlink" title="一串数据需要几个检测位"></a>一串数据需要几个检测位</h2><p>设欲检测的二进制代码有n位，为使其具有纠错能力，需增加k位，组成n + k的代码。为了能准确对错误定位以及指出代码没错，k需要满足以下关系： <strong>2<sup>k</sup> &gt;= n + k + 1</strong></p>
+<p>这个不等式的意思就是：检测位的所能表示的状态需要大于等于 n + k + 1 个（这里额外加1是全正确的情况下，即000…）</p>
+<h2 id="检测位加在什么地方"><a href="#检测位加在什么地方" class="headerlink" title="检测位加在什么地方"></a>检测位加在什么地方</h2><p>放在 <strong>2<sup>i - 1</sup></strong> 的位置上，比如：</p>
+<ol>
+<li>第一个检测位，就放在第1的位置上</li>
+<li>第二个检测位，就放在第2的位置上</li>
+<li>第三个检测位，就放在第4的位置上<br>…</li>
+</ol>
+<p>数据位按序依次填到检测位和检测位之间的间隔中去。</p>
+<p>比如二进制代码：“0010”</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为3。需要3个检测位</li>
+<li>我们用“?”代替检测位：??0?010</li>
+</ol>
+<h2 id="检测位需要监督哪些位置的数据"><a href="#检测位需要监督哪些位置的数据" class="headerlink" title="检测位需要监督哪些位置的数据"></a>检测位需要监督哪些位置的数据</h2><ol>
+<li>第一个检测位，需要检测1、3、5、7、9…每检测一个跳过一个</li>
+<li>第二个检测位，需要检测2、3、6、7、10、11…每检测两个跳过两个</li>
+<li>第三个检测位，需要检测4、5、6、7、12、13、14、15…每检查四个跳过四个</li>
+</ol>
+<p>用公式总结一下<br>第i个检测位，每检测完 <strong>2<sup>i - 1</sup></strong> ，就跳过 <strong>2<sup>i - 1</sup></strong>，再检测下一个范围 <strong>2<sup>i - 1</sup></strong>…</p>
+<p>这样分组能有以下这些特点：</p>
+<ol>
+<li>每个小组有且仅有一位被该组所独占，该位是其他组没有的。</li>
+<li>每两个小组（g<sub>i</sub>和 g<sub>j</sub>）共同占有一位，该位是其他组没有的。即 g<sub>i</sub>和 g<sub>j</sub> 共同占有第 2<sup>i-1</sup> + 2<sup>j-1</sup> 位</li>
+<li>每三个小组（g<sub>i</sub>、g<sub>j</sub>和g<sub>t</sub>）共同占有一位，该位同样是其他组没有的。即 g<sub>i</sub>、 g<sub>j</sub> 、g<sub>t</sub>共同占有第 2<sup>i-1</sup> + 2<sup>j-1</sup> + 2<sup>t-1</sup>位</li>
+</ol>
+<p>比如二进制代码：“1101 1010”</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为4。需要4个检测位</li>
+<li>我们用“?”代替检测位：??1? 101? 1010</li>
+<li><p>检测位需要对要监督的位置进行异或（⊕）</p>
+<ul>
+<li>第一位检测位：需要检查1、3、5、7、9… 根据题目判断（这里的3、5、7、9表示位置） 3 ⊕ 5 ⊕ 7 ⊕ 9 ⊕ 11 = 1 ⊕ 1 ⊕ 1 ⊕ 1 ⊕ 1 = 0。所以第一位检测位是0。</li>
+<li>第二位检测位：需要检查2、3、6、7… 根据题目判断 3 ⊕ 6 ⊕ 7 ⊕ 10 ⊕ 11 = 1 ⊕ 0 ⊕ 1 ⊕ 0 ⊕ 1 = 1</li>
+<li>…后面的如上所示</li>
+<li>最后得出0110 1010 1010 </li>
+</ul>
+</li>
+</ol>
+<p>为什么使用异或？<br>答：因为异或运算符正好满足相同为0，不同为1的情况</p>
+<h2 id="如何验证检测位和数据位的关系"><a href="#如何验证检测位和数据位的关系" class="headerlink" title="如何验证检测位和数据位的关系"></a>如何验证检测位和数据位的关系</h2><p>P<sub>i</sub>表示从左到右的位数。</p>
+<p>比如第一组，只要验证P1 ⊕ P3 ⊕ P5 ⊕ P7 ⊕ P9 ⊕ P11 = 0 即可。<br>如果所有的小组异或后为0，那么就代表数据没有问题</p>
+<p>比如：<br>|情况| P8 | P4 | P2 | P1 |<br>| :-: | :-: | :-: | :-: | :-: |<br>| 1 | 0 | 0 | 0 | 0 |<br>| 2 | 0 | 1 | 1 | 0 |<br>| 3 | 1 | 1 | 0 | 0 | </p>
+<ul>
+<li>第一种情况，所有的数据全部正确</li>
+<li>第二种情况，P2和P4的数据有问题，说明P2和P4的交叉位置有错。将二进制转换成十进制，可以直接得出第6位数据有误（第6位正好是P2组和P4组负责的）。</li>
+<li>第三种情况，P4和P8的数据有问题，说明P4和P8的交叉位置有错。将二进制转换成十进制，可以直接得出第12位数据有误。</li>
+</ul>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>按配奇原则（偶数个数的“1”，用1表示；奇数个数的“1”，用0表示）配置1100 101的海明码</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为4。需要4个检测位</li>
+<li>??1?100?101</li>
+<li>计算校验位<ul>
+<li>P1 = P3 ⊕ P5 ⊕ P7 ⊕ P9 ⊕ P11… = 1</li>
+<li>P2 = P3 ⊕ P6 ⊕ P7 ⊕ P10 ⊕ P11…= 1</li>
+<li>P4 = P5 ⊕ P6 ⊕ P7 ⊕ P12 ⊕ P13 ⊕ P14 ⊕ P15…= 0；</li>
+<li>P8 = P9 ⊕ P10 ⊕ P11 ⊕ P12 ⊕ P13… = 1；</li>
+</ul>
+</li>
+<li>新配置的汉明码为1110 1001 101</li>
+</ol>
+<p>按配偶原则（偶数个数的“1”，用0表示；奇数个数的“1”，用1表示）配置0110 101的海明码</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为4。需要4个检测位</li>
+<li>??0?110?101</li>
+<li>P1 = 1；P2 = 0；P3 = 0；P8 = 0；</li>
+<li>新配置的汉明码为1000 1000 101</li>
+</ol>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>海明码通常用于一位纠错、两位检错，实际使用时需要再加一位检测码。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/" data-id="cjjqhctfg002ro4vjuxnc8n7b" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/18/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">存储器之校验码（上）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 15px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 17.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/18/输入输出设备/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/18/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

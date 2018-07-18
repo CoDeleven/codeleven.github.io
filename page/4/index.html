@@ -65,6 +65,284 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
+  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>线程池的优点：</p>
+<ul>
+<li>降低资源开销：每次任务到达时不需要重新创建和销毁</li>
+<li>提高可管理性：统一对线程进行调优、监控</li>
+<li>提高任务响应速度：不需要等待线程创建</li>
+</ul>
+<p>线程池创建的各个参数：</p>
+<ul>
+<li>corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程）</li>
+<li>maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务</li>
+<li>keepAliveTime：存活时间。非核心线程可空闲的最大时间</li>
+<li>workQueue: 任务阻塞队列。当提交新任务且核心线程数已经被使用完时，新任务会先加入任务队列</li>
+</ul>
+<p>线程池中线程创建流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png" alt=""></p>
+<ol>
+<li>提交任务时，先判断核心线程数<strong>是否已经创建完毕</strong>，如果没有，则<strong>先将核心线程数创建满</strong>；反之则进入下个阶段</li>
+<li>判断核心线程数是否已经全部被占用，如果没有则交给核心线程执行；反之进入下个阶段</li>
+<li>判断工作队列是否已满，如果没满加入队列等待；反之进入下个阶段</li>
+<li>判断当前线程数是否小于MaxThread，如果是，则创建新线程执行任务；反之调用RejectPolicyHandler执行对应的策略</li>
+</ol>
+<h2 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h2><p>我们可以通过ThreadPoolExecutor创建一个线程池<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ThreadPoolExecutor(</span><br><span class="line">    <span class="keyword">int</span> corePoolSize,</span><br><span class="line">    <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">    <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">    TimeUnit unit,</span><br><span class="line">    BlockingQueue&lt;Runnable&gt; workQueue，</span><br><span class="line">    RejectedExecutionHandler handler)</span><br></pre></td></tr></table></figure></p>
+<p>1) corePoolSize: 当提交一个任务时（即使其他空闲核心线程也能够执行新任务），线程池会创建一个新线程来执行任务，等到corePoolSize个线程被创建了，就不再创建了。如果要额外创建，就要看后面的参数。如果调用了线程的<figure class="highlight plain"><figcaption><span>方法，线程池会提前创建并启动所有核心线程</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2) maximumPoolSize: 线程池允许创建的最大线程数。如果队列满了，并且已经创建的线程数小于最大线程数，则线程池会再创建新的线程执行任务。如果使用了无界队列，该参数没什么效果</span><br><span class="line"></span><br><span class="line">3) keepAliveTime: 线程池的工作线程空闲后，保持存活的时间。如果每个线程执行时间较短，可以将该值调大，提高线程利用率</span><br><span class="line"></span><br><span class="line">4) unit: 时间单位</span><br><span class="line"></span><br><span class="line">5) workQueue: 用于保存等待执行的任务的阻塞队列，可以选择以下几个阻塞队列：</span><br><span class="line"></span><br><span class="line">    * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO原则队元素进行排序</span><br><span class="line">    * LinkedBlockingQueue: 一个基于链表结构的阻塞，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法Executors.newFixedThreadPool()使用了这个队列。</span><br><span class="line">    * SynchronousQueue: 一个不存储元素的队列。每个插入操作要必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法Executors.newCachedThreadPool使用了这个队列</span><br><span class="line">    * PriorityQueue: 一个具有优先级的无限阻塞队列</span><br><span class="line"></span><br><span class="line">6) handler: RejectPolicy默认有四种：</span><br><span class="line">    * AbortPolicy，直接抛出异常</span><br><span class="line">    * DiscardPolicy，丢弃该任务，放弃处理</span><br><span class="line">    * CallerRunsPolicy，只用调用者线程执行任务</span><br><span class="line">    * DiscardOldestPolicy，丢弃队列里的队首元素</span><br><span class="line"></span><br><span class="line">## 执行任务</span><br><span class="line">线程池提交任务有两个方法向线程池提交任务，分别为execute()和submit():</span><br><span class="line"></span><br><span class="line">* execute: 执行后没有返回值，无法判断任务是否被线程池执行成功</span><br><span class="line">* submit: 提交后会返回一个Future类型的对象，通过该Future对象可以判断执行是否成功。其中get方法可以阻塞当前线程直到任务完成，get(timeout, unit)方法可以阻塞当前线程一段时间后返回</span><br><span class="line"></span><br><span class="line">## 关闭线程</span><br><span class="line">关闭线程池有两个方法，分别为```shutdown()``` 和 ```shutdownNow()</span><br></pre></td></tr></table></figure></p>
+<p>共同点：<br>遍历线程池中的所有线程，然后逐个调用线程的<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">不同点：</span><br><span class="line">* shutdownNow首先将线程池的状态设置为STOP状态，然后尝试停止所有的正在执行或暂停任务的线程，并返回等待执行任务的列表</span><br><span class="line">* shutdown只是将线程池的状态设置成SHUTDOWN状态，然后中断所有没有正在执行任务的线程</span><br><span class="line"></span><br><span class="line">当任意一个关闭方法被调用时，isShutdown()方法就会返回true。当所有的任务关闭后，调用isTerminated()才会返回true。</span><br><span class="line"></span><br><span class="line">具体要调用```shutdown()```还是```shutdownNow()```，需要根据具体业务来判断(通常调用```shutdown()```)。如果任务不一定要执行完，可以用```shutdownNow()</span><br></pre></td></tr></table></figure></p>
+<h2 id="合理配置"><a href="#合理配置" class="headerlink" title="合理配置"></a>合理配置</h2><ul>
+<li>任务的性质：CPU密集型任务、IO密集型任务、混合型任务</li>
+<li>任务的优先级：高、中、低</li>
+<li>任务的执行时间：长、中、短</li>
+<li>任务的依赖性：是否依赖其他系统资源，如  数据库连接</li>
+</ul>
+<p>如何挑选：</p>
+<ul>
+<li>CPU密集型任务需要长时间用到CPU运算，所以线程数量最好配置: N<sub>cpu + 1</sub> </li>
+<li>IO密集型任务并不是一直占用CPU，则尽可能配置多的线程: 2 * N<sub>cpu</sub></li>
+<li>如果是混合型任务，尝试将其拆分为CPU密集型任务和IO密集型任务</li>
+<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲时间越长，那么线程数应该设置的越大，这样才能更好的利用CPU。</li>
+</ul>
+<p>注意：建议使用有界队列，因为如果线程池里的工作线程全部阻塞，任务挤压在线程池里，最终会导致整个系统不可用</p>
+<h2 id="监控要素"><a href="#监控要素" class="headerlink" title="监控要素"></a>监控要素</h2><ul>
+<li>taskCount: 线程池需要执行的任务数量</li>
+<li>completedTaskCount: 线程池在运行过程中已完成的任务数量，小于等于taskCount</li>
+<li>targetPoolSize: 线程池里曾将创建过的最大线程数。通过这个数据可以直到线程池是否曾经瞒过。</li>
+<li>getPoolSize: 线程池的线程数量。如果线程池不销毁，线程池里的线程不会自动销毁，所以该值只增不减</li>
+<li>getActiveCount: 获取活动的线程数</li>
+</ul>
+<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<code>beforeExecute()</code>, <code>afterExecute()</code>, <code>terminated()</code> 方法，也可以在任务执行前、后执行一些代码来监控。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该篇主要了解了线程池的使用已经各个元素的含义以及监控时的优化。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjjqhctdo0015o4vj79v87xy8" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之同步工具" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/" class="article-date">
+  <time datetime="2018-05-13T02:25:39.000Z" itemprop="datePublished">2018-05-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之同步工具/">《Java并发编程的艺术》之同步工具</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h2 id="CountDownLatch"><a href="#CountDownLatch" class="headerlink" title="CountDownLatch"></a>CountDownLatch</h2><p>该类主要实现了：让一个线程等待其他线程完成后再执行的功能，好比<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">该类的初始化需要一个整数值count，当每次调用```CountDownLatch.countDown()```时Count会递减。直到count降到0时，所有执行```CountDownLatch.await()```的方法都会返回。</span><br><span class="line"></span><br><span class="line">初始化了一个共享变量latch，并赋予count为3</span><br><span class="line">```java</span><br><span class="line">CountDownLatch latch = new CountDownLatch(3);</span><br></pre></td></tr></table></figure></p>
+<p>创建一个任务，睡眠1秒假装执行任务，最后执行countDown<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> throw InterruptedException</span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"执行任务..."</span>);</span><br><span class="line">    Thread.sleep(<span class="number">1000</span>);</span><br><span class="line">    latch.countDown();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>主线程里执行如下方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 调用3个线程执行上述的任务</span></span><br><span class="line">...</span><br><span class="line">latch.await();</span><br><span class="line">System.out.println(<span class="string">"执行结束"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>当三个任务线程全部执行完latch.countDown()时，main线程就会从阻塞的await()中返回，最后输出”执行结束”。<br>注意：CountDownLatch 只能使用一次，下一次使用要重新创建一个。</p>
+<h2 id="CylicBarrier"><a href="#CylicBarrier" class="headerlink" title="CylicBarrier"></a>CylicBarrier</h2><p>该类和CountDownLatch有点类似，不过从名字就可以看出它是一个<strong>可循环使用</strong> 的类。它的功能主要是等待所有线程达到某个位置，然后统一执行。可以想象成出发旅游，大家都先到集合地等待，待所有人都到了，就可以出发了。</p>
+<p>创建一个屏障<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CyclicBarrier barrier = <span class="keyword">new</span> CyclicBarrier(<span class="number">4</span>);</span><br></pre></td></tr></table></figure></p>
+<p>任务类，让先完成的任务进行等待，等待其他线程到达<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> throw InterruptedException</span>&#123;</span><br><span class="line">    System.out.println(Thread.currentThread.getName() + <span class="string">" -&gt; 到达集合点"</span>);</span><br><span class="line">    barrier.await();</span><br><span class="line">    System.out.println(Thread.currentThread.getName() + <span class="string">"出发！"</span>)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>睡5秒，不让主线程过早结束<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建4个线程执行上述的任务</span></span><br><span class="line">...</span><br><span class="line">Thread.sleep(<span class="number">5000</span>);</span><br><span class="line">System.out.println(<span class="string">"执行结束"</span>)</span><br></pre></td></tr></table></figure></p>
+<p>注意，如果barrier在等待过程中某个线程被中断了一次，那么整个barrier就需要重新来过。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">Thread thread = <span class="keyword">new</span> Thread(() -&gt; &#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        barrier.await();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (BrokenBarrierException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">thread.start();</span><br><span class="line">thread.interrupt();</span><br><span class="line"><span class="keyword">try</span>&#123;</span><br><span class="line">    barrier.await();</span><br><span class="line">&#125;<span class="keyword">catch</span> (Exception e)&#123;</span><br><span class="line">    System.out.println(<span class="string">"无法等待..."</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>当另起的线程被中断后，后续的barrier就无法使用了，会抛出<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">## Semaphore</span><br><span class="line">该类被称作信号量，用于控制同一时间的线程执行数。想象下面一副场景:</span><br></pre></td></tr></table></figure></p>
+<hr>
+<p>🚌     🚌 🚌 🚌↘—————<br>🚌   🚌   🚌    🚌🚌  🚌🚌</p>
+<h2 id="🚌-🚌-🚌↗—————"><a href="#🚌-🚌-🚌↗—————" class="headerlink" title="   🚌    🚌  🚌↗—————"></a>   🚌    🚌  🚌↗—————</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">在窄路口里每次只能通过5辆车，5辆车通过后，后5辆车才能通过。Semaphore的作用就和它很类似，当有20条线程在执行IO密集型的任务，执行完后需要将处理结果存储到数据库中。如果数据库连接只有10条，那就要用semaphore去控制拿到数据库连接的线程数量。</span><br><span class="line"></span><br><span class="line">Semaphore里没用过的方法：</span><br><span class="line">* hasQueuedThreads()：是否有等待的线程</span><br><span class="line">* getQueueLength()：返回正在等待获取许可证的线程数量</span><br><span class="line"></span><br><span class="line">## Exchanger</span><br><span class="line">该类是一个用于线程间协作的工具类。Exchanger用于进行线程间的数据交换。它提供一个同步点，在这个通不见，两个线程可以交换彼此间的数据。这两个线程通过exchange方法交换数据：如果第一个线程执行exchange()，它会一直等待第二个线程exchange()，当两个线程达到同步点，这两个线程就可以交换线程。</span><br><span class="line">虽然我不知道这个类有啥作用(ε=ε=ε=┏(゜ロ゜;)┛</span><br><span class="line">但是书上说可以用于遗传算法、校对工作：</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">Exchanger&lt;String&gt; exchanger = new Exchanger&lt;&gt;();</span><br><span class="line"></span><br><span class="line">new Thread(() -&gt; &#123;</span><br><span class="line">    String dataOfAThread = Thread.currentThread().getName() + &quot;-----A的数据&quot;;</span><br><span class="line">    try &#123;</span><br><span class="line">        String resultOfBThread = exchanger.exchange(dataOfAThread);</span><br><span class="line">        System.out.println(Thread.currentThread().getName() + &quot;-------&gt; &quot; + resultOfBThread);</span><br><span class="line">    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br><span class="line"></span><br><span class="line">new Thread(() -&gt; &#123;</span><br><span class="line">    String dataOfBThread = Thread.currentThread().getName() + &quot;-----B的数据&quot;;</span><br><span class="line">    try &#123;</span><br><span class="line">        String resultOfAThread = exchanger.exchange(dataOfBThread);</span><br><span class="line">        System.out.println(Thread.currentThread().getName() + &quot;-------&gt; &quot; + resultOfAThread);</span><br><span class="line">    &#125; catch (InterruptedException e) &#123;</span><br><span class="line">        e.printStackTrace();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;).start();</span><br></pre></td></tr></table></figure>
+<p>最后输出：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Thread-1-------&gt; Thread-0-----A的数据</span><br><span class="line">Thread-0-------&gt; Thread-1-----B的数据</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>重新熟悉一下同步工具，学习到了CyclicBarrier被中断一次后，整个作废的点；学习到了Exchanger的适用场景</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjjqhctd9000oo4vjce2k976y" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之AtomicX" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之AtomicX/" class="article-date">
+  <time datetime="2018-05-13T01:53:39.000Z" itemprop="datePublished">2018-05-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/13/《Java并发编程的艺术》之AtomicX/">《Java并发编程的艺术》之AtomicX</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/atomic_family.png" alt=""></p>
+<p>其中主要是了解下<code>AtomicReference</code>以及<code>AtomicXUpdater</code></p>
+<p>AtomicReference是支持对象引用原子更新的类，仅仅是支持引用，如果要让对象内的字段支持原子更新，就一定要使用到AtomicXUpdater。</p>
+<p>字段更新类需要特别注意，字段必须是<code>public volatile</code> 类型的。</p>
+<p>AtomicStampedReference和AtomicMarkableReference均是用于解决ABA问题的类（后者不知道有没有，暂时没实践经验）。前者解决字段方面的更新，后者解决引用类型的更新。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjjqhctar0005o4vjp0snq63k" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《Java并发编程的艺术》之阻塞队列" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/" class="article-date">
+  <time datetime="2018-05-12T01:48:01.000Z" itemprop="datePublished">2018-05-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/12/《Java并发编程的艺术》之阻塞队列/">《Java并发编程的艺术》之阻塞队列</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>阻塞队列是一个支持两个附加操作的队列。这两个附加的操作支持阻塞的插入和移除方法：</p>
+<p>1) 支持阻塞的插入方法：当队列满时，队列会阻塞执行插入的线程<br>2) 支持阻塞的移除方法：当队列空时，队列会阻塞执行移除的线程</p>
+<p>方法总结：</p>
+<table>
+<thead>
+<tr>
+<th>方法/处理方式</th>
+<th>抛出异常</th>
+<th>返回特殊值</th>
+<th>一直阻塞</th>
+<th>超时退出</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>插入方法</td>
+<td>add(e)</td>
+<td>offer(e)</td>
+<td>put(e)</td>
+<td>offer(e, time, unit)</td>
+</tr>
+<tr>
+<td>移除方法</td>
+<td>无</td>
+<td>poll()</td>
+<td>take()</td>
+<td>poll(time, unit)</td>
+</tr>
+<tr>
+<td>检测方法</td>
+<td>element()</td>
+<td>peek()</td>
+<td>无</td>
+<td>无</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>抛出异常：当队列满时，插入元素会抛出<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">* 返回特殊值：offer()是入队方法，当插入成功时返回true，插入失败返回false；poll()是出队方法，当出队成功时返回元素的值，队列为空时返回null</span><br><span class="line">* 一直阻塞：当队列满时，阻塞执行插入方法的线程；当队列空时，阻塞执行出队方法的线程</span><br><span class="line">* 超时退出：顾名思义</span><br><span class="line"></span><br><span class="line">在JDK7里，Java的阻塞队列总共有七个，每个类都继承```AbstractQueue```：</span><br><span class="line"></span><br><span class="line">* ArrayBlockingQueue</span><br><span class="line">* LinkedTransferQueue</span><br><span class="line">* SynchronousQueue</span><br><span class="line">* DelayQueue</span><br><span class="line">* LinkedBlockingDeque</span><br><span class="line">* LinkedBlockingQueue</span><br><span class="line">* PriorityBlockingQueue</span><br><span class="line"></span><br><span class="line">## ArrayBlockingQueue</span><br><span class="line">该类是通过数组实现的有界阻塞队列，此队列按照FIFO的原则对元素进行排列。默认情况下不保证线程公平的访问队列，所谓公平访问是指阻塞的线程，可以按照阻塞的先后顺序访问队列，即先阻塞的先访问。公平访问是由ReentrantLock的公平锁实现的：</span><br><span class="line">```java</span><br><span class="line">public ArrayBlockingQueue(int capacity, boolean fair) &#123;</span><br><span class="line">    if (capacity &lt;= 0)</span><br><span class="line">        throw new IllegalArgumentException();</span><br><span class="line">    this.items = new Object[capacity];</span><br><span class="line">    lock = new ReentrantLock(fair);</span><br><span class="line">    notEmpty = lock.newCondition();</span><br><span class="line">    notFull =  lock.newCondition();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></li>
+</ul>
+<ol>
+<li>因为直接创建的数组，ArrayBlockingQueue的长度无法更改，</li>
+<li>当ReentrantLock设置为公平锁后，后续所有Lock竞争中都会是公平竞争，没看过Condition原理的小伙伴会想，那和Condition有什么关系呢？答案是Condition在被唤醒时也要参与竞争Lock，那么在Lock竞争中都会遵守公平竞争。</li>
+</ol>
+<h2 id="LinkedBlockingQueue"><a href="#LinkedBlockingQueue" class="headerlink" title="LinkedBlockingQueue"></a>LinkedBlockingQueue</h2><p>该类是一个用链表实现的有界阻塞队列（也不算有界，只是因为计数器最多只能计Integer.MAX_VALUE)。此队列的默认和最大长度为Integer.MAX_VALUE。按照先进先出的原则对元素进行排列。</p>
+<h2 id="PriorityBlockingQueue"><a href="#PriorityBlockingQueue" class="headerlink" title="PriorityBlockingQueue"></a>PriorityBlockingQueue</h2><p>该类是一个支持优先级的无界阻塞队列。默认情况下元素采取自然升序的排序方式。也可以自定义类实现compareTo()来指定元素排序规则，或者初始化时指定Comparator来对元素排序。<br>详见：<a href="">坑还没填，迟点填</a></p>
+<h2 id="DelayQueue"><a href="#DelayQueue" class="headerlink" title="DelayQueue"></a>DelayQueue</h2><p>支持延时获取元素的无界阻塞队列。队列使用<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">运用场景：</span><br><span class="line">* 缓存系统的设计：可以用DelayQueue保存缓存元素的有效期，使用一个线程循环查询DelayQueue，一旦能从DelayQueue中获取元素，表示缓存有效期到了</span><br><span class="line">* 定时任务调度：使用DelayQueue保存当天将会执行的任务和执行时间，一旦从DelayQueue中获取到任务就开始执行，比如TimerQueue</span><br><span class="line"></span><br><span class="line">执行流程如下所示：</span><br><span class="line"></span><br><span class="line"> 首先实现```Delayed```接口：</span><br><span class="line"> ```java</span><br><span class="line"> @Override</span><br><span class="line"> public long getDelay(TimeUnit unit)&#123;</span><br><span class="line">     // 返回当前元素还需要等待多久，当返回&lt;0的值时，表示可以出队；&gt;0时，表示仍需要等待</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure></p>
+<p>第二步，每次offer()时，往<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">第三步，每次获取时(调用take()，才能有阻塞的功能)，如果时间未满会先阻塞</span><br><span class="line">```java</span><br><span class="line">for (;;) &#123;</span><br><span class="line">    E first = q.peek();</span><br><span class="line">    if (first == null)</span><br><span class="line">        available.await();</span><br><span class="line">    else &#123;</span><br><span class="line">        long delay = first.getDelay(NANOSECONDS);</span><br><span class="line">        if (delay &lt;= 0)</span><br><span class="line">            return q.poll();</span><br><span class="line">        first = null; // don&apos;t retain ref while waiting</span><br><span class="line">        if (leader != null)</span><br><span class="line">            available.await();</span><br><span class="line">        else &#123;</span><br><span class="line">            Thread thisThread = Thread.currentThread();</span><br><span class="line">            leader = thisThread;</span><br><span class="line">            try &#123;</span><br><span class="line">                available.awaitNanos(delay);</span><br><span class="line">            &#125; finally &#123;</span><br><span class="line">                if (leader == thisThread)</span><br><span class="line">                    leader = null;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>具体的可以看： <a href="">了解之DelayQueue</a></p>
+<h2 id="SynchronousQueue"><a href="#SynchronousQueue" class="headerlink" title="SynchronousQueue"></a>SynchronousQueue</h2><p>一个不存储元素的队列，生产者生产一个，消费者消费一个，每一个put操作都需要等待一个take操作。该队列主要负责生产者线程处理的数据传递给消费者线程。比较适合传递性场景。其吞吐量高于ArrayBlockingQueue和LinkedBlockingQueue</p>
+<h2 id="LinkedTransferQueue"><a href="#LinkedTransferQueue" class="headerlink" title="LinkedTransferQueue"></a>LinkedTransferQueue</h2><p>该类主要添加了两个方法：<code>transfer()</code>和<code>tryTransfer()</code><br><code>transfer()</code> 主要是当消费者线程在等待的时候，生产者一产生元素，就立刻交给消费者，不需要再进行额外的入队操作；如果没有消费者在等待，就先进入队尾。<br><code>tryTransfer()</code> 用来试探生产者传入的元素是否能直接传给消费者。</p>
+<p>具体的可以看：<a href="">了解之LinkedTansferQueue</a></p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>ArrayBlockingQueue</li>
+<li>LinkedBlockingQueue</li>
+<li>LinkedBlockingDeque</li>
+<li>SynchronousQueue<br>上面四个是较为简单的，数据结构和各个方法都较为简单就不一一阐述了。剩下三个则是比较大头的，而且比较新颖，打算单独拎出来讲解</li>
+</ul>
+<p>该章主要是粗略的了解一下其他阻塞队列的功能，对于一些不常见的类，后续会补上详细的分析（其实是先补充一波数据结构和算法）</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjjqhctdc000so4vjypg90oot" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《Java并发编程的艺术》之ConcurrentLinkedQueue" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" class="article-date">
@@ -376,7 +654,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjjmyj62n000eqwvj5gp7hy4e" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjjqhctdb000qo4vjs527vza5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -441,7 +719,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjjmyj62n0008qwvjheadkj1y" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjjqhctcy000eo4vjij3fntjy" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -492,7 +770,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjjmyj63r001vqwvj5ftkdxf7" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjjqhctdx001io4vjpyi7a3jf" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -554,7 +832,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjjmyj63b000xqwvj0zrgkpmr" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjjqhctdf000uo4vjp7udnjne" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -634,7 +912,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cjjmyj62n000cqwvjkjvnegk9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cjjqhctd0000go4vjk12yicma" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -695,393 +973,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjjmyj62n0009qwvjcl71leps" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjjqhctcx000do4vj0tn7ttws" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之synchronized及JUC" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" class="article-date">
-  <time datetime="2018-05-02T02:36:31.000Z" itemprop="datePublished">2018-05-02</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/">《Java并发编程的艺术》之synchronized及JUC</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h2 id="synchrnoized的happens-before"><a href="#synchrnoized的happens-before" class="headerlink" title="synchrnoized的happens-before"></a>synchrnoized的happens-before</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;<span class="comment">// ①</span></span><br><span class="line">    a = <span class="number">100</span>; <span class="comment">// ②</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ③</span></span><br><span class="line">&#125;<span class="comment">// ④</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123; <span class="comment">// ⑤</span></span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ⑥</span></span><br><span class="line">        <span class="keyword">int</span> result = a; <span class="comment">// ⑦</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125; <span class="comment">// ⑧</span></span><br></pre></td></tr></table></figure>
-<p>假设线程A执行init()，线程B执行doTask()，有如下的happens-before关系：</p>
-<ul>
-<li>根据程序次序规则：<ul>
-<li>① hb ②</li>
-<li>② hb ③</li>
-<li>③ hb ④</li>
-<li>⑤ hb ⑥</li>
-<li>⑥ hb ⑦</li>
-<li>⑦ hb ⑧</li>
-</ul>
-</li>
-<li>根据监视器规则：<ul>
-<li>① hb ④</li>
-<li>④ hb ⑤</li>
-<li>⑤ hb ⑧</li>
-</ul>
-</li>
-</ul>
-<p>根据传递规则，保证init()方法所有的修改对doTask()方法可见，happens-before关系如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png" alt=""></p>
-<p>1、2间的表示程序次序性规则，4、5间的表示监视器规则，由于3、4有happens-before关系，4、5有happens-before关系，所以根据传递性规则，2、6间有happens-before关系。</p>
-<p>线程A释放锁之前所有可见的共享变量，在线程B获取同个锁之后就变得可见了。</p>
-<h2 id="synchrnoized的内存语义"><a href="#synchrnoized的内存语义" class="headerlink" title="synchrnoized的内存语义"></a>synchrnoized的内存语义</h2><h3 id="synchrnoized获取锁内存语义"><a href="#synchrnoized获取锁内存语义" class="headerlink" title="synchrnoized获取锁内存语义"></a>synchrnoized获取锁内存语义</h3><p>当释放锁时，JMM会把线程对应的本地内存中的共享变量刷新到主内存。以上面的例子为例，共享数据的状态示意图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png" alt=""></p>
-<h3 id="synchrnoized释放锁内存语义"><a href="#synchrnoized释放锁内存语义" class="headerlink" title="synchrnoized释放锁内存语义"></a>synchrnoized释放锁内存语义</h3><p>当A线程获取到锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png" alt=""></p>
-<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><p>对比锁释放-获取的内存语义和volatile的写-读内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取和volatile读有相同的内存语义。</p>
-<ul>
-<li>线程A释放一个锁，实质上是告诉其他 要获取该共享变量 线程 一个消息（线程A所做的修改）</li>
-<li>线程B获取一个锁，实质上是接受到其他线程发出的消息（释放这个锁的线程对共享变量所做的修改）</li>
-<li>线程A释放，随后线程B获取，实质上是线程A通过主内存给线程B发送消息。</li>
-</ul>
-<p>这里判断语义是否相同是通过两个操作的流程是否相同，比如线程A的锁释放完时，刷新至主内存；volatile写完后，刷新至主内存，并通知其他线程本地内存的共享变量失效（在锁释放环节里是交给锁获取执行）；</p>
-<h2 id="CAS和JUC"><a href="#CAS和JUC" class="headerlink" title="CAS和JUC"></a>CAS和JUC</h2><p>synchronized是通过控制对象头来控制锁的升级，但是具体获取锁和释放锁的流程藏在JVM里，这里将通过ReentrantLock类比synchronized过程。</p>
-<p><a href="https://codeleven.cn/2018/04/05/%E4%BA%86%E8%A7%A3AQS%E4%B9%8BExclusiveLock/" target="_blank" rel="noopener">ReentrantLock的实现流程</a></p>
-<p>这里要学习的是CAS，JDK文档对该方法的说明如下：如果当前状态值等于预期值，则以原子方式将同步设置为给定的更新值。此操作具有volatile读和写的语义。<br>前面讲到volatile写保证volatile写不会和前面的操作发生重排序，volatile读保证volatile读不会和后面的操作发生重排序。组合这两个条件就意味着同时实现了 禁止某一操作和操作前、操作后的重排序。CAS操作就是如此，它在是通过加上lock前缀来实现以下的功能：</p>
-<ul>
-<li>使用缓存锁定保证原子性</li>
-<li>禁止之前和之后的重排序</li>
-<li>把写缓冲区中的所有数据刷新到内存</li>
-</ul>
-<p>正是因为CAS同时具有volatile读和写的内存语义，因此Java线程之间的通信有下面四种方式。</p>
-<ol>
-<li>A线程写volatile变量，B线程读这个volatile变量</li>
-<li>A线程写volatile变量，B线程用CAS修改volatile变量</li>
-<li>A线程用CAS修改volatile变量，B线程用CAS修改这个变量</li>
-<li>A线程用CAS修改volatile变量，B线程用volatile读取该变量</li>
-</ol>
-<p>JUC包的通用化的实现模式：</p>
-<ul>
-<li>声明共享变量为volatile</li>
-<li>使用CAS的原子条件来实现线程间的同步</li>
-<li>配合volatile读/写和CAS 来实习线程间的通信</li>
-</ul>
-<p>AQS，非阻塞数据结构和原子变量类，这些JUC包中的基础都是使用上面的模式来实现的，而JUC包的高层类又是依赖这些基础类来实现的。从整体看，JUC包的实现示意图如下所示。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png" alt=""></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjjmyj63b000tqwvjrjhb7oi9" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之volatile" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/" class="article-date">
-  <time datetime="2018-05-01T02:52:35.000Z" itemprop="datePublished">2018-05-01</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/01/《Java并发编程的艺术》之volatile/">《Java并发编程的艺术》之volatile</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>本章是在学习内存模型后，对<em>Volatile</em>关键字 有了更加全面得理解，对知识点进行一个分析总结。</p>
-<h2 id="volatile的特性"><a href="#volatile的特性" class="headerlink" title="volatile的特性"></a>volatile的特性</h2><p>volatile在单个操作上和synchronized一样</p>
-<ul>
-<li>可见性：volatile字段的写操作保证对所有线程可见</li>
-<li>原子性：volatile字段的单个读写操作是原子性的（比如在32位机上，读取64位的long、double类型），但是volatile++就不具有原子性</li>
-</ul>
-<h2 id="volatile的happens-before"><a href="#volatile的happens-before" class="headerlink" title="volatile的happens-before"></a>volatile的happens-before</h2><p>本节采用happens-before关系阐述volatile的作用</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>; <span class="comment">//①</span></span><br><span class="line">    flag = <span class="keyword">true</span>; <span class="comment">// ②</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123; <span class="comment">// ③</span></span><br><span class="line">        result = a; <span class="comment">// ④</span></span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>假设线程A执行init(), 线程B执行doTask()；这个过程里，happens-before关系共分为三类：</p>
-<ol>
-<li>① happens-before ②</li>
-<li>③ happens-before ④</li>
-<li>② happens-before ③</li>
-</ol>
-<p>这个过程的happens-before关系图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_happens-before.png" alt=""></p>
-<p>分别遵守程序次序规则、volatile变量规则和传递规则：</p>
-<ul>
-<li>程序次序规则：一个线程内，按照代码顺序，书写在前面的操作先行发生于书写在后面的操作</li>
-<li>volatile变量规则：对一个变量的写操作先行发生于后面对这个变量的读操作</li>
-<li>传递规则：如果操作A先行发生于操作B，而操作B又先行发生于操作C，则可以得出操作A先行发生于操作C</li>
-</ul>
-<h2 id="volatile的内存语义"><a href="#volatile的内存语义" class="headerlink" title="volatile的内存语义"></a>volatile的内存语义</h2><p><strong>JMM针对编译器制定</strong>的volatile的重排序规则<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png" alt=""></p>
-<ul>
-<li>第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被<strong>编译器重排序</strong>到volatile写之后。</li>
-<li>当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被<strong>编译器重排序</strong>到volatile读之前。</li>
-<li>当第一个操作是volatile写，第二个操作是volatile读时，不能重排序。</li>
-</ul>
-<h3 id="volatile的写内存语义"><a href="#volatile的写内存语义" class="headerlink" title="volatile的写内存语义"></a>volatile的写内存语义</h3><p>当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_concept.png" alt=""></p>
-<p>线程A写入flag变量后，本地内存将<strong>更新的共享变量</strong>（更新了几个就刷新几个）刷新至主内存，此时A线程的本地内存和主内存的共享变量相同。</p>
-<h3 id="volatile的读内存语义"><a href="#volatile的读内存语义" class="headerlink" title="volatile的读内存语义"></a>volatile的读内存语义</h3><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_memory_concept.png" alt=""></p>
-<p>当B线程要读取flag变量时，本地内存B 中包含的共享变量已经被置为无效，B线程不得不去主内存读取共享变量。线程B的读取将导致本地内存B与主内存的共享变量的值变成一致。</p>
-<p>将两张图综合起来看，在读线程B读取一个volatile变量后，写线程A在写这个volatile变量之前所有可见的共享变量都将立即变得对读线程B可见。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_summary.png" alt=""></p>
-<h3 id="语义总结"><a href="#语义总结" class="headerlink" title="语义总结"></a>语义总结</h3><ul>
-<li>当写线程写了一个volatile变量，实质是写线程向接下来要读取这个变量的线程发出了消息（对其共享变量所做的修改）</li>
-<li>读线程读对应的volatile变量，实质是收到写线程发来的消息（在volatile写之前的共享变量的修改）</li>
-<li>随后写线程写入volatile变量，读线程去读取volatile变量，这个过程实质是A线程通过主内存给B线程发送消息</li>
-</ul>
-<h2 id="volatile内存语义的实现"><a href="#volatile内存语义的实现" class="headerlink" title="volatile内存语义的实现"></a>volatile内存语义的实现</h2><p>volatile关键字实现原理主要还是通过内存屏障进行控制的。编译器在生成字节码时，会在指令序列里插入内存屏障来禁止特定的重排序。对于编译器来说，自行判断最小化插入屏障总数不太可能。为此，JMM采取保守策略：</p>
-<ul>
-<li>在每个volatile写操作的前面加入<em>StoreStore</em></li>
-<li>在每个volatile写操作的后面加入<em>StoreLoad</em></li>
-<li>在每个volatile读操作的后面加入<em>LoadLoad</em></li>
-<li>在每个volatile读操作的后面加入<em>LoadStore</em></li>
-</ul>
-<p>上面的插入策略十分保守，但它可以保证在任意处理器平台上（在X86里，写/写，读/读，读/写 是不会发生重排序的，而且只有StoreLoad一个内存屏障），任意的程序中都能实现正确的语义。</p>
-<h3 id="volatile写的内存语义实现"><a href="#volatile写的内存语义实现" class="headerlink" title="volatile写的内存语义实现"></a>volatile写的内存语义实现</h3><p>下面是保守策略下，volatile写插入内存屏障的指令序列示意图。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png" alt=""></p>
-<p>StoreStore保证在执行volatile写前，所有写操作的处理已经刷新至内存，保证对其他线程可见了。而StoreLoad的作用是避免后面还有其他的volatile读/写操作发生重排序。由于JMM无法准确判断StoreLoad所处的环境（比如结尾是return），所以有两种选择：</p>
-<ol>
-<li>在volatile读前加上StoreLoad</li>
-<li>在volatile写后加上StoreLoad</li>
-</ol>
-<p>但是因为StoreLoad相比其他内存屏障更加消耗性能，考虑更多场景下是少写多读，所以将StoreLoad加在volatile写后。</p>
-<p>讲到StoreLoad的性能问题，不得不提一下Unsafe里面的<em>putOrderedObject()</em>。 这个方法很有意思，乍一看命名是放一个有序的对象，但它是通过避免加上StoreLoad内存屏障来弥补volatile写的性能问题。这时可能会有朋友问，不加上volatile不会影响可见性吗？会影响可见性，但不会永远影响下去，最多就两三秒的延迟，就会将共享变量刷新至主内存。所以当延迟要求不高，性能要求高时，就可以采用这个方法（Unsafe不安全类，这个方法的实现在Atmoic***类里面）。</p>
-<h3 id="volatile读的内存语义实现"><a href="#volatile读的内存语义实现" class="headerlink" title="volatile读的内存语义实现"></a>volatile读的内存语义实现</h3><p>下面是保守策略下，volatile读插入内存屏障的指令序列示意图。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_semantic.png" alt=""></p>
-<p>LoadLoad保证先执行volatile读再执行后续的读操作（禁止volatile读和后续的读发生重排序），而后的LoadStore保证先执行volatile读再执行写操作（禁止volatile读和后续的写发生重排序）。两者联合起来就是无论如何volatile读必须和程序顺序保持一致。</p>
-<h3 id="volatile执行时的优化"><a href="#volatile执行时的优化" class="headerlink" title="volatile执行时的优化"></a>volatile执行时的优化</h3><p>上面的volatile读/写的内存屏障插入策略都十分保守，但是在实际过程中，只要不改变volatile写/读的内存语义，编译器可以根据实际情况省略不必要的屏障。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> v1 = <span class="number">1</span>;</span><br><span class="line"><span class="keyword">volatile</span> <span class="keyword">int</span> v2 = <span class="number">2</span>;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">readAndWrite</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = v1;</span><br><span class="line">    <span class="keyword">int</span> j = v2;</span><br><span class="line">    a = i + j;</span><br><span class="line">    v1 = i + <span class="number">1</span>;</span><br><span class="line">    v2 = j + <span class="number">2</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>针对readAndWrite()方法，编译器在生成字节码时会做如下优化。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png" alt=""></p>
-<p>按顺序下来，第一个volatile读先于第二个volatile，第二个volatile先于所有后续的写，故第一个volatile读一定不会被重排序；StoreStore保证普通写先于第一个volatile写，StoreStore又保证第一个volatile写先于第二个volatile写，最后安全起见插入StoreLoad。</p>
-<p>上面的优化针对任意处理器平台，由于不同的处理器有不同“松紧度”的处理器内存模型，内存屏障的插入还可以根据具体的处理器内存模型继续优化。比如X86处理器，由于X86不会对读/读，读/写，写/写做重排序，所以面对X86处理器时，JMM会省略掉三种类型对应的内存屏障，保留StoreLoad内存屏障。</p>
-<h2 id="JSR-133为什么增强volatile的内存语义"><a href="#JSR-133为什么增强volatile的内存语义" class="headerlink" title="JSR-133为什么增强volatile的内存语义"></a>JSR-133为什么增强volatile的内存语义</h2><p>在之前的版本，虽然不允许<strong>volatile变量间</strong> 的重排序，但是允许<strong>volatile和普通变量</strong>间的重排序。为了提供一种比锁更轻量级的线程间通信机制，专家组决定增强volatile的内存语义，严格限制volatile变量与普通变量的重排序，确保volatile的写-读和锁的释放-获取具有相同的内存语义。</p>
-<p>由于volatile仅仅保证对单个volatile变量的读/写具有原子性，而锁的互斥执行的特性可以确保对整个临界区代码的执行具有原子性。在功能上，锁比volatile更强大；在可伸缩性和性能上，volatile更有优势。具体看《Java理论与实践：正确使用volatile变量》</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjjmyj63h0015qwvjquoxzr2h" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" class="article-date">
-  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png" alt=""></p>
-<p>整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 <strong>重排序</strong> 和 <strong>写缓冲区</strong> 引发的，重排序又分为 <strong>处理器重排序</strong> 和 <strong>编译器重排序</strong>。面对 <strong>写缓冲区</strong>的问题，像Java这样的高级语言一般无能为力，所以从<strong>重排序</strong> 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。</p>
-<hr>
-<p>相信许多在<strong>多线程</strong>前线作战的伙伴们经常会遇到一种叫做<strong>内存可见性</strong>的大麻烦。这个麻烦可以简单粗暴的用<em>synchronized</em>解决，也可以很巧妙的用一些轻量级的同步原语解决。虽然能解决问题的都是好方案，但是在程序人生的旅途上，后者才是更为远见的选择。</p>
-<p>在面对<strong>内存可见性</strong>这个问题时，我们不得不先去学习一个叫做<strong>内存模型</strong>的东西。这个模型解释了 <strong>如何解决多线程间的通讯</strong> 和 <strong>如何实现多线程间的同步</strong> 两个问题。<br>传统上有两种模型，一种叫做<strong>内存共享模型</strong>，另外一种则时<strong>消息传递模型</strong>。而Java采用了<strong>内存共享模型</strong>，后文简称<strong>JMM</strong>。这个抽象概念主要描述了：</p>
-<pre><code>线程间的共享变量存储在主内存中，每个线程拥有自己的本地内存，每个本地内存上都有该线程读/写变量的副本。
-</code></pre><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png" alt="JMM概念图"></p>
-<p>然而了解这个模型还不够，我们还要知道在Java编译、运行阶段都会有一种优化手段——<strong>重排序</strong>。重排序分为以下三种类型：</p>
-<ul>
-<li>编译器优化的重排序。在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序</li>
-<li>指令集并行的重排序。现代处理器采用了指令级并行技术（Instruction-Level Parallelism）来将多条指令重叠执行，如果不存在数据以来，处理器可以改变语句对应机器指令的执行顺序。</li>
-<li>内存系统的重排序。由于处理器适用缓存和读/写缓冲区，这使得加载和存储操作看上去是乱序执行的。</li>
-</ul>
-<p>第1类属于<strong>编译器重排序</strong>，第2、3类型属于<strong>处理器重排序</strong>。而JMM作为语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保障。</p>
-<p>另外Java尽可能地满足处理器级别的重排序优化，又让程序员自己把握优化程度。正如我们前面所讲的，遇到<strong>内存可见性问题</strong>，可以简单的用<em>synchronized</em> 大范围的禁止重排序，也可以根据实际情况，选用<em>volatile、final等轻量级同步原语</em> 仅仅禁止关键部分的重排序。</p>
-<p>总而言之，发生<strong>内存可见性问题</strong>的原因不外乎两点：</p>
-<ol>
-<li>本地内存（在CPU那个层面理解为缓冲区）在作怪</li>
-<li>重排序</li>
-</ol>
-<p>第一点属于硬件架构问题，基本上是无法从语言层面进行解决。故通过<strong>解决重排序问题</strong>来解决<strong>内存可见性问题</strong>。</p>
-<h1 id="深入底层，了解本地内存"><a href="#深入底层，了解本地内存" class="headerlink" title="深入底层，了解本地内存"></a>深入底层，了解本地内存</h1><p>现代处理器都会配备一个写缓冲区，该缓冲区用来暂存写入的变量，保证指令流水线持续运行，避免CPU停下来等待向内存写入数据而产生的延迟；同时也能合并对同一地址的多次写。虽然写缓冲区好处多多，但是只对自己的CPU可见。这个特性在<strong>重排序</strong>的加持下，容易发生CPU对内存的读/写顺序 和实际内存发生的读/写顺序 不一致的情况。</p>
-<p>假设现在有这样一个情况，线程A和线程B并发执行：</p>
-<ul>
-<li>处理器A：<ul>
-<li>int a = 1;</li>
-<li>int a = b;</li>
-</ul>
-</li>
-<li>处理器B：<ul>
-<li>int b = 2;</li>
-<li>int b = a;</li>
-</ul>
-</li>
-</ul>
-<p>这样的程序偶尔会出现预料之外的结果，比如a和b均为0，或者a=1，b=1等等。具体原因如下图所示</p>
-<p>这里CPU0 和 CPU1 均往自己的缓冲区写入数据，然后从内存中读取共享变量，最后才把写缓冲区中的数据刷新至主内存。当以这种时许执行时，就会出现a = y = 0的情况。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow2.png" alt=""></p>
-<p>从内存理想执行角度看，下面的图例可能更符合直观感受：先写入缓冲区，缓冲区刷新到主内存，最后CPU从主内存中读取。对处理器来说，它认为执行顺序是①、②、③，但是实际操作情况却是①、③、②。此时CPU0的内存操作顺序被重排序了。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow.png" alt=""></p>
-<p>为了解决一些重要操作被重排序导致的问题，处理器提供了一种被称作<strong>内存屏障（Memory Fence）</strong> 的CPU指令，该指令可以处理重排序和可见性问题。Java编译器在生成指令序列时，会在适当位置中插入内存屏障来禁止特定类型的处理器重排序（所以那些同步原语本质都是<strong>内存屏障</strong>在其作用）。JVM把内存屏障分为4类，如下所示：</p>
-<table>
-<thead>
-<tr>
-<th>屏障类型</th>
-<th style="text-align:center">指令示例</th>
-<th style="text-align:center">说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>LoadLoad</td>
-<td style="text-align:center">Load1;LoadLoad;Load2</td>
-<td style="text-align:center">在Load2及所有后续读取指令之前，Load1读取数据完毕</td>
-<td></td>
-</tr>
-<tr>
-<td>StoreStore</td>
-<td style="text-align:center">Store1;StoreStore;Store2</td>
-<td style="text-align:center">在Store2及所有后续写入指令执行前，Store1写入的数据对其他处理器可见(将修改的变量都刷新到主内存中，毕竟刷新不可能只刷新Store1这一个数据，而是Store1及前面所有的修改后的共享变量)</td>
-<td></td>
-</tr>
-<tr>
-<td>LoadStore</td>
-<td style="text-align:center">Load1;LoadStore;Store2</td>
-<td style="text-align:center">在Store2及所有后续写入指令刷新到主内存前，Load1读取数据完毕</td>
-<td></td>
-</tr>
-<tr>
-<td>StoreLoad</td>
-<td style="text-align:center">Store1;StoreLoad;Load2</td>
-<td style="text-align:center">在Load2及后续所有读取操作执行前，保证Store1的写入对所有处理器可见(将修改的变量都刷新到主内存中)</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>最后一个StoreLoad指令是万能指令（有些处理器不支持前三种指令），兼具前三种指令的功能，且开销最大。<br>内存屏障在禁止重排序、保证内存可见性方面作用极大，为后续JMM的规则打下了基础。</p>
-<h1 id="解决内存可见性问题"><a href="#解决内存可见性问题" class="headerlink" title="解决内存可见性问题"></a>解决内存可见性问题</h1><p>为了能让JVM在一定程度上(因为重排序就是优化)保持<strong>重排序</strong>，又能解决<strong>内存可见性问题</strong>。Java 在 JSR-133 里推出了Happens-Before规则，修改了<strong>volatile、final等同步原语</strong>。</p>
-<h2 id="程序顺序规则-as-if-serial"><a href="#程序顺序规则-as-if-serial" class="headerlink" title="程序顺序规则(as-if-serial)"></a>程序顺序规则(as-if-serial)</h2><p>上面我们都了解到了<strong>处理器重排序</strong> 对 CPU的影响，现在我们看看<strong>编译器重排序</strong>对单线程的影响<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">// ①</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">3</span>; <span class="comment">// ②</span></span><br><span class="line"><span class="keyword">int</span> c = a * b; <span class="comment">// ③</span></span><br></pre></td></tr></table></figure></p>
-<p>在单线程的环境下运行这段代码，会和直观感受一样，它的结果是3，但是它的执行顺序是否和想象中一样就不得而知了。这就引出了一个这么概念——if as serial，这个概念主要描述了 <strong>不管如何重排序，单线程程序的执行结果不能被改变</strong>，编译器、runtime和处理器都必须遵守这个as-if-serial语义(处理器本身是不会遵守的，但是有JMM的控制)。</p>
-<p>因为③依赖①、②的数据，所以为了保证结果一致，无论如何③都不会被排到①或②之前。</p>
-<p>as-if-serial语义使单线程程序员无需担心重排序会干扰他们，也无需担心内存可见性问题。这是JMM对程序员作的第一个保证：在单线程下，你不用管重排不重排，结果肯定给你保证一样。</p>
-<p>但是面对多线程的情况下，这个语义显得有点单薄，无法保证 多线程的重排序不会对程序有影响。为了能让多线程也无需担心重排序和内存可见性问题，我们需要<strong>同步</strong>，</p>
-<h2 id="顺序一致性模型"><a href="#顺序一致性模型" class="headerlink" title="顺序一致性模型"></a>顺序一致性模型</h2><p>在讲同步之前，需要了解下<strong>顺序一致性模型</strong>，这个模型是一个理论参考模型，它为程序提供了极强的内存可见性，该模型有以下两个特点：</p>
-<ol>
-<li>一个线程中的所有操作必须按照程序的顺序来执行</li>
-<li>（不管程序是否同步）所有线程都只能看到一个单一的操作执行顺序。在顺序一致内存模型中，每个操作都必须原子执行且立刻对所有线程可见</li>
-</ol>
-<p>在顺序一致性内存模型中，假设现有A、B两个线程，A线程先获取锁再执行A1、A2、A3，B线程同上。它的执行顺序图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInSynchronized.png" alt="SequenceModelInSynchronized"><br>当线程A获取锁时，按顺序依次执行A1到A3；在A释放锁，B获取时，按顺序依次执行B1到B3。</p>
-<p>假设现在不用锁这些同步工具，它的执行顺序如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png" alt="SequenceModelInNormal"><br>虽然整体执行顺序发生了改变，但是再每个线程依然能看到一个一致的执行顺序，之所以能保证它一致就是因为上述的两个特点：必须按程序顺序执行、每个操作立即对所有线程可见。<br>但是在JMM上却没有这个保证，首先JMM不是顺序一致性模型，而且未同步程序的执行顺序是无需的，而且所有线程看到的执行顺序也可能不一样。就比如A线程先写入了一个数值，缓存在本地内存，A线程以为写进去了，但是本地内存只对A线程可见。其他线程仍然是原来的数值，只有等本地内存将数据刷新到主内存，其他线程才可见。这种情况下，当前线程看到的执行顺序和其他线程顺序将不一致。</p>
-<h3 id="JMM里正确同步地顺序"><a href="#JMM里正确同步地顺序" class="headerlink" title="JMM里正确同步地顺序"></a>JMM里正确同步地顺序</h3><p>讲完了理想的顺序一致性模型，我们回归到现实，看看JMM里的同步程序执行顺序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">int</span> result;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>;</span><br><span class="line">    flag = <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123;</span><br><span class="line">        result = a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>在这个代码里，假设A线程执行init()方法，B线程执行doTask()方法。根据JMM规范，只要正确同步的程序，结果都会和顺序一致性内存模型的结果一致。下面是该程序在两个内存模型的时序图。<br>对于JMM来说，在临界区内的代码可任意重排序（但不允许临界区内的代码溢出到临界区外，那样会破坏监视器语言），JMM会在进入临界区和退出临界区时做一些特别的处理，使程序在这两个时间点具有和顺序一致性相同的内存视图。虽然线程A在临界区内进行了重排序，但是在监视器互斥执行的特性下，线程B根本不知道过程，只能观测到结果。这种重排序既提高了效率，又没改变程序的执行结果。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png" alt=""></p>
-<p>从这里我们可以看到JMM在不改变（正确同步）程序执行结果的前提下，尽可能地为编译器和处理器地优化打开了方便之门。</p>
-<h3 id="JMM里没有同步地执行顺序"><a href="#JMM里没有同步地执行顺序" class="headerlink" title="JMM里没有同步地执行顺序"></a>JMM里没有同步地执行顺序</h3><p>在JMM里，对没有正确同步地程序只提供了最小安全性：线程执行时读取到的值，要么时默认值（0，null，false），JMM保证线程读取到的值不会无中生有。为了实现最小安全性，JVM在堆上分配对象时，首先会对内存清零，然后才会在上面分配对象（JVM内部会同步该操作）。因此，在已清零的内存空间中分配对象时，域的默认初始化已经完成了。</p>
-<p>在JMM里，未同步的程序不能保证执行结果和顺序一致性模型的结果一样。因为JVM要这么做的话需要大量禁止重排序，极其影响性能。未同步程序在JMM中的执行顺序整体上是无序的，其执行结果也是不可预测的，在两个模型中的执行特性有如下几个差异。</p>
-<ul>
-<li>顺序一致性模型保证单线程内的操作会按程序的顺序执行，而JMM不保证单线程的操作会按程序顺序执行</li>
-<li>顺序一致性模型保证所有线程只能看到一致的操作顺序，而JMM不保证所有线程能看到一致的操作执行顺序</li>
-<li>JMM不保证对64位的long、double型变量的写操作具有原子性，而顺序一致性保证所有对内存的读写操作都是原子性</li>
-</ul>
-<p>第三点与处理器总线工作机制密切相关。这里放出书上的原话</p>
-<p>JVM在这点上也只是鼓励去做但不强求，因为在一些32位处理器上，要64位的写操作保持原子性是会需要大开销的。所以当JVM在这种处理器上运行时，会把64位long/double型变量拆做两个32位的写操作执行。此时，这种64位变量的写操作将不具有原子性。当单个内存操作不存在原子性时，可能会产生意想不到的后果。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Target</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">long</span> a;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Target target = <span class="keyword">new</span> Target();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = <span class="number">0l</span>).start();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = Long.MAX_VALUE).start();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">        String binary = toBinary(target.a);</span><br><span class="line">        <span class="comment">// 出现不是0，又不是MAX_VALUE的二进制字串是就输出</span></span><br><span class="line">        <span class="keyword">if</span>(!binary.equals(<span class="string">"00000000000000000000000000000000"</span>) &amp;&amp; </span><br><span class="line">        !binary.equals(<span class="string">"01111111111111111111111111111111"</span>))&#123;</span><br><span class="line">            System.out.println(<span class="string">"long不是原子性操作.."</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">toBinary</span><span class="params">(<span class="keyword">long</span> l)</span> </span>&#123;</span><br><span class="line">    StringBuilder sb = <span class="keyword">new</span> StringBuilder(Long.toBinaryString(l));</span><br><span class="line">    <span class="keyword">while</span> (sb.length() &lt; <span class="number">64</span>) &#123;</span><br><span class="line">        sb.insert(<span class="number">0</span>, <span class="string">"0"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>代码如上所示，假设处理器A写一个了long型变量，同时B处理器要读取这个long型变量。处理器A中的64位操作被拆分为两个32位的写操作，且这两个32位的写操作被分配到不同的事务中执行。同时处理器B 64位的读操作被分配到单个读事务中处理，执行顺序如下图所示时就会发生处理器A写到一半的数据被处理器B看见。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png" alt=""></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjjmyj62n000hqwvjrg1fj6im" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-关于final插入StoreStore的疑惑" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/" class="article-date">
-  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/关于final插入StoreStore的疑惑/">关于final插入StoreStore的疑惑</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在学习volatile和final时，注意到写时的区别：</p>
-<ol>
-<li>volatile写时往前面插入StoreStore内存屏障，保证第一个操作先发生于volatile写</li>
-<li>final在构造函数时在final写后插入StoreStore内存屏障，保证final写先发生于后面的操作</li>
-</ol>
-<p>想必大家经常会听到volatile会保证 volatile写前的所有操作先执行完再执行volatile写。</p>
-<p>而在<strong>对final域和普通域初始化的构造函数</strong>里，即使final写前面有StoreStore，前面的普通写/读仍然会发生重排序？？</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjjmyj63r0024qwvjkvfr2ywa" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
 
     </footer>
   </div>
@@ -1093,7 +988,7 @@
 
 
   <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/codeleven.github.io/page/3/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><a class="page-number" href="/codeleven.github.io/page/2/">2</a><a class="page-number" href="/codeleven.github.io/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/codeleven.github.io/page/5/">5</a><a class="extend next" rel="next" href="/codeleven.github.io/page/5/">__('next') &raquo;</a>
+    <a class="extend prev" rel="prev" href="/codeleven.github.io/page/3/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/">1</a><a class="page-number" href="/codeleven.github.io/page/2/">2</a><a class="page-number" href="/codeleven.github.io/page/3/">3</a><span class="page-number current">4</span><a class="page-number" href="/codeleven.github.io/page/5/">5</a><a class="page-number" href="/codeleven.github.io/page/6/">6</a><a class="extend next" rel="next" href="/codeleven.github.io/page/5/">__('next') &raquo;</a>
   </nav>
 </section>
         
@@ -1116,7 +1011,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 17.5px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 17.5px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 15px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 15px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 17.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
     </div>
   </div>
 
@@ -1138,23 +1033,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/18/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/15/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/18/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>
