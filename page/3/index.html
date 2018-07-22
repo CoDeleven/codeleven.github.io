@@ -65,6 +65,282 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《深入Java虚拟机》之类加载" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/" class="article-date">
+  <time datetime="2018-06-08T10:45:09.000Z" itemprop="datePublished">2018-06-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/">《深入Java虚拟机》之类加载</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>类加载总共分为以下几个阶段：</p>
+<ol>
+<li>加载</li>
+<li>验证</li>
+<li>准备</li>
+<li>解析</li>
+<li>初始化</li>
+<li>使用</li>
+<li>卸载</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/ClassLoading.png" alt=""></p>
+<p>每个阶段并非按部就班的执行或完成，而是混合式进行的，通常会在一个阶段执行的过程中调用、激活。</p>
+<p>类加载会在以下几种情况下被触发：</p>
+<ol>
+<li>遇到<code>new</code>、<code>putstatic</code>、<code>getstatic</code>、<code>invokestatic</code>这四条字节码指令时，如果类没有进行过初始化，则需先触发其初始化。上述四条指令分别对应：<strong>创建新对象</strong>、 <strong>对静态字段赋值</strong>、 <strong>获取静态字段（对final属性无效，因为final属性在编译阶段就在常量池里）</strong>、 <strong>调用静态方法</strong> 这四个场景。</li>
+<li>使用java.lang.reflect包的方法对类进行反射调用的时候，如果类没有进行过初始化，则先触发其初始化</li>
+<li>当初始化一个类时，该类的父类尚未初始化，则先初始化父类</li>
+<li>虚拟机启动时，初始化用户指定执行的 <strong>包含main()方法的主类</strong></li>
+<li>当使用JDK7的动态语言支持时，如果一个<code>java.lang.invoke.MethodHandle</code>实例最后的解析结果是<code>REF_getstatic</code>、<code>REF_putstatic</code>、<code>REF_invokestatic</code>的方法句柄，并且这个方法句柄对应的类没有初始化，则触发初始化。</li>
+</ol>
+<p>有且只有以上五种场景被成为 <strong>主动引用</strong>，除此之外所有引用类的方式都不会触发初始化。</p>
+<h2 id="被动式引用一"><a href="#被动式引用一" class="headerlink" title="被动式引用一"></a>被动式引用一</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Super</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Super Init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> String hello = <span class="string">"nice"</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Sub</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Sub Init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    System.out.println(Sub.hello);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment"> * 最后会输出 "Super Init"</span></span><br><span class="line"><span class="comment"> * 因为调用的是Super类的hello字段</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+<h2 id="被动式引用二"><a href="#被动式引用二" class="headerlink" title="被动式引用二"></a>被动式引用二</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Super[] supers = <span class="keyword">new</span> Super[<span class="number">10</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 该操作不会输出 "Super Init"</span></span><br><span class="line"><span class="comment"> * 因为虚拟机实例化的不是Super对象，而是 [Super</span></span><br><span class="line"><span class="comment"> * 该类由虚拟机生成，创建动作由字节码指令newarray触发</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+<h2 id="被动式引用三"><a href="#被动式引用三" class="headerlink" title="被动式引用三"></a>被动式引用三</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Super</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Super Init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String hello = <span class="string">"nice"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    System.out.println(Super.hello);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 该例子不会输出 "Super Init"</span></span><br><span class="line"><span class="comment"> * 因为final变量会在编译阶段就进入常量池</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
+<hr>
+<h1 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h1><p>在加载阶段，虚拟机需要完成以下三件事：</p>
+<ol>
+<li>通过一个类的全限定名读取该类的二进制文件（没有定义来源，可以是网络、ZIP包中读取的、生成的）</li>
+<li>将字节流里定义的静态数据结构转换成运行时数据结构</li>
+<li>在内存中生成一个代表这个类的java.lang.Class对象，在方法区内提供该类的数据入口</li>
+</ol>
+<p><strong>类加载</strong> 过程中，加载这个阶段对 <strong>非数组类</strong>的限制是最少的，开发人员对其的可控性也是最高的。因为加载阶段可以由开发人员提供自定义的ClassLoader（覆盖loadClass()方法）</p>
+<p>对于 <strong>数组类</strong>来说，数组类本身不会通过类加载器创建，它是由虚拟机直接创建的。不过数组类的元素类型（去掉所有维度的类型）最终是要靠类加载器去创建的：</p>
+<ul>
+<li>如果数组的组件类型（数组去掉一个维度的类型）是引用类型，那么就正常加载，数组C会在 <strong>加载该组件类型的类加载器的类名称空间里</strong> 被标记</li>
+<li>如果数组的组件类型不是引用类型（比如int[])，那么虚拟机会把数组标记为与引导类加载器关联</li>
+<li>数组类的可见性与它的组件类型的可见性一致，如果组件类型不是引用类型，那数组类的可见性将默认为public</li>
+</ul>
+<p>加载完毕后，类的二进制流会按照虚拟机所需的格式存放在方法区内，然后在内存中实例化一个Class类的对象（不同虚拟机里实现不同，HotSpot里，Class对象是存放在方法区里面），这个对象作为程序访问方法区数据的入口。</p>
+<p>加载阶段和连接阶段是交叉进行的，下一个阶段会在加载阶段尚未完成的时候就开始。夹在加载阶段之中进行的动作，仍然属于连接阶段，这两个阶段的开始时间仍然保持着固定的先后顺序。</p>
+<h1 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h1><p>该阶段主要验证来源不明的Class文件，因为Class文件可以通过16进制修改器直接修改，如果完全新任，不检查它，可能会因为载入有害的字节流而导致系统崩溃。该阶段直接决定了虚拟机是否能承受恶意的代码攻击。该阶段分为四个部分：</p>
+<ol>
+<li>文件格式验证</li>
+<li>元数据验证</li>
+<li>字节码验证</li>
+<li>符号引用验证</li>
+</ol>
+<h2 id="文件格式验证"><a href="#文件格式验证" class="headerlink" title="文件格式验证"></a>文件格式验证</h2><p>因为字节流的来源不明，所以需要校验一下文件格式是否符合Class文件的定义：</p>
+<ul>
+<li>是否以魔数 0xCAFEBABE 开头</li>
+<li>主、次版本号是否在当前虚拟机处理范围之内</li>
+<li>常量池的常量中是否有不被支持的常量类型</li>
+<li>指向常量的各种索引值中是否有指向不存在的常量或不符合类型的常量</li>
+<li>CONSTANT_Utf8_info 型的常量中是否有不符合UTF8编码规范的数据</li>
+<li>Class文件中各个部分及文件本身是否有被删除或附加的信息</li>
+<li>……</li>
+</ul>
+<p>该阶段的目的是保证输入的字节流能被正确解析成方法区的数据结构并存于方法区之内，只有经过这个阶段，字节流才会进入内存的方法区中进行存储，所以后面的阶段都是基于方法区的存储结构进行的，不会再直接操作字节流。</p>
+<h2 id="元数据验证"><a href="#元数据验证" class="headerlink" title="元数据验证"></a>元数据验证</h2><p>对类的信息进行语义分析，保证每个类符合规范：</p>
+<ul>
+<li>这个类是否有父类（除了Object类以外，所有类都应该有父类）</li>
+<li>这个类的是否继承了不该继承的类（被final修饰的类）</li>
+<li>如果这个类不是抽象类且继承了抽象类（或接口），是否实现了其父类的所有抽象方法（或实现接口的所有方法）</li>
+<li>类中的字段、方法是否与父类产生矛盾（覆盖了父类的final字段，或者出现不符合规则的方法重载，例如方法签名都一样，但是返回值不同）</li>
+<li>……</li>
+</ul>
+<p>第二阶段的主要目的是对元数据信息进行语义检验，保证不存在不符合Java规范的元数据信息。</p>
+<h2 id="字节码验证"><a href="#字节码验证" class="headerlink" title="字节码验证"></a>字节码验证</h2><p>主要校验代码逻辑是否正确：</p>
+<ul>
+<li>保证操作数栈的类型和指令代码序列能一一对应。比如从操作数栈取出的类型为int，而指令代码序列却是用long类型</li>
+<li>保证跳转指令不会跳转到方法体以外的字节码指令上</li>
+<li>保证方法体中的类型转换是有效的</li>
+<li>……</li>
+</ul>
+<p>如果类文件没通过字节码验证，那么一定是不安全的；如果通过字节码验证，也不能说明绝对安全。一个著名的问题——停机问题，可以告诉我们程序不可能准确算出程序是否能在有限时间结束。</p>
+<p>JVM为了解决检验时间过长的问题，在方法的code属性表中增加了一项名为“StackMapTable”的属性，这项属性描述了方法体中所有的基本块（按照控制流拆分的代码块）开始时本地变量表和操作栈应有的状态，在字节码验证期间，就不需要根据程序推导这些状态的合法性，只需要检查StackMapTable中的记录是否合法即可。同样，该属性也有被篡改的可能。</p>
+<h2 id="符合引用验证"><a href="#符合引用验证" class="headerlink" title="符合引用验证"></a>符合引用验证</h2><p>该阶段的校验发生在虚拟机将符号引用转换为直接引用的时候，这个转换动作将在连接的第三阶段——解析阶段中发生。主要作用就是检验各个引用是否存在匹配项：</p>
+<ul>
+<li>全限定名是否能找到对应的类</li>
+<li>指定类中是否存在符合方法的字段描述符以及简单名称所描述的方法和字段</li>
+</ul>
+<p>如果开发人员对所有的代码都很了解，确定没有恶意代码，可以考虑使用 <code>-Xverify:none</code> 参数来关闭大部分类的验证措施，以缩短虚拟机的加载时间</p>
+<h1 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h1><p>该阶段只会初始类里面的static域（不会初始化实体类的普通属性），通常情况下会将static域初始化成默认值（int为0，float为0.0等等）</p>
+<p>而如果该static域被final修饰了，那么当该属性所属的类在编译期就会产生一个ConstantValue。在类的加载过程中，static域就会被初始化为对应的ConstantValue</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">128</span>;</span><br><span class="line"><span class="comment">// 当在准备阶段时，该类的a属性被初始化为0</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">128</span>;</span><br><span class="line"><span class="comment">// 在编译期时，128作为ConstantValue被存储到Class文件中</span></span><br><span class="line"><span class="comment">// 在准备阶段时，该类的a属性值立刻被初始化为128</span></span><br></pre></td></tr></table></figure>
+<h1 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h1><p>虚拟机将常量池内的符号引用转换成直接引用的过程，符号引用在Class文件中以 CONSTANT_Class_info 、CONSTANT_Methodref_info、CONSTANT_Field_info形式进行记录。</p>
+<ul>
+<li>符号引用：符号引用以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义地定位到目标即可。符号引用在各虚拟机里表现不同，内存布局也不同，但是虚拟机能够接受的符号引用都是一样的，因为这是java虚拟机规范</li>
+<li>直接引用：直接引用是一个在运行时的概念，可以是指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。直接引用和内存布局是相关的，同一个符号引用在不同虚拟机上会转换出的直接引用一般不同。如果有了直接引用，那引用目标必定已经存在内存里了。</li>
+</ul>
+<p>虚拟机会在遇到以下指令之前触发解析</p>
+<ul>
+<li>anewarray</li>
+<li>checkcast</li>
+<li>getfield</li>
+<li>getstatic</li>
+<li>instanceof</li>
+<li>invokedynamic</li>
+<li>invokeinterface</li>
+<li>invokespecial</li>
+<li>invokestatic</li>
+<li>invokevirtual</li>
+<li>ldc</li>
+<li>ldc_w</li>
+<li>multianewarray</li>
+<li>new </li>
+<li>putfield</li>
+<li>putstatic<br>这16个指令囊括一下就有以下的规律：</li>
+<li>创建的时候——anewarray、new、multianewarray、ldc、ldc_w（后两个创建字符串时会触发</li>
+<li>类型判断或转换的时候——checkcast、instanceof</li>
+<li>调用方法时——invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual</li>
+<li>获取字段/赋值——getfield、getstatic、putfield、putstatic</li>
+</ul>
+<p>触发解析阶段可能会在加载类时就触发，也可能运行到以上指令前触发，这是根据具体虚拟机的实现而定的。</p>
+<p>除invokedynamic指令以外的指令满足如下条件：<br>虚拟机可能会对同一个符号引用调用很多次，但是虚拟机通常会将第一次解析结果进行缓存（通过在运行时常量池记录直接引用以及标记符号引用已被解析），但是仍然会发生多次解析同一个符号引用的情形，那么虚拟机需要保证第一次解析成功，后续对其的解析也必须成功；同理，如果第一次解析失败，后续的解析都要抛出相同的异常。</p>
+<p>而invokedynamic之所以如此特别，主要在于它是用于动态语言的指令，它所对应的引用称为 <strong>动态调用限定符</strong>，这里动态的意思是指必须等到实际程序运行到该条命令时，解析动作才能进行。其余的指令，可以在运行到指令前（加载时）就可以触发解析。</p>
+<h2 id="类解析"><a href="#类解析" class="headerlink" title="类解析"></a>类解析</h2><p>当解析类或接口时，假设当前执行的代码类是D。<br>如果遇到了一个类，需要把一个从未解析过的符号引用N解析为一个类或接口C的直接引用，虚拟机要完成以下三个步骤：</p>
+<ol>
+<li>如果该类不是数组类，那虚拟机会将代表N的全限定名传给D的类加载器去加载该类或接口C。在加载过程中，无论哪个阶段抛出异常，解析过程就宣告失败。</li>
+<li>如果该类是数组类，并且数组元素的类型为对象，也就是N的描述符是类似”[java/lang/String”的形式，那么会采用第一点的规则加载数组元素类型。假设N的描述符和上述一样，那么需要加载的数组元素类型就是”java.lang.String”，接着会由虚拟机生成一个代表此维度和元素的数组对象</li>
+<li>如果上面的步骤没有问题，那么C已经成为一个有效的类或接口，但在解析完成之前还要进行符号引用验证，即确认D是否具备对C的访问权限。如果发现不具备，将抛出java.lang.IllegalAccessError。</li>
+</ol>
+<h2 id="字段解析"><a href="#字段解析" class="headerlink" title="字段解析"></a>字段解析</h2><p>要解析一个未被解析过的字段符号引用，首先需要对该字段所处的类进行解析，也就是类或接口的符号引用。如果在解析这个类或接口过程中失败，都会导致字段符号引用的解析失败。如果解析成功完成，那将这个字段所属的类或接口用C表示，虚拟机会后续对字段符号引用进行如下查找：</p>
+<ol>
+<li>如果C本身就是该字段的引用类型，且简单名称和字段描述符都与目标字段相匹配，则返回这个字段的直接引用，查找结束</li>
+<li>否则，如果C实现了接口，那么就从接口里（递归查找）进行查找，如果接口中包含了简单名称和字段描述都与目标字段相匹配，则返回这个字段的直接引用。</li>
+<li>否则，如果C继承了父类，那么就从父类进行递归查找，如果在父类中包含了简单名称和字段描述符都与目标字段相匹配的字段，则返回这个字段的直接引用。</li>
+<li>否则查找失败，抛出NoSuchFieldError异常</li>
+<li>查找成功后，进行访问权限的校验</li>
+</ol>
+<p>注意，实际虚拟机的编译器实现会比上述更严格一些，即实现的接口、继承的类都声明了同个字段，可能会提示字段混淆的异常。</p>
+<h2 id="类方法解析"><a href="#类方法解析" class="headerlink" title="类方法解析"></a>类方法解析</h2><p>对于被调用的方法，先解析它所属类或接口的符号引用，如果解析成功，我们依然用C表示这个类，接下来会按以下的规则进行查找：</p>
+<ol>
+<li>类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError</li>
+<li>如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则在C的父类中递归查找是否有简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则在C实现的接口列表及它们的父接口中递归查找简单名称和描述符都匹配的目标方法，如果存在匹配方法，说明类C是抽象类方法（因为前面的可能都不存在），抛出AbstractMethodError</li>
+<li>否则，抛出NoSuchMethodError</li>
+<li>返回直接引用时，并对这个方法进行权限校验</li>
+</ol>
+<blockquote>
+<p>Your newly packaged library is not backward binary compatible (BC) with old version. For this reason some of the library clients that are not recompiled may throw the exception.<br>This is a complete list of changes in Java library API that may cause clients built with an old version of the library to throw java.lang.IncompatibleClassChangeError if they run on a new one (i.e. breaking BC):<br>Non-final field become static,</p>
+</blockquote>
+<blockquote>
+<p>Non-constant field become non-static,</p>
+</blockquote>
+<blockquote>
+<p>Class become interface,</p>
+</blockquote>
+<blockquote>
+<p>Interface become class,</p>
+</blockquote>
+<blockquote>
+<p>if you add a new field to class/interface (or add new super-class/super-interface) then a static field from a super-interface of a client class C may hide an added field (with the same name) inherited from the super-class of C (very rare case).</p>
+</blockquote>
+<h2 id="接口方法解析"><a href="#接口方法解析" class="headerlink" title="接口方法解析"></a>接口方法解析</h2><p>对于被调用的接口，先查找该方法所属的接口，如果解析成功，我们用C表示这个类，接下来按以下的规则进行查找：</p>
+<ol>
+<li>类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError</li>
+<li>如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则查找C的父类接口，直到java.lang.Object，如果找到简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
+<li>否则抛出，NoSuchMethodError<br>由于interface里面都是public方法，所以不用校验权限</li>
+</ol>
+<h1 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h1><p>类加载阶段里的准备阶段已经将常量（final修饰）的变量进行初始化为给定数值，把非常量的静态变量初始化为默认值。而该阶段就是将非常量的静态变量按照开发人员的意图进行初始化：</p>
+<ol>
+<li>编译期收集一个类的全部静态类型（包括static字段、static块）</li>
+<li>按收集顺序（程序里的排列顺序）依次排序到 <cinit></cinit></li>
+</ol>
+<p><cinit>不是必须的，如果父类或者接口类没有静态字段或者静态块，编译期就不会生成<cinit>方法。另外，与类不同的是，接口的静态字段需要等到用户真正调用时才会初始化。遇到多个线程初始化同一个类的情况时，虚拟机会保证只有一个线程执行<cinit>，其他线程就会进入阻塞状态直到该线程执行完初始化；</cinit></cinit></cinit></p>
+<p>虚拟机会保证先执行父类的<cinit>，再执行子类的<cinit>，所以java.lang.Object一定是第一个被初始化的类。</cinit></cinit></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/classload_summary.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjjwvanqq001lv4vjmi1i7zg9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-《深入Java虚拟机》之回收策略及实践" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/" class="article-date">
+  <time datetime="2018-06-05T14:35:31.000Z" itemprop="datePublished">2018-06-05</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/">《深入Java虚拟机》之回收策略及实践</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>新生代分为Eden区和Survivor区，Survivor会按1：1划分成From、To两个区域。示意图如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/YoungGen.png" alt="新生代布局"></p>
+<h2 id="新生代比例划分"><a href="#新生代比例划分" class="headerlink" title="新生代比例划分"></a>新生代比例划分</h2><p>布局比例会按 <code>-XX:SurvivorRatio=x</code> 划分，这个虚拟机参数是指 <strong>Eden区:Survivor区=z</strong> ，即Eden区和Survivor区之比为x。计算方式如下：</p>
+<blockquote>
+<p>z <em> x + 2 </em> x = 新生代大小</p>
+</blockquote>
+<pre><code>如果z = 6，新生代大小为10240K，那么6 * x + 2 * x = 10240K，解出x = 1280K；那么Eden区的大小就是7680K？？？
+</code></pre><p>理论上的确是7680K，但是当该数值除以1024时，无法得到整数值（个人猜测为了内存对齐吧）。所以实际上Eden区的大小为8192K，即8MB。</p>
+<pre><code>如果z = 6， 新生代大小为102400K（100MB），那么6 * x + 2 * x = 102400K，解出x = 12800K，那么Eden区就是76800K？
+</code></pre><p>嗯，真的是76800K。</p>
+<p>总而言之，解出来的Eden区数值（单位一定是K）如果无法被整出，则向上取一个能被1024整除的数。</p>
+<h2 id="内存分配规则"><a href="#内存分配规则" class="headerlink" title="内存分配规则"></a>内存分配规则</h2><p><img src="https://blog-1252749790.file.myqcloud.com/jvm/GC_flowchart.png" alt="GC流程示意图，不严谨版"></p>
+<p>当直接分配对象时，优先考虑 <code>Eden区</code>。如果不能则考虑是否能直接放入 <code>Old Gen</code>，由 <code>-XX:PretenureSizeThreshold</code>控制多大的对象能直接进入 <code>Old Gen</code>。如果仍不能放入 <code>Old Gen</code> 则触发minor GC。发生 minor gc时，就先清空Eden区和其中一块Survivor区，然后放入另外一块空的里面（注意这里针对发生过一次GC以上的情况）。</p>
+<h3 id="要点一"><a href="#要点一" class="headerlink" title="要点一"></a>要点一</h3><p>对象优先在Eden区分配，如果Eden区不够分配了，剩余空间已经不足以分配新对象了，因此发生Minor GC。GC期间，发现已有的对象都不能全部放入Survivor空间，所以只能通过<code>分配担保机制</code>提前转移到 <code>Old Gen</code>。</p>
+<h3 id="要点二"><a href="#要点二" class="headerlink" title="要点二"></a>要点二</h3><p>当分配一个大对象。打对象容易导致内存还有不少空间就提前触发垃圾收集以获取足够大的空间安置它们。虚拟机提供了 <code>-XX:PretenureSizeThreshold</code>参数，当对象的大小大于等于设置的参数时，对象就会直接被分配到 <code>Old Gen</code>。该参数只对 <code>Serial</code> 和 <code>ParNew</code>两款收集器有效。</p>
+<h3 id="要点三"><a href="#要点三" class="headerlink" title="要点三"></a>要点三</h3><p>虚拟机给每个对象定义了一个年龄计数器字段 <code>Age</code>，该字段会记录 自从Eden出生后，经过Minor GC 的次数。每经过一次 Minor GC，Age就会加一，当它的年龄到达15时，就会晋升到 <code>Old Gen</code>。晋升年龄可以用参数 <code>-XX:MaxTenuringThreshold</code>控制。</p>
+<h3 id="要点四"><a href="#要点四" class="headerlink" title="要点四"></a>要点四</h3><p>如果Survivor空间里有一半及以上的对象年龄相同，那么大于等于该年龄的对象可以直接进入Old Gen，无须等待<code>-XX:MaxTenuringThreshold</code>的参数</p>
+<h3 id="要点五"><a href="#要点五" class="headerlink" title="要点五"></a>要点五</h3><p>在发生Minor GC之前，虚拟机会先检查老年代最大可用的连续空间 是否 大于新生代所有对象总空间。<br>如果这个条件成立，那么Minor GC的担保可以确保是安全的。<br>如果这个条件不成立，则设置<code>-XX:+/-HandlePromotionFailure</code>允许担保，那么发生minor gc 前，会判断一下 <strong>老年代最大可用连续空间</strong> 是否大于 <strong>历次晋升到老年代的平均大小</strong>。如果大于，那么会尝试发生一次Minor GC（不确定是否安全的）；如果小于，或者没有开启 <code>-XX:+/-HandlePromotionFailure</code>，就发生 Full GC。</p>
+<p>一般都会开启 <code>-XX:+/-HandlePromotionFailure</code> ，因为即使条件不满足，也要尝试进行一次 Minor GC；否则直接进行 Full GC，对系统的负担就会比较大。<br>在JDK6 Update24之后，<code>-XX:+/-HandlePromotionFailure</code>参数已经失效了，默认为：<strong>老年代的连续空间</strong> 大于 <strong>新生代对象总大小</strong> 或者 <strong>大于历次晋升的平均大小</strong>就发生Minor GC</p>
+<hr>
+<blockquote>
+<p>而是将内存分为一块较大的Eden区和两块较小的Survivor空间里，每次使用Eden和其中一块Survivor。</p>
+</blockquote>
+<p>上面的句子摘自《深入Java虚拟机 第二版》，这句子可能会给一些读者带来误解：以为Survivor也会作为一块内存空间用来 <strong>分配</strong> 对象。这直接会让我们以为当 <code>其中一块Survivor</code>和<code>Eden区</code>都满了后才会触发Minor GC。其实不然，在HotSpot虚拟机里，所有新生对象都是闲分配到 <code>Eden区</code>中（特殊情况分配到 <code>Old Gen</code>）。当<code>Eden区</code>不够，触发了Minor GC后，会将 <code>Eden区</code> 里的幸存对象复制到 <code>Survivor的From区</code>里。在第一次Minor GC后，对象才 <strong>真真正正的只在Eden区和其中一块Survivor里</strong>。<strong>即发生第一次Minor GC前，只有Eden区存放对象</strong></p>
+<h2 id="实践阶段"><a href="#实践阶段" class="headerlink" title="实践阶段"></a>实践阶段</h2><p>emmmmmm，以后补充；</p>
+<ol>
+<li>当新分配的对象直接超出了<code>Eden区</code>的可用最大值时，直接放入<code>OldGen</code><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-Xms20M  <span class="comment">// 最小内存20M</span></span><br><span class="line">-Xmx20M  <span class="comment">// 最大内存20M</span></span><br><span class="line">-Xmn18M  <span class="comment">// 年轻代10M，老年代也就10M</span></span><br><span class="line">-XX:SurvivorRatio=<span class="number">8</span>  <span class="comment">// eden区比例，如果为8，就是8：1：1；如果为3，就是3：1：1</span></span><br><span class="line">-XX:+PrintHeapAtGC <span class="comment">// 打印GC前后的信息</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjjwvanq2000zv4vjpey8rkvh" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《深入Java虚拟机》之GC Roots及拓展" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" class="article-date">
@@ -142,7 +418,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjjspdhhc00123gvjrv5m83oq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/04/《深入Java虚拟机》之GC Roots及拓展/" data-id="cjjwvanq1000xv4vj568gu7d2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -212,7 +488,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjjspdhi200273gvjqp94ei63" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/了解阻塞队列之DelayQueue/" data-id="cjjwvanqu001pv4vjwg1q9lx9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -255,7 +531,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjjspdhi6002h3gvj4yh0e36s" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/06/03/深入JDK之Queue/" data-id="cjjwvanrk002jv4vjzo19qez9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -324,7 +600,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjjspdhhd00143gvjvcbbrcje" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/29/《深入Java虚拟机》之垃圾收集算法/" data-id="cjjwvanq90016v4vjigetjjcn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -395,7 +671,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象的GC/" data-id="cjjspdhhh001b3gvjskyo50fj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象的GC/" data-id="cjjwvanqi001dv4vjkybd0a3p" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -493,7 +769,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/" data-id="cjjspdhhj001g3gvjdaamprdg" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/27/《深入Java虚拟机》之对象内存布局及使用/" data-id="cjjwvanqm001hv4vjjt0dyw39" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -582,7 +858,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjjspdhhf00193gvjf1be3fk6" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/25/《深入Java虚拟机》之虚拟机栈/" data-id="cjjwvanqk001fv4vjnf6wi0sd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -621,195 +897,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjjspdhgq00053gvjvoc396l6" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/17/(未埋)《算法》之堆排序/" data-id="cjjwvanp50007v4vjyty148ba" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-队列之PriorityQueue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/" class="article-date">
-  <time datetime="2018-05-17T01:58:51.000Z" itemprop="datePublished">2018-05-17</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/">队列之PriorityQueue</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>由于该优先级队列是实现定时等任务的基础，所以想彻底理解后续的DelayQueue及ScheduledThreadPoolExecutor就要先学习优先级队列。</p>
-<p>该队列是更具堆排序的划分优先级的队列，默认情况下优先级是使用按照自然顺序排序的比较器（即从小到大），当然你也可以传入一个比较器，让队列按照比较器排序。因为会用到比较器，所以每个元素都需要实现Comparable接口。</p>
-<p><strong>注意：该队列不是线程安全的</strong></p>
-<p>PriorityQueue有以下几个构造方法：</p>
-<ul>
-<li>PriorityQueue(): 创建一个可以存放11个元素的，<strong>因为没有比较器，传入的元素必须要实现Comparable(像int、double这类可以自动装箱的元素不必实现，它们在强转的时候不会出问题)</strong>。</li>
-<li>PriorityQueue(Collection&lt;? extends E&gt;): 根据给定的集合创建一个优先级队列，<strong>每个元素都必须实现Comparable</strong> </li>
-<li>PriorityQueue(PriorityQueue&lt;? extends E&gt; c)</li>
-<li>PriorityQueue(SortedSet&lt;? extends E&gt; c) </li>
-<li>PriorityQueue(int initialCapacity): 根据给定的初始容器大小，创建一个按自然数排序的优先级队列</li>
-<li>PriorityQueue(int initialCapacity, Comparator&lt;? super E&gt; comparator): 根据给定的初始容器大小和比较器，创建一个优先级队列，优先级队列会按照比较器进行排序</li>
-<li>PriorityQueue(Comparator&lt;? super E&gt; comparator): 该方法从1.8之后才有</li>
-</ul>
-<h2 id="属性介绍"><a href="#属性介绍" class="headerlink" title="属性介绍"></a>属性介绍</h2><table>
-<thead>
-<tr>
-<th>变量名称</th>
-<th>变量类型</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>queue</td>
-<td>Object[]</td>
-<td>二叉树。每一次插入或移除都会调整树的结构</td>
-</tr>
-<tr>
-<td>size</td>
-<td>int</td>
-<td>元素个数。</td>
-</tr>
-<tr>
-<td>comparator</td>
-<td>Comparator&lt;? super E&gt;</td>
-<td>比较器。决定队列是从小到大还是从大到小</td>
-</tr>
-<tr>
-<td>modCount</td>
-<td>int</td>
-<td>修改次数。每次增删操作都会使modCount递增</td>
-</tr>
-</tbody>
-</table>
-<h2 id="offer"><a href="#offer" class="headerlink" title="offer()"></a>offer()</h2><p>在执行offer()方法前的队列状态，此时 <strong>元素个数size</strong>为7, <strong>queue.length</strong>为8</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status0.png" alt="插入前的初始状态"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (e == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="keyword">int</span> i = size;</span><br><span class="line">    <span class="comment">// 如果队列包含元素的数量大于等于数组的长度</span></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= queue.length)</span><br><span class="line">        <span class="comment">// 扩充数组长度</span></span><br><span class="line">        grow(i + <span class="number">1</span>);</span><br><span class="line">    <span class="comment">// 递增总元素数量</span></span><br><span class="line">    size = i + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (i == <span class="number">0</span>)</span><br><span class="line">        queue[<span class="number">0</span>] = e;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="comment">// 关键点</span></span><br><span class="line">        siftUp(i, e);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>执行offer()时，<figure class="highlight plain"><figcaption><span>< queue.length``` 所以不扩容，只是对size进行递增。此时， **元素个数size为8**, **queue.length**为8。状态图如下所示</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">![插入时的状态1](https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status1.png)</span><br><span class="line"></span><br><span class="line">offer()方法前面都在做一些准备，比如检查元素是否为null、检查数组长度。真正执行插入的地方在siftUp()。siftUp()就是将插入的元素调整到大于等于其祖先元素，说的术语点就是堆排序。这里会判断是否存在比较器，如果创建PriorityQueue没有传入Comparator时，则进入else，通过元素的Comparable判断；否则进入if语句</span><br><span class="line">```java</span><br><span class="line">private void siftUp(int k, E x) &#123;</span><br><span class="line">    if (comparator != null)</span><br><span class="line">        siftUpUsingComparator(k, x);</span><br><span class="line">    else</span><br><span class="line">        siftUpComparable(k, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>假设我们没传Comparator，进入else语句:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftUpComparable</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 必须要让元素显式实现Comparable，如果是int、double这类可以自动装箱的元素，倒是不需要显式实现</span></span><br><span class="line">    Comparable&lt;? <span class="keyword">super</span> E&gt; key = (Comparable&lt;? <span class="keyword">super</span> E&gt;) x;</span><br><span class="line">    <span class="keyword">while</span> (k &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> parent = (k - <span class="number">1</span>) &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        Object e = queue[parent];</span><br><span class="line">        <span class="keyword">if</span> (key.compareTo((E) e) &gt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        queue[k] = e;</span><br><span class="line">        k = parent;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>k为新元素的下标，x为新元素的值。由于新元素尚未插入，其中的元素个数实际上还是只有k - 1个，故要执行<figure class="highlight k"><figcaption><span>- 1```。</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="number">1.</span> (k - <span class="number">1</span>) / <span class="number">2</span> 获取 **祖先元素下标 parent** ，parent是**新元素 x** 的祖先元素的下标。</span><br><span class="line"><span class="number">2.</span> 将祖先（该新元素的parent）和新元素进行比较</span><br><span class="line"><span class="number">3.</span> 如果新元素和parent比较后返回<span class="number">0</span>或负数，就将**新元素所在位置**设置为parent值；反之就直接插入（这里还是要具体看比较器，通常是小到大的排序，下文也是这样）</span><br><span class="line"><span class="number">4.</span> 最后将**新元素的下标 k**改成**parent所在位置 parent**，即新元素值要保存在parent所在位置</span><br><span class="line"><span class="number">5.</span> 继续拿**新元素下标 k** 比较，重复<span class="number">1</span><span class="number">-3</span>的步骤</span><br><span class="line"></span><br><span class="line">对不明白为什么要这么做的同学，请移步这里[排序算法之堆排序]()</span><br><span class="line"></span><br><span class="line">当`siftUpComarable`执行完后，状态图如下所示（没有体现排序的过程）</span><br><span class="line">![](https:<span class="comment">//blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status2.png)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## poll()</span><br><span class="line">![poll前的初始状态](https:<span class="comment">//blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status1.png)</span></span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">public E poll() &#123;</span><br><span class="line">    if (size == <span class="number">0</span>)</span><br><span class="line">        return <span class="built_in">null</span>;</span><br><span class="line">    <span class="type">int</span> s = --size;</span><br><span class="line">    modCount++;</span><br><span class="line">    E result = (E) queue[<span class="number">0</span>];</span><br><span class="line">    E x = (E) queue[s];</span><br><span class="line">    queue[s] = <span class="built_in">null</span>;</span><br><span class="line">    if (s != <span class="number">0</span>)</span><br><span class="line">        siftDown(<span class="number">0</span>, x);</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>poll()方法和offer()有异曲同工之妙，其区别主要在于它出队后，是通过将最后一个元素放在首结点，然后 <strong>下沉</strong> 调整堆结构的。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status2.png" alt="将最后一个结点移到顶点"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftDownComparable</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>&#123;</span><br><span class="line">    Comparable&lt;? <span class="keyword">super</span> E&gt; key = (Comparable&lt;? <span class="keyword">super</span> E&gt;)x;</span><br><span class="line">    <span class="keyword">int</span> half = size &gt;&gt;&gt; <span class="number">1</span>;        <span class="comment">// loop while a non-leaf</span></span><br><span class="line">    <span class="keyword">while</span> (k &lt; half) &#123;</span><br><span class="line">        <span class="keyword">int</span> child = (k &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>; <span class="comment">// assume left child is least</span></span><br><span class="line">        Object c = queue[child];</span><br><span class="line">        <span class="keyword">int</span> right = child + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (right &lt; size &amp;&amp;</span><br><span class="line">            ((Comparable&lt;? <span class="keyword">super</span> E&gt;) c).compareTo((E) queue[right]) &gt; <span class="number">0</span>)</span><br><span class="line">            c = queue[child = right];</span><br><span class="line">        <span class="keyword">if</span> (key.compareTo((E) c) &lt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        queue[k] = c;</span><br><span class="line">        k = child;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>(k &lt;&lt; 1) + 1</code> 获取到首结点的左子结点，<code>child + 1</code> 获取到右子结点。当<code>k &lt; half</code>时，<code>(k &gt;&gt;&gt; 1) + 1 &lt;= size - 1</code>，所以只需要判断<code>right &lt; size</code> 即可知道数组是否越界。此时状态图如下所示</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status3.png" alt=""></p>
-<p>比较左子结点和右子节点，如果左大于右，将右下标设置给左下标，右值设置给左变量c</p>
-<p><strong>注意：这里只将右结点的下标设置到左结点的下标，数组里的值还没有动，然后将c设置为right的值，并没有修改数组</strong></p>
-<p>状态图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status4.png" alt=""></p>
-<p>此时比较新值x 和 变量c(即<code>min(leftValue, rightValue)</code>)，如果新值x最小，直接退出循环。反之，<code>queue[k] = c; k = child</code></p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status5.png" alt=""></p>
-<p>到这一步，前三个结点已经挑出最大值，看图可以得知数值“111”还没有设置进去，这是为什么呢？因为如果下标为2的结点还有子结点，还要和他们比较，最终才能确定一个最合适的位置。</p>
-<p>当数值“111”确定下了位置<code>queue[k] = key;</code>将111设置到k的位置。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>到这一步，PriorityQueue的难点基本上没有了。让人头大的堆排序还是要归结于数据结构学的不够精，不过话说回来这段代码写的很妙，和看AQS一样的感觉，很精细，每个局部变量最大程度上被利用起来，缺一不可。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjjspdhj8003f3gvjyryx89g9" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
-  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/">《Java并发编程的艺术》之线程池(一)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>线程池的优点：</p>
-<ul>
-<li>降低资源开销：每次任务到达时不需要重新创建和销毁</li>
-<li>提高可管理性：统一对线程进行调优、监控</li>
-<li>提高任务响应速度：不需要等待线程创建</li>
-</ul>
-<p>线程池创建的各个参数：</p>
-<ul>
-<li>corePoolSize： 核心线程数。在核心线程数未满时，也优先创建满核心线程数（就算有空余的核心线程）</li>
-<li>maximumPoolSize： 最大线程数。当workQueue满的时候，创建新线程来执行新任务</li>
-<li>keepAliveTime：存活时间。非核心线程可空闲的最大时间</li>
-<li>workQueue: 任务阻塞队列。当提交新任务且核心线程数已经被使用完时，新任务会先加入任务队列</li>
-</ul>
-<p>线程池中线程创建流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png" alt=""></p>
-<ol>
-<li>提交任务时，先判断核心线程数<strong>是否已经创建完毕</strong>，如果没有，则<strong>先将核心线程数创建满</strong>；反之则进入下个阶段</li>
-<li>判断核心线程数是否已经全部被占用，如果没有则交给核心线程执行；反之进入下个阶段</li>
-<li>判断工作队列是否已满，如果没满加入队列等待；反之进入下个阶段</li>
-<li>判断当前线程数是否小于MaxThread，如果是，则创建新线程执行任务；反之调用RejectPolicyHandler执行对应的策略</li>
-</ol>
-<h2 id="线程池的创建"><a href="#线程池的创建" class="headerlink" title="线程池的创建"></a>线程池的创建</h2><p>我们可以通过ThreadPoolExecutor创建一个线程池<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ThreadPoolExecutor(</span><br><span class="line">    <span class="keyword">int</span> corePoolSize,</span><br><span class="line">    <span class="keyword">int</span> maximumPoolSize,</span><br><span class="line">    <span class="keyword">long</span> keepAliveTime,</span><br><span class="line">    TimeUnit unit,</span><br><span class="line">    BlockingQueue&lt;Runnable&gt; workQueue，</span><br><span class="line">    RejectedExecutionHandler handler)</span><br></pre></td></tr></table></figure></p>
-<p>1) corePoolSize: 当提交一个任务时（即使其他空闲核心线程也能够执行新任务），线程池会创建一个新线程来执行任务，等到corePoolSize个线程被创建了，就不再创建了。如果要额外创建，就要看后面的参数。如果调用了线程的<figure class="highlight plain"><figcaption><span>方法，线程池会提前创建并启动所有核心线程</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">2) maximumPoolSize: 线程池允许创建的最大线程数。如果队列满了，并且已经创建的线程数小于最大线程数，则线程池会再创建新的线程执行任务。如果使用了无界队列，该参数没什么效果</span><br><span class="line"></span><br><span class="line">3) keepAliveTime: 线程池的工作线程空闲后，保持存活的时间。如果每个线程执行时间较短，可以将该值调大，提高线程利用率</span><br><span class="line"></span><br><span class="line">4) unit: 时间单位</span><br><span class="line"></span><br><span class="line">5) workQueue: 用于保存等待执行的任务的阻塞队列，可以选择以下几个阻塞队列：</span><br><span class="line"></span><br><span class="line">    * ArrayBlockingQueue: 是一个基于数组结构的有界阻塞队列，此队列按FIFO原则队元素进行排序</span><br><span class="line">    * LinkedBlockingQueue: 一个基于链表结构的阻塞，此队列按FIFO排序元素，吞吐量通常要高于ArrayBlockingQueue。静态工厂方法Executors.newFixedThreadPool()使用了这个队列。</span><br><span class="line">    * SynchronousQueue: 一个不存储元素的队列。每个插入操作要必须等到另一个线程调用移除操作，否则插入操作一直处于阻塞状态，吞吐量通常要高于LinkedBlockingQueue，静态工厂方法Executors.newCachedThreadPool使用了这个队列</span><br><span class="line">    * PriorityQueue: 一个具有优先级的无限阻塞队列</span><br><span class="line"></span><br><span class="line">6) handler: RejectPolicy默认有四种：</span><br><span class="line">    * AbortPolicy，直接抛出异常</span><br><span class="line">    * DiscardPolicy，丢弃该任务，放弃处理</span><br><span class="line">    * CallerRunsPolicy，只用调用者线程执行任务</span><br><span class="line">    * DiscardOldestPolicy，丢弃队列里的队首元素</span><br><span class="line"></span><br><span class="line">## 执行任务</span><br><span class="line">线程池提交任务有两个方法向线程池提交任务，分别为execute()和submit():</span><br><span class="line"></span><br><span class="line">* execute: 执行后没有返回值，无法判断任务是否被线程池执行成功</span><br><span class="line">* submit: 提交后会返回一个Future类型的对象，通过该Future对象可以判断执行是否成功。其中get方法可以阻塞当前线程直到任务完成，get(timeout, unit)方法可以阻塞当前线程一段时间后返回</span><br><span class="line"></span><br><span class="line">## 关闭线程</span><br><span class="line">关闭线程池有两个方法，分别为```shutdown()``` 和 ```shutdownNow()</span><br></pre></td></tr></table></figure></p>
-<p>共同点：<br>遍历线程池中的所有线程，然后逐个调用线程的<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">不同点：</span><br><span class="line">* shutdownNow首先将线程池的状态设置为STOP状态，然后尝试停止所有的正在执行或暂停任务的线程，并返回等待执行任务的列表</span><br><span class="line">* shutdown只是将线程池的状态设置成SHUTDOWN状态，然后中断所有没有正在执行任务的线程</span><br><span class="line"></span><br><span class="line">当任意一个关闭方法被调用时，isShutdown()方法就会返回true。当所有的任务关闭后，调用isTerminated()才会返回true。</span><br><span class="line"></span><br><span class="line">具体要调用```shutdown()```还是```shutdownNow()```，需要根据具体业务来判断(通常调用```shutdown()```)。如果任务不一定要执行完，可以用```shutdownNow()</span><br></pre></td></tr></table></figure></p>
-<h2 id="合理配置"><a href="#合理配置" class="headerlink" title="合理配置"></a>合理配置</h2><ul>
-<li>任务的性质：CPU密集型任务、IO密集型任务、混合型任务</li>
-<li>任务的优先级：高、中、低</li>
-<li>任务的执行时间：长、中、短</li>
-<li>任务的依赖性：是否依赖其他系统资源，如  数据库连接</li>
-</ul>
-<p>如何挑选：</p>
-<ul>
-<li>CPU密集型任务需要长时间用到CPU运算，所以线程数量最好配置: N<sub>cpu + 1</sub> </li>
-<li>IO密集型任务并不是一直占用CPU，则尽可能配置多的线程: 2 * N<sub>cpu</sub></li>
-<li>如果是混合型任务，尝试将其拆分为CPU密集型任务和IO密集型任务</li>
-<li>依赖数据库连接池的任务，因为线程提交SQL后需要等待数据库返回结果，等待的时间越长，则CPU空闲时间越长，那么线程数应该设置的越大，这样才能更好的利用CPU。</li>
-</ul>
-<p>注意：建议使用有界队列，因为如果线程池里的工作线程全部阻塞，任务挤压在线程池里，最终会导致整个系统不可用</p>
-<h2 id="监控要素"><a href="#监控要素" class="headerlink" title="监控要素"></a>监控要素</h2><ul>
-<li>taskCount: 线程池需要执行的任务数量</li>
-<li>completedTaskCount: 线程池在运行过程中已完成的任务数量，小于等于taskCount</li>
-<li>targetPoolSize: 线程池里曾将创建过的最大线程数。通过这个数据可以直到线程池是否曾经瞒过。</li>
-<li>getPoolSize: 线程池的线程数量。如果线程池不销毁，线程池里的线程不会自动销毁，所以该值只增不减</li>
-<li>getActiveCount: 获取活动的线程数</li>
-</ul>
-<p>通过扩展线程池进行监控。可以通过继承线程池来自定义线程池，重写线程池的<code>beforeExecute()</code>, <code>afterExecute()</code>, <code>terminated()</code> 方法，也可以在任务执行前、后执行一些代码来监控。</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>该篇主要了解了线程池的使用已经各个元素的含义以及监控时的优化。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjjspdhh8000s3gvjcs5bis3w" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
 
     </footer>
   </div>
@@ -866,23 +957,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/19/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/19/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/19/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/19/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/19/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/22/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>

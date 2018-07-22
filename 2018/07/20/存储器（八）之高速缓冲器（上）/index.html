@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>存储器之高速缓冲器(Cache)(上篇) | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="概要目前CPU遇到以下两个问题：  当 I/O设备向主存请求时，CPU无法访问主存，只能空等着 主存速度的提高 始终跟不上 CPU的发展  为了避免CPU和I/O设备争抢方寸，可在CPU与主存之间加一级Cache，此时CPU只需要跟Cache交互即可；另一方面，添加Cache还能解决主存与CPU速度的不匹配。 问题的提出 为什么添加一个Cache可以解决主存与CPU速度的不匹配问题？ 既然Cach">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="存储器之高速缓冲器(Cache)(上篇)">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/20/存储器（八）之高速缓冲器（上）/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="概要目前CPU遇到以下两个问题：  当 I/O设备向主存请求时，CPU无法访问主存，只能空等着 主存速度的提高 始终跟不上 CPU的发展  为了避免CPU和I/O设备争抢方寸，可在CPU与主存之间加一级Cache，此时CPU只需要跟Cache交互即可；另一方面，添加Cache还能解决主存与CPU速度的不匹配。 问题的提出 为什么添加一个Cache可以解决主存与CPU速度的不匹配问题？ 既然Cach">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache-%E4%B8%BB%E5%AD%98%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/CPU%E3%80%81Cache%E3%80%81%E4%B8%BB%E5%AD%98%E9%97%B4%E7%9A%84%E4%BA%A4%E4%BA%92.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache%E8%AF%BB%E6%B5%81%E7%A8%8B.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache%E9%80%8F%E5%86%99.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache%E5%86%99%E6%B5%81%E7%A8%8B.png">
+<meta property="og:updated_time" content="2018-07-22T07:15:20.963Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="存储器之高速缓冲器(Cache)(上篇)">
+<meta name="twitter:description" content="概要目前CPU遇到以下两个问题：  当 I/O设备向主存请求时，CPU无法访问主存，只能空等着 主存速度的提高 始终跟不上 CPU的发展  为了避免CPU和I/O设备争抢方寸，可在CPU与主存之间加一级Cache，此时CPU只需要跟Cache交互即可；另一方面，添加Cache还能解决主存与CPU速度的不匹配。 问题的提出 为什么添加一个Cache可以解决主存与CPU速度的不匹配问题？ 既然Cach">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache-%E4%B8%BB%E5%AD%98%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-存储器（八）之高速缓冲器（上）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/20/存储器（八）之高速缓冲器（上）/" class="article-date">
+  <time datetime="2018-07-20T07:46:19.000Z" itemprop="datePublished">2018-07-20</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      存储器之高速缓冲器(Cache)(上篇)
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h1><p>目前CPU遇到以下两个问题：</p>
+<ol>
+<li>当 <strong>I/O设备向主存请求</strong>时，<strong>CPU无法访问主存</strong>，只能空等着</li>
+<li><strong>主存速度的提高</strong> 始终跟不上 <strong>CPU的发展</strong></li>
+</ol>
+<p>为了避免CPU和I/O设备争抢方寸，可在CPU与主存之间加一级Cache，此时CPU只需要跟Cache交互即可；另一方面，添加Cache还能解决主存与CPU速度的不匹配。</p>
+<h1 id="问题的提出"><a href="#问题的提出" class="headerlink" title="问题的提出"></a>问题的提出</h1><ol>
+<li>为什么添加一个Cache可以解决主存与CPU速度的不匹配问题？</li>
+<li>既然Cache速度这么快，为什么不用 Cache 替换 主存？</li>
+<li>Cache的工作原理？</li>
+<li>如何判断Cache的性能？</li>
+<li>Cache的性能由哪些方面决定？</li>
+<li>CPU、Cache、主存间是如何进行交互的？</li>
+</ol>
+<h2 id="为什么添加一个Cache可以解决主存与CPU速度的不匹配问题"><a href="#为什么添加一个Cache可以解决主存与CPU速度的不匹配问题" class="headerlink" title="为什么添加一个Cache可以解决主存与CPU速度的不匹配问题"></a>为什么添加一个Cache可以解决主存与CPU速度的不匹配问题</h2><p>因为经过数据分析，发现代码执行时是存在 <strong>局部性</strong>的。<br>局部性主要分成两部分：<strong>时间局部性</strong>、<strong>空间局部性</strong>。</p>
+<ul>
+<li>时间局部性：CPU从主存取指令或取数据时，在一定时间内，可能会对同个块重复访问。</li>
+<li>空间局部性：由于数据在主存内都是连续存放的，所以很可能下一个即将访问的指令也在同一个区域内。</li>
+</ul>
+<p>根据以上两点，只要将CPU近期要用到的程序和数据提前存到Cache中，那么CPU在一定时间内，只需要访问Cache即可。</p>
+<h2 id="既然Cache速度这么快，为什么不用-Cache-替换-主存"><a href="#既然Cache速度这么快，为什么不用-Cache-替换-主存" class="headerlink" title="既然Cache速度这么快，为什么不用 Cache 替换 主存"></a>既然Cache速度这么快，为什么不用 Cache 替换 主存</h2><p>因为Cache一般采用SRAM制作，其价格比主存昂贵。</p>
+<h2 id="Cache的工作原理"><a href="#Cache的工作原理" class="headerlink" title="Cache的工作原理"></a>Cache的工作原理</h2><p>主存由2<sup>n</sup>个可编址的字组成，每个字有惟一的n位地址。<br>为了与Cache映射，将主存与缓存都分成若干 <strong>块</strong>，每个块内又包含多个 <strong>字</strong>，并使他们的块大小相同（即块内字数相同）。</p>
+<p>这就将主存的地址分成了两端：<strong>主存块号</strong>、<strong>块内地址</strong>。<strong>主存块号的位数 + 块内地址的位数 = 一个字的位数</strong>。</p>
+<p>除此之外，Cache中有一个“标记”。标记是用来表示当前存放的是 <strong>哪一块主存块</strong>。设置这个标记是因为 Cache块 <strong>远比</strong> 主存块 <strong>少</strong>，所以Cache里停留的内容不会是固定的，需要一个东西标志 某个缓存块对应的主存块。</p>
+<blockquote>
+<p>不是主存地址可以通过转换获取缓存地址吗，为什么还需要标志位？因为Map需要的时间是最少的。</p>
+</blockquote>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache-%E4%B8%BB%E5%AD%98%E5%AD%98%E5%82%A8%E7%A9%BA%E9%97%B4.png" alt="Cache-主存原理"></p>
+<h2 id="Cache的性能指标"><a href="#Cache的性能指标" class="headerlink" title="Cache的性能指标"></a>Cache的性能指标</h2><p>判断Cache好坏的指标有三个：</p>
+<ul>
+<li>Cache的命中率</li>
+<li>Cache的平均访问时间</li>
+<li>Cache的访问效率</li>
+</ul>
+<h3 id="Cache的命中率"><a href="#Cache的命中率" class="headerlink" title="Cache的命中率"></a>Cache的命中率</h3><p><code>Cache命中率 = 命中数 / (命中数 + 未命中数)</code></p>
+<p>当CPU欲访问主存中的某块数据时，Cache中正好存在，则称为 <strong>缓存命中</strong><br>当CPU欲访问主存中的某块数据时，Cache中不存在，则称为 <strong>缓存不命中</strong></p>
+<h3 id="平均访问时间"><a href="#平均访问时间" class="headerlink" title="平均访问时间"></a>平均访问时间</h3><p><code>平均访问时间 = 命中时访问时间 * 命中率 + (1 - 命中率) * 未命中时间</code></p>
+<p><strong>平均访问时间</strong> 越接近 <strong>命中时访问时间</strong>越好</p>
+<h3 id="访问效率"><a href="#访问效率" class="headerlink" title="访问效率"></a>访问效率</h3><p>在平均访问时间的基础上，扩充出访问效率，即<code>访问效率 = 平均访问时间 / 命中时访问时间</code></p>
+<h2 id="Cache的性能由哪些方面决定"><a href="#Cache的性能由哪些方面决定" class="headerlink" title="Cache的性能由哪些方面决定"></a>Cache的性能由哪些方面决定</h2><p>通常来说，Cache 由 <strong>块的数量</strong>、<strong>块的长度</strong>决定的。</p>
+<h3 id="Cache块的数量"><a href="#Cache块的数量" class="headerlink" title="Cache块的数量"></a>Cache块的数量</h3><p>因为Cache的块数量够多，达到主存的块数量，那么Cache除了第一次不命中，后面都是100%命中的。</p>
+<h3 id="Cache块的长度"><a href="#Cache块的长度" class="headerlink" title="Cache块的长度"></a>Cache块的长度</h3><p>Cache的块长则需要具体情况具体分析，因为Cache块过短，保存的数据量不够多，可以被命中的字少了，那么命中率就下降了；而Cache块过长，缓存中块数减少，可装入的块就少了，很容易出现新块 覆盖 旧块，然后因为新块被使用次数不够多，最终导致命中率下讲；另外块过长，可能会导致一些不相关的数据保存进来，白白浪费空间。</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>一般来说Cache块通常取4~8个字或字节，也可以取 一个主存周期所能获得的主存信息长度。</p>
+<h2 id="CPU、Cache和主存间的交互"><a href="#CPU、Cache和主存间的交互" class="headerlink" title="CPU、Cache和主存间的交互"></a>CPU、Cache和主存间的交互</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/CPU%E3%80%81Cache%E3%80%81%E4%B8%BB%E5%AD%98%E9%97%B4%E7%9A%84%E4%BA%A4%E4%BA%92.png" alt="CPU、Cache和主存间的交互"></p>
+<h3 id="Cache存储体"><a href="#Cache存储体" class="headerlink" title="Cache存储体"></a>Cache存储体</h3><p>Cache存储体以块为单位与主存交换信息，为了加速主存和Cache之间的调用速度，主存通常采用多体结构，且Cache访存的优先级最高。</p>
+<h3 id="主存Cache地址映射变换机构"><a href="#主存Cache地址映射变换机构" class="headerlink" title="主存Cache地址映射变换机构"></a>主存Cache地址映射变换机构</h3><p>该机构是将CPU送来的主存地址转换为Cache地址。由于主存和Cache的块内地址都是一样的长度，因此地址映射变换机构主要是将 <strong>主存块号</strong> 转换成 <strong>Cache块号</strong>。如果Cache命中，则CPU可以直接访问Cache存储体；如果Cache未命中，CPU会直接访问主存，不仅将该字从主存中取出，同时将它（代指字）所在的主存块一并存入Cache内。如果Cache不可装进，就得采用替换策略；反正，可以直接装入Cache。</p>
+<h3 id="替换机构"><a href="#替换机构" class="headerlink" title="替换机构"></a>替换机构</h3><p>当Cache内容已满时，需要根据一定的替换算法将Cache内的某个块移除，从而装入新的主存块。</p>
+<p>注意：Cache对用户是透明得，用户编程时用到的地址是主存地址，用户根本不知道这些主存是否已调入Cache内。因为将主存块调入Cache的任务全由机器硬件自动完成。</p>
+<h3 id="Cache的读写操作"><a href="#Cache的读写操作" class="headerlink" title="Cache的读写操作"></a>Cache的读写操作</h3><h4 id="Cache读"><a href="#Cache读" class="headerlink" title="Cache读"></a>Cache读</h4><p>Cache读如下图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache%E8%AF%BB%E6%B5%81%E7%A8%8B.png" alt="Cache的读操作"></p>
+<p>当CPU发出主存地址后，先判断该字是否在Cache中。若命中，直接访问Cache，并将该字送至CPU；若未命中，一方面要访问主存，将该字传送给CPU，与此同时，要将该字所在的主存块装入Cache。</p>
+<p>Cache写分为 <strong>写通</strong> 和 <strong>回写</strong>两种方法</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache%E9%80%8F%E5%86%99.png" alt="Cache的写直达操作"><br>当CPU对某个Cache块内的数据进行修改时，也将对应的主存块的内容进行修改。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/Cache%E5%86%99%E6%B5%81%E7%A8%8B.png" alt="Cache的回写操作"><br>当CPU对某个Cache块内的数据进行修改后，该块被标记为 <strong>浊</strong>。当Cache发生替换时，将浊的块写回主存中去。</p>
+<p><em>注意，上述的写操作都只针对于单核处理去，对于多核处理器，需要考虑Cache一致性问题</em></p>
+<h3 id="Cache的改进"><a href="#Cache的改进" class="headerlink" title="Cache的改进"></a>Cache的改进</h3><p>改进方法有以下两种：</p>
+<ul>
+<li>增加Cache级数</li>
+<li>将统一的Cache变成分立的Cache</li>
+</ul>
+<h4 id="增加Cache级数"><a href="#增加Cache级数" class="headerlink" title="增加Cache级数"></a>增加Cache级数</h4><p>一开始CPU的Cache是直接集成在芯片内部的，这种Cache称为<strong>片内Cache(又或是L1 Cache)</strong>。片内Cache离CPU近，CPU也不需要占用系统总线就可以直接访问，速度极快。但是片内Cache没有相应数据块时，CPU被迫要访问主存内的信息，访问次数多了，速度相比直接访问Cache就慢下来很多。</p>
+<p>所以为了解决CPU与主存间通讯占用总线的问题：在主存与片内缓存之间再加一级缓存，称为 <strong>片外缓存</strong>，<strong>片外缓存不使用系统总线</strong>而是 <strong>使用一个独立的数据路径</strong>。那么从片外缓存调入片内缓存的速度就得到了提高。</p>
+<p>所以增加一个层次，即 <strong>片外Cache</strong>，该Cache置于L1与主存之间，当CPU要获取数据，先访问L1 Cache，如果L1 Cache没有，则访问L2 Cache。</p>
+<h4 id="将统一的Cache变成分立的Cache"><a href="#将统一的Cache变成分立的Cache" class="headerlink" title="将统一的Cache变成分立的Cache"></a>将统一的Cache变成分立的Cache</h4><p>统一缓存是将数据、指令都存放在同一缓存内；分立缓存是将指令和数据分别存放在指令Cache、数据Cache内。</p>
+<p>两种方案如何选择是由 <strong>存储结构</strong>、<strong>指令控制方式</strong>两个方面决定的。</p>
+<p>如果存储结构是统一的（指令和数据存储在同一主存内），则相应的Cache采用统一缓存；如果主存采用指令、数据分开存储的方案，则相应的Cache采用分立缓存</p>
+<p>如果指令控制方式是超前控制或流水控制，一般采用分立缓存。</p>
+<blockquote>
+<p>超前控制指在当前指令执行过程尚未结束时，就提前将下一条准备执行的指令取出，称为 <strong>超前取指</strong> 或 <strong>指令预取</strong>；流水线控制指多条指令同时执行，又可视为指令流水。</p>
+</blockquote>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/20/存储器（八）之高速缓冲器（上）/" data-id="cjjwvanrn002nv4vjnsh1a28l" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          存储器之高速缓冲器(Cache)(下)
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/17/存储器（六）之校验码（下）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">存储器之校验码（下）</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 15px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 17.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)Java动态代理解析/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/22/输入输出设备/">(no title)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/22/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
