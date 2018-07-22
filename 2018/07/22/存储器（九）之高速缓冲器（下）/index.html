@@ -19,7 +19,9 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/CPU%E5%8F%91%E9%80%81%E7%9A%84%E4%B8%BB%E5%AD%98%E5%9C%B0%E5%9D%80.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84CPU%E5%8F%91%E9%80%81%E7%9A%84%E5%9C%B0%E5%9D%80.png">
-<meta property="og:updated_time" content="2018-07-22T10:43:53.244Z">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84%E5%9B%BE%E4%B8%80.png">
+<meta property="og:updated_time" content="2018-07-22T14:56:04.014Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="存储器之高速缓冲器(Cache)(下)">
 <meta name="twitter:description" content="概要CPU将主存地址 转换成 Cache地址时，需要经过 地址映射变换机构。不同层级的Cache 对 地址映射的算法方案 有不同的要求。 主存Cache地址映射变换机构该机构主要是 将主存地址 按一定算法映射到 Cache地址 直接映射 映射算法假设主存的块数为 m，Cache的块数为 c。那么通常会按 c个块为一组划分主存，每组的块编号依次按 0,1,2,...,c进行编号。假设m为16，c为2">
@@ -121,17 +123,23 @@
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>直接映射的缺点就是不够灵活，因为每个主存块都对应着唯一的Cache块，如果CPU频繁访问 <strong>不同组的同编号</strong>块，那么Cache就经常会发生替换，影响速度，空间利用率不高</p>
 <h2 id="全相联映射"><a href="#全相联映射" class="headerlink" title="全相联映射"></a>全相联映射</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84.png" alt="全相联映射"></p>
 <h3 id="映射算法-1"><a href="#映射算法-1" class="headerlink" title="映射算法"></a>映射算法</h3><p>主存内每个字块都可以被存储到Cache的任意字块内。</p>
-<h3 id="映射流程-1"><a href="#映射流程-1" class="headerlink" title="映射流程"></a>映射流程</h3><p>当CPU发出如下图所示的地址时，<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84CPU%E5%8F%91%E9%80%81%E7%9A%84%E5%9C%B0%E5%9D%80.png" alt="全相联映射地址"></p>
+<h3 id="映射流程-1"><a href="#映射流程-1" class="headerlink" title="映射流程"></a>映射流程</h3><p>当CPU发出如下图所示的地址时，</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84CPU%E5%8F%91%E9%80%81%E7%9A%84%E5%9C%B0%E5%9D%80.png" alt="全相联映射地址"></p>
 <ol>
 <li>CPU通过主存块编号遍历Cache，查找Cache的标记是否和该主存编号相同</li>
 <li>如果找到则命中，未找到则未命中</li>
 </ol>
 <h3 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h3><p>全相联映射更加灵活，主存块可以保存到Cache的任意块中。Cache的利用率就会高，但是由于遍历，速度往往较低。</p>
-<h2 id="组相联映射"><a href="#组相联映射" class="headerlink" title="组相联映射"></a>组相联映射</h2><h1 id="替换机构"><a href="#替换机构" class="headerlink" title="替换机构"></a>替换机构</h1>
+<h2 id="组相联映射"><a href="#组相联映射" class="headerlink" title="组相联映射"></a>组相联映射</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84.png" alt="组相联映射"></p>
+<h3 id="映射算法-2"><a href="#映射算法-2" class="headerlink" title="映射算法"></a>映射算法</h3><p>主存划分为多个组，缓存也划分为多个组，每个组里的块编号都对应着缓存里的组编号。简而言之，原来的直接映射只能一个缓存块对应多个主存块，为了提高空间利用率，允许一个多个同组的缓存块对应多个主存块。示意图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84%E5%9B%BE%E4%B8%80.png" alt="组相联映射一"></p>
+<p>每个组的第一个块都对应着缓存的第一个组。同理，每个组的第二块都对应着缓存的第二块。</p>
+<h3 id="映射流程-2"><a href="#映射流程-2" class="headerlink" title="映射流程"></a>映射流程</h3><p>每个组的第一块 都能放到缓存的第一个组内的任意位置。一方面，主存的块可以放在对应组内的任意一个位置，体现出了全相联的思想；另一方面，主存的每个块都对应着唯一一个组，这是直接映射的思想。</p>
+<p>该方案是直接映射和全相联映射的折中方案。</p>
+<h1 id="替换机构"><a href="#替换机构" class="headerlink" title="替换机构"></a>替换机构</h1>
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjjwvanr90024v4vj7pu15fo9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjjwyw5uf002f88vjs7i6akjc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -209,11 +217,11 @@
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
