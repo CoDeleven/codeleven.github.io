@@ -21,7 +21,7 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%85%A8%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84CPU%E5%8F%91%E9%80%81%E7%9A%84%E5%9C%B0%E5%9D%80.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BB%84%E7%9B%B8%E8%81%94%E6%98%A0%E5%B0%84%E5%9B%BE%E4%B8%80.png">
-<meta property="og:updated_time" content="2018-07-22T14:56:04.014Z">
+<meta property="og:updated_time" content="2018-07-24T15:38:57.004Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="存储器之高速缓冲器(Cache)(下)">
 <meta name="twitter:description" content="概要CPU将主存地址 转换成 Cache地址时，需要经过 地址映射变换机构。不同层级的Cache 对 地址映射的算法方案 有不同的要求。 主存Cache地址映射变换机构该机构主要是 将主存地址 按一定算法映射到 Cache地址 直接映射 映射算法假设主存的块数为 m，Cache的块数为 c。那么通常会按 c个块为一组划分主存，每组的块编号依次按 0,1,2,...,c进行编号。假设m为16，c为2">
@@ -135,11 +135,23 @@
 <p>每个组的第一个块都对应着缓存的第一个组。同理，每个组的第二块都对应着缓存的第二块。</p>
 <h3 id="映射流程-2"><a href="#映射流程-2" class="headerlink" title="映射流程"></a>映射流程</h3><p>每个组的第一块 都能放到缓存的第一个组内的任意位置。一方面，主存的块可以放在对应组内的任意一个位置，体现出了全相联的思想；另一方面，主存的每个块都对应着唯一一个组，这是直接映射的思想。</p>
 <p>该方案是直接映射和全相联映射的折中方案。</p>
-<h1 id="替换机构"><a href="#替换机构" class="headerlink" title="替换机构"></a>替换机构</h1>
+<h1 id="替换机构"><a href="#替换机构" class="headerlink" title="替换机构"></a>替换机构</h1><p>替换就是指 <strong>Cache满了之后，如果要存放新的主存块，就需要将某个Cache块取出，并替换新的主存块进入</strong></p>
+<blockquote>
+<p>主存块就像是放在书架上的书，缓存块就像是放在床头的书，如果床头的书满了，就需要找个方案取出一本书，然后将想看的书加进去</p>
+</blockquote>
+<p>替换机构就是做了 <strong>如何取书</strong> 这件事</p>
+<p>目前有两种方案：</p>
+<ul>
+<li>先进先出FIFO</li>
+<li>近期最少使用(Least Recently Used)<br>  LRU算法比较好的利用访存局部性原理，替换出近期用的最少的字块。通常是只记录每个快最近一次使用的时间。</li>
+<li>随机法<br>  取一个随机数，没有根据访存的局部性原理。</li>
+</ul>
+<p>注意，这里讲到的访存局部性原理是指 <strong>只访问某个块的内容，而不是全部的内容，即局部性</strong></p>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjjwyw5uf002f88vjs7i6akjc" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjjzv8u8b002668vj302hix6a" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -150,7 +162,7 @@
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/07/22/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/24/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
@@ -213,23 +225,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/24/(未埋)Java动态代理解析/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/24/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/24/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/24/输入输出设备/">(no title)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/22/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/24/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
       </ul>
