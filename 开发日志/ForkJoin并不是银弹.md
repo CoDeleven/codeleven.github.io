@@ -1,5 +1,5 @@
 ---
-title: (未埋)ForkJoin并不是银弹
+title: ForkJoin并不是银弹
 date: 2018-04-26 15:11:46
 tags: [Java并发]
 ---
