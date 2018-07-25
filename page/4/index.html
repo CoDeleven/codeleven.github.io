@@ -65,210 +65,6 @@
       <div class="outer">
         <section id="main">
   
-    <article id="post-队列之PriorityQueue" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/" class="article-date">
-  <time datetime="2018-05-17T01:58:51.000Z" itemprop="datePublished">2018-05-17</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/17/队列之PriorityQueue/">队列之PriorityQueue</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>由于该优先级队列是实现定时等任务的基础，所以想彻底理解后续的DelayQueue及ScheduledThreadPoolExecutor就要先学习优先级队列。</p>
-<p>该队列是更具堆排序的划分优先级的队列，默认情况下优先级是使用按照自然顺序排序的比较器（即从小到大），当然你也可以传入一个比较器，让队列按照比较器排序。因为会用到比较器，所以每个元素都需要实现Comparable接口。</p>
-<p><strong>注意：该队列不是线程安全的</strong></p>
-<p>PriorityQueue有以下几个构造方法：</p>
-<ul>
-<li>PriorityQueue(): 创建一个可以存放11个元素的，<strong>因为没有比较器，传入的元素必须要实现Comparable(像int、double这类可以自动装箱的元素不必实现，它们在强转的时候不会出问题)</strong>。</li>
-<li>PriorityQueue(Collection&lt;? extends E&gt;): 根据给定的集合创建一个优先级队列，<strong>每个元素都必须实现Comparable</strong> </li>
-<li>PriorityQueue(PriorityQueue&lt;? extends E&gt; c)</li>
-<li>PriorityQueue(SortedSet&lt;? extends E&gt; c) </li>
-<li>PriorityQueue(int initialCapacity): 根据给定的初始容器大小，创建一个按自然数排序的优先级队列</li>
-<li>PriorityQueue(int initialCapacity, Comparator&lt;? super E&gt; comparator): 根据给定的初始容器大小和比较器，创建一个优先级队列，优先级队列会按照比较器进行排序</li>
-<li>PriorityQueue(Comparator&lt;? super E&gt; comparator): 该方法从1.8之后才有</li>
-</ul>
-<h2 id="属性介绍"><a href="#属性介绍" class="headerlink" title="属性介绍"></a>属性介绍</h2><table>
-<thead>
-<tr>
-<th>变量名称</th>
-<th>变量类型</th>
-<th>作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>queue</td>
-<td>Object[]</td>
-<td>二叉树。每一次插入或移除都会调整树的结构</td>
-</tr>
-<tr>
-<td>size</td>
-<td>int</td>
-<td>元素个数。</td>
-</tr>
-<tr>
-<td>comparator</td>
-<td>Comparator&lt;? super E&gt;</td>
-<td>比较器。决定队列是从小到大还是从大到小</td>
-</tr>
-<tr>
-<td>modCount</td>
-<td>int</td>
-<td>修改次数。每次增删操作都会使modCount递增</td>
-</tr>
-</tbody>
-</table>
-<h2 id="offer"><a href="#offer" class="headerlink" title="offer()"></a>offer()</h2><p>在执行offer()方法前的队列状态，此时 <strong>元素个数size</strong>为7, <strong>queue.length</strong>为8</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status0.png" alt="插入前的初始状态"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (e == <span class="keyword">null</span>)</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException();</span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="keyword">int</span> i = size;</span><br><span class="line">    <span class="comment">// 如果队列包含元素的数量大于等于数组的长度</span></span><br><span class="line">    <span class="keyword">if</span> (i &gt;= queue.length)</span><br><span class="line">        <span class="comment">// 扩充数组长度</span></span><br><span class="line">        grow(i + <span class="number">1</span>);</span><br><span class="line">    <span class="comment">// 递增总元素数量</span></span><br><span class="line">    size = i + <span class="number">1</span>;</span><br><span class="line">    <span class="keyword">if</span> (i == <span class="number">0</span>)</span><br><span class="line">        queue[<span class="number">0</span>] = e;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="comment">// 关键点</span></span><br><span class="line">        siftUp(i, e);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p>执行offer()时，<figure class="highlight plain"><figcaption><span>< queue.length``` 所以不扩容，只是对size进行递增。此时， **元素个数size为8**, **queue.length**为8。状态图如下所示</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">![插入时的状态1](https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status1.png)</span><br><span class="line"></span><br><span class="line">offer()方法前面都在做一些准备，比如检查元素是否为null、检查数组长度。真正执行插入的地方在siftUp()。siftUp()就是将插入的元素调整到大于等于其祖先元素，说的术语点就是堆排序。这里会判断是否存在比较器，如果创建PriorityQueue没有传入Comparator时，则进入else，通过元素的Comparable判断；否则进入if语句</span><br><span class="line">```java</span><br><span class="line">private void siftUp(int k, E x) &#123;</span><br><span class="line">    if (comparator != null)</span><br><span class="line">        siftUpUsingComparator(k, x);</span><br><span class="line">    else</span><br><span class="line">        siftUpComparable(k, x);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>假设我们没传Comparator，进入else语句:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftUpComparable</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 必须要让元素显式实现Comparable，如果是int、double这类可以自动装箱的元素，倒是不需要显式实现</span></span><br><span class="line">    Comparable&lt;? <span class="keyword">super</span> E&gt; key = (Comparable&lt;? <span class="keyword">super</span> E&gt;) x;</span><br><span class="line">    <span class="keyword">while</span> (k &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> parent = (k - <span class="number">1</span>) &gt;&gt;&gt; <span class="number">1</span>;</span><br><span class="line">        Object e = queue[parent];</span><br><span class="line">        <span class="keyword">if</span> (key.compareTo((E) e) &gt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        queue[k] = e;</span><br><span class="line">        k = parent;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>k为新元素的下标，x为新元素的值。由于新元素尚未插入，其中的元素个数实际上还是只有k - 1个，故要执行<figure class="highlight k"><figcaption><span>- 1```。</span></figcaption><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="number">1.</span> (k - <span class="number">1</span>) / <span class="number">2</span> 获取 **祖先元素下标 parent** ，parent是**新元素 x** 的祖先元素的下标。</span><br><span class="line"><span class="number">2.</span> 将祖先（该新元素的parent）和新元素进行比较</span><br><span class="line"><span class="number">3.</span> 如果新元素和parent比较后返回<span class="number">0</span>或负数，就将**新元素所在位置**设置为parent值；反之就直接插入（这里还是要具体看比较器，通常是小到大的排序，下文也是这样）</span><br><span class="line"><span class="number">4.</span> 最后将**新元素的下标 k**改成**parent所在位置 parent**，即新元素值要保存在parent所在位置</span><br><span class="line"><span class="number">5.</span> 继续拿**新元素下标 k** 比较，重复<span class="number">1</span><span class="number">-3</span>的步骤</span><br><span class="line"></span><br><span class="line">对不明白为什么要这么做的同学，请移步这里[排序算法之堆排序]()</span><br><span class="line"></span><br><span class="line">当`siftUpComarable`执行完后，状态图如下所示（没有体现排序的过程）</span><br><span class="line">![](https:<span class="comment">//blog-1252749790.file.myqcloud.com/collections/PriorityQueue_status2.png)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">## poll()</span><br><span class="line">![poll前的初始状态](https:<span class="comment">//blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status1.png)</span></span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">public E poll() &#123;</span><br><span class="line">    if (size == <span class="number">0</span>)</span><br><span class="line">        return <span class="built_in">null</span>;</span><br><span class="line">    <span class="type">int</span> s = --size;</span><br><span class="line">    modCount++;</span><br><span class="line">    E result = (E) queue[<span class="number">0</span>];</span><br><span class="line">    E x = (E) queue[s];</span><br><span class="line">    queue[s] = <span class="built_in">null</span>;</span><br><span class="line">    if (s != <span class="number">0</span>)</span><br><span class="line">        siftDown(<span class="number">0</span>, x);</span><br><span class="line">    return result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>poll()方法和offer()有异曲同工之妙，其区别主要在于它出队后，是通过将最后一个元素放在首结点，然后 <strong>下沉</strong> 调整堆结构的。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status2.png" alt="将最后一个结点移到顶点"></p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">siftDownComparable</span><span class="params">(<span class="keyword">int</span> k, E x)</span> </span>&#123;</span><br><span class="line">    Comparable&lt;? <span class="keyword">super</span> E&gt; key = (Comparable&lt;? <span class="keyword">super</span> E&gt;)x;</span><br><span class="line">    <span class="keyword">int</span> half = size &gt;&gt;&gt; <span class="number">1</span>;        <span class="comment">// loop while a non-leaf</span></span><br><span class="line">    <span class="keyword">while</span> (k &lt; half) &#123;</span><br><span class="line">        <span class="keyword">int</span> child = (k &lt;&lt; <span class="number">1</span>) + <span class="number">1</span>; <span class="comment">// assume left child is least</span></span><br><span class="line">        Object c = queue[child];</span><br><span class="line">        <span class="keyword">int</span> right = child + <span class="number">1</span>;</span><br><span class="line">        <span class="keyword">if</span> (right &lt; size &amp;&amp;</span><br><span class="line">            ((Comparable&lt;? <span class="keyword">super</span> E&gt;) c).compareTo((E) queue[right]) &gt; <span class="number">0</span>)</span><br><span class="line">            c = queue[child = right];</span><br><span class="line">        <span class="keyword">if</span> (key.compareTo((E) c) &lt;= <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        queue[k] = c;</span><br><span class="line">        k = child;</span><br><span class="line">    &#125;</span><br><span class="line">    queue[k] = key;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<p><code>(k &lt;&lt; 1) + 1</code> 获取到首结点的左子结点，<code>child + 1</code> 获取到右子结点。当<code>k &lt; half</code>时，<code>(k &gt;&gt;&gt; 1) + 1 &lt;= size - 1</code>，所以只需要判断<code>right &lt; size</code> 即可知道数组是否越界。此时状态图如下所示</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status3.png" alt=""></p>
-<p>比较左子结点和右子节点，如果左大于右，将右下标设置给左下标，右值设置给左变量c</p>
-<p><strong>注意：这里只将右结点的下标设置到左结点的下标，数组里的值还没有动，然后将c设置为right的值，并没有修改数组</strong></p>
-<p>状态图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status4.png" alt=""></p>
-<p>此时比较新值x 和 变量c(即<code>min(leftValue, rightValue)</code>)，如果新值x最小，直接退出循环。反之，<code>queue[k] = c; k = child</code></p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/collections/PriorityQueue_poll_status5.png" alt=""></p>
-<p>到这一步，前三个结点已经挑出最大值，看图可以得知数值“111”还没有设置进去，这是为什么呢？因为如果下标为2的结点还有子结点，还要和他们比较，最终才能确定一个最合适的位置。</p>
-<p>当数值“111”确定下了位置<code>queue[k] = key;</code>将111设置到k的位置。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>到这一步，PriorityQueue的难点基本上没有了。让人头大的堆排序还是要归结于数据结构学的不够精，不过话说回来这段代码写的很妙，和看AQS一样的感觉，很精细，每个局部变量最大程度上被利用起来，缺一不可。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/17/队列之PriorityQueue/" data-id="cjjzv8u9q003i68vj84j8kwrt" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之线程池(二)" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/" class="article-date">
-  <time datetime="2018-05-14T02:50:19.000Z" itemprop="datePublished">2018-05-14</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(二)/">《Java并发编程的艺术》之线程池(二)</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="线程池核心Executor"><a href="#线程池核心Executor" class="headerlink" title="线程池核心Executor"></a>线程池核心Executor</h1><p>Java的线程既是工作单元，也是执行机制。从JDK5开始，把工作单元与执行机制分离开来。工作单元包括Runnable、Callable，而执行机制由Executor提供。</p>
-<h2 id="Executor框架结构和流程"><a href="#Executor框架结构和流程" class="headerlink" title="Executor框架结构和流程"></a>Executor框架结构和流程</h2><p>主要由以下三部分组成：</p>
-<ul>
-<li>任务：Runnable、Callable接口</li>
-<li>任务的执行：Executor，以及继承Executor的ExecutorService</li>
-<li>异步计算的结果：Future接口、实现Future接口的FutureTask类</li>
-</ul>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_member_flow.png" alt=""></p>
-<p>各个部分的执行流程：</p>
-<ul>
-<li>主线程创建任务（实现Runnable或Callable接口的任务对象）。工具类Executors可以把一个Runnable对象封装成Callable对象。</li>
-<li>把Runnable对象直接交给ExecutorSerivce执行，或者也可以把Runnable对象或Callable对象提交给ExecutorService执行。</li>
-<li>submit()会返回一个实现Future接口的对象。主线程可以执行FutureTask.get()方法来等待任务执行完成。主线程也可以通过FutureTask.cancel()方法取消任务执行。</li>
-</ul>
-<h2 id="Executor框架成员"><a href="#Executor框架成员" class="headerlink" title="Executor框架成员"></a>Executor框架成员</h2><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_uml.jpg" alt=""></p>
-<p>Executors可以创建以下四个ThreadPoolExecutor特殊应用的类：</p>
-<ul>
-<li>ThreadPoolExecutor</li>
-<li>FixedThreadPool，固定线程数量的线程池，多余的任务会加入无界的阻塞队列中</li>
-<li>SingleThreadPool，只有单个线程的线程池，多余的任务会加入无界的阻塞队列中</li>
-<li>CachedThreadPool，没有上限的线程池，使用的SynchronousQueue队列</li>
-</ul>
-<p>Executors可以创建以下两个ScheduledThreadPoolExecutor特殊应用的类：</p>
-<ul>
-<li>ScheduledThreadPoolExecutor</li>
-<li>SingleThreadScheduledExecutor</li>
-</ul>
-<p>下面将对Executor的后两个部分进行分解讲解</p>
-<h2 id="ThreadPoolExecutor下的特殊应用（任务执行-部分）"><a href="#ThreadPoolExecutor下的特殊应用（任务执行-部分）" class="headerlink" title="ThreadPoolExecutor下的特殊应用（任务执行 部分）"></a>ThreadPoolExecutor下的特殊应用（任务执行 部分）</h2><h3 id="FixedThreadPool"><a href="#FixedThreadPool" class="headerlink" title="FixedThreadPool"></a>FixedThreadPool</h3><p>FixedThreadPool的创建方法，FixedThreadPool其实就是ThreadPoolExecutors的特殊用法：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 只能通过Executors.newFixedThreadPool()创建</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newFixedThreadPool</span><span class="params">(<span class="keyword">int</span> nThreads)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(nThreads, nThreads,</span><br><span class="line">                                  <span class="number">0L</span>, TimeUnit.MILLISECONDS,</span><br><span class="line">                                  <span class="keyword">new</span> LinkedBlockingQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>主要需要注意的是<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">* 执行中的线程数达到corePoolSize，新任务会在无界队列中等待，所以线程数不会超过corePoolSize</span><br><span class="line">* 因为不会创建更多的线程，所以maximumPoolSize和keepAliveTime参数就没什么作用了</span><br><span class="line">* 因为是无界队列，所以也不需要用到RejectPolicyHandler</span><br><span class="line"></span><br><span class="line">### SingleThreadExecutor</span><br><span class="line">该类也是ThreadPoolExecutor的特殊用法</span><br><span class="line">```java</span><br><span class="line">public static ExecutorService newSingleThreadExecutor() &#123;</span><br><span class="line">    return new FinalizableDelegatedExecutorService</span><br><span class="line">        (new ThreadPoolExecutor(1, 1,</span><br><span class="line">                                0L, TimeUnit.MILLISECONDS,</span><br><span class="line">                                new LinkedBlockingQueue&lt;Runnable&gt;()));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>相比FixedThreadPool，除一个正在执行任务的线程，其他任务都会一一加入队列中等待执行。</p>
-<h3 id="CachedThreadPool"><a href="#CachedThreadPool" class="headerlink" title="CachedThreadPool"></a>CachedThreadPool</h3><p>该类比较特殊，是FixedThreadPool的无限版本：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> ExecutorService <span class="title">newCachedThreadPool</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> ThreadPoolExecutor(<span class="number">0</span>, Integer.MAX_VALUE,</span><br><span class="line">                                  <span class="number">60L</span>, TimeUnit.SECONDS,</span><br><span class="line">                                  <span class="keyword">new</span> SynchronousQueue&lt;Runnable&gt;());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>一手<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">### ScheduledThreadPoolExecutor</span><br><span class="line">ScheduledThreadPoolExecutor虽然不是对ThreadPoolExecutor的参数进行调整，但是对其执行流程进行了一个调整。该类主要用来在给定的延时之后执行任务或定期执行任务。ScheduledThreadPoolExecutor和Timer类似，但是更强大。Timer在单线程下执行，如果前一个任务执行时间过长，会影响下一个任务的执行。</span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">public ScheduledThreadPoolExecutor(int corePoolSize,</span><br><span class="line">                                   ThreadFactory threadFactory,</span><br><span class="line">                                   RejectedExecutionHandler handler) &#123;</span><br><span class="line">    // 继承ThreadPoolExecutor</span><br><span class="line">    super(corePoolSize, Integer.MAX_VALUE, 0, NANOSECONDS,</span><br><span class="line">          new DelayedWorkQueue(), threadFactory, handler);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>因为是无界队列，所以maximumPoolSize，aliveKeepTime和workQueue三个参数没什么意义（根据流程判断用不到它们）</p>
-<p>ScheduledThreadPoolExecutor的执行主要分成两个部分：</p>
-<ul>
-<li>当调用ScheduledThreadPoolExecutor的scheduleAtFixedRate()方法或者scheduleWithFixedDelay()方法时，会向DelayQueue添加一个实现了RunnableScheduledFuture接口的ScheduledFutureTask</li>
-<li>线程池会从DelayQueue中获取ScheduledFutureTask，然后执行任务</li>
-</ul>
-<p>ScheduledThreadPoolExecutor在ThreadPoolExecutor的基础上做了以下修改：</p>
-<ul>
-<li>使用DelayQueue作为任务队列</li>
-<li>获取任务的方式不同</li>
-<li>执行任务时会做一些修改</li>
-</ul>
-<p>接下来就围绕着上面三点不同点，研究ScheduledThreadPoolExecutor</p>
-<h4 id="DelayQueue作为任务队列"><a href="#DelayQueue作为任务队列" class="headerlink" title="DelayQueue作为任务队列"></a>DelayQueue作为任务队列</h4><p>具体的内容看这篇</p>
-<p>DelayQueue封装了一个PriorityQueue，这个PriorityQueue会对队列中的ScheduledFutureTask进行排序。time小的排在前面（时间早的任务先被执行）。如果两个task的taim相同就比较sequenceNumber，sequenceNumber小的排在前面。</p>
-<h4 id="获取任务的方式"><a href="#获取任务的方式" class="headerlink" title="获取任务的方式"></a>获取任务的方式</h4><p>线程池总从DelayQueue中获取流程：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ScheduledThreadPool_flow.png" alt=""></p>
-<ol>
-<li>线程1从DelayQueue中获取已到期的ScheduledFutureTask</li>
-<li>线程1执行该task</li>
-<li>线程1修改该task的time变量为下一次执行的时间</li>
-<li>线程1把这个修改time后的task放回DelayQueue中</li>
-</ol>
-<h2 id="FutureTask（异步结果-部分）"><a href="#FutureTask（异步结果-部分）" class="headerlink" title="FutureTask（异步结果 部分）"></a>FutureTask（异步结果 部分）</h2><p>该类除了Future接口外还实现了Runnable接口。因此可以将FutureTask提交给线程池使用。该任务如果有多个线程尝试去执行，最终只会有一个线程可以执行，其他线程只能等待该任务执行完毕才能继续执行。</p>
-<p>FutureTask可以处于以下三种状态：</p>
-<ul>
-<li>未启动。在run()方法还没执行之前，FutureTask处于未启动状态</li>
-<li>已启动。在run()方法执行过程中，FutureTask处于已启动状态</li>
-<li>已完成。在run()方法执行完后正常结束、被取消、抛出异常。</li>
-</ul>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/FutureTask_state_change.png" alt="状态迁移示例图"><br>当FutureTask处于未启动或已启动状态，调用get()方法，会让调用线程进入阻塞状态；当FutureTask处于已完成状态，阻塞的get()方法会立即返回</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/FutureTask_perform_flow.png" alt="执行示意图"><br>不同状态下调用get/cancel方法，会有不同的影响</p>
-<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>无论是ScheduledThreadPoolExecutor还是FixedThreadExecutor等，都是ThreadPoolExecutor的特殊用法，只要把ThreadPoolExecutor搞懂，那么就不需要担心其他的特殊应用。</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(二)/" data-id="cjjzv8u7a001568vjo0cl1cf3" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
     <article id="post-《Java并发编程的艺术》之线程池(一)" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/14/《Java并发编程的艺术》之线程池(一)/" class="article-date">
@@ -341,7 +137,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjjzv8u71000s68vj2tfbv60b" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/14/《Java并发编程的艺术》之线程池(一)/" data-id="cjk0syqy9000p28vjmg24a8vz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -395,7 +191,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjjzv8u73000v68vj7yqfocpi" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之同步工具/" data-id="cjk0syqy6000n28vjfl2tg87u" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -438,10 +234,49 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjjzv8u63000768vj5cv8d7qc" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/13/《Java并发编程的艺术》之AtomicX/" data-id="cjk0syqxd000328vjju0hizpv" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-(未埋)了解阻塞队列之LinkedTransferQueue" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/" class="article-date">
+  <time datetime="2018-05-12T03:28:38.000Z" itemprop="datePublished">2018-05-12</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/">了解阻塞队列之LinkedTransferQueue</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>下次埋</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/(未埋)了解阻塞队列之LinkedTransferQueue/" data-id="cjk0syqxg000528vjjdrbzzx1" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
 
     </footer>
   </div>
@@ -535,7 +370,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjjzv8u7c001768vja4udkdqq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/12/《Java并发编程的艺术》之阻塞队列/" data-id="cjk0syqyo001628vjl37wzbff" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -858,7 +693,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjjzv8u6h000e68vjrpuvhdyu" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjk0syqyb000r28vjegjcfq9q" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -923,7 +758,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjjzv8u69000868vjpw4yeven" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjk0syqxq000e28vj2ilx60qp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -974,10 +809,49 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjjzv8u7q001k68vjkqbm5u0t" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjk0syqzc001v28vjfear60t5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-(未埋)Java动态代理解析" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/08/(未埋)Java动态代理解析/" class="article-date">
+  <time datetime="2018-05-08T14:26:42.000Z" itemprop="datePublished">2018-05-08</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/08/(未埋)Java动态代理解析/">(未埋)Java动态代理解析</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>挖个坑，有空埋</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/08/(未埋)Java动态代理解析/" data-id="cjk0syqx2000028vjr1c8joyu" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
 
     </footer>
   </div>
@@ -1036,7 +910,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjjzv8u6w000n68vj7551l1c2" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjk0syqyt001b28vjmhm883vj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -1074,7 +948,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Tag Cloud</h3>
     <div class="widget tagcloud">
-      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 15px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 15px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 12.5px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 10px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 17.5px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 10px;">设计模式</a>
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 13.33px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 18.33px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 11.67px;">设计模式</a>
     </div>
   </div>
 
@@ -1096,23 +970,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/24/(未埋)Java动态代理解析/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/25/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/24/(未埋)了解阻塞队列之PriorityBlockingQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/24/(未埋)了解阻塞队列之LinkedTransferQueue/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/24/输入输出设备/">(no title)</a>
+            <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/">存储器之高速缓冲器(Cache)(下)</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/24/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/20/存储器（八）之高速缓冲器（上）/">存储器之高速缓冲器(Cache)(上篇)</a>
           </li>
         
       </ul>

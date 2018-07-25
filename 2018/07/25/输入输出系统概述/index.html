@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>输入输出系统之概述 | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="I/O设备的发展第一阶段早期计算机采用 分散连接(指计算机各个部件间相连的方式) 的结构，如下图所示。每一个部件之间都需要连接。  以下是分散连接的抽象图  缺点：  由于一个I/O设备需要一个专用的逻辑控制电路才能连接使用，所以线路会很多很繁琐。 该结构下对I/O设备的读写基本都是串行的，会严重影响CPU的运行速度 由于I/O设备和CPU之间的耦合性过于紧密，所以对于设备的增减过于麻烦  第二阶">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="输入输出系统之概述">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="I/O设备的发展第一阶段早期计算机采用 分散连接(指计算机各个部件间相连的方式) 的结构，如下图所示。每一个部件之间都需要连接。  以下是分散连接的抽象图  缺点：  由于一个I/O设备需要一个专用的逻辑控制电路才能连接使用，所以线路会很多很繁琐。 该结构下对I/O设备的读写基本都是串行的，会严重影响CPU的运行速度 由于I/O设备和CPU之间的耦合性过于紧密，所以对于设备的增减过于麻烦  第二阶">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/CPU%E5%92%8CIO%E8%AE%BE%E5%A4%87%E7%9A%84%E8%81%94%E7%B3%BB%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E6%8C%87%E4%BB%A4%E7%9A%84%E4%B8%80%E8%88%AC%E6%A0%BC%E5%BC%8F.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%80%9A%E9%81%93%E6%8C%87%E4%BB%A4.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E8%AE%BE%E5%A4%87%E8%AF%BB%E6%B5%81%E7%A8%8B%E4%B9%8B%E5%BC%82%E6%AD%A5%E5%BA%94%E7%AD%94%E8%81%94%E7%BB%9C.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E5%86%99%E6%B5%81%E7%A8%8B%E4%B9%8B%E5%BC%82%E6%AD%A5%E5%BA%94%E7%AD%94%E8%81%94%E7%BB%9C.png">
+<meta property="og:updated_time" content="2018-07-25T07:15:48.092Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="输入输出系统之概述">
+<meta name="twitter:description" content="I/O设备的发展第一阶段早期计算机采用 分散连接(指计算机各个部件间相连的方式) 的结构，如下图所示。每一个部件之间都需要连接。  以下是分散连接的抽象图  缺点：  由于一个I/O设备需要一个专用的逻辑控制电路才能连接使用，所以线路会很多很繁琐。 该结构下对I/O设备的读写基本都是串行的，会严重影响CPU的运行速度 由于I/O设备和CPU之间的耦合性过于紧密，所以对于设备的增减过于麻烦  第二阶">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-输入输出系统概述" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/" class="article-date">
+  <time datetime="2018-07-25T05:38:56.000Z" itemprop="datePublished">2018-07-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      输入输出系统之概述
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="I-O设备的发展"><a href="#I-O设备的发展" class="headerlink" title="I/O设备的发展"></a>I/O设备的发展</h1><h2 id="第一阶段"><a href="#第一阶段" class="headerlink" title="第一阶段"></a>第一阶段</h2><p>早期计算机采用 <strong>分散连接(指计算机各个部件间相连的方式)</strong> 的结构，如下图所示。每一个部件之间都需要连接。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png" alt="分散连接"></p>
+<p>以下是分散连接的抽象图</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/CPU%E5%92%8CIO%E8%AE%BE%E5%A4%87%E7%9A%84%E8%81%94%E7%B3%BB%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5.png" alt="CPU和IO设备的联系-第一阶段"></p>
+<p>缺点：</p>
+<ol>
+<li>由于一个I/O设备需要一个专用的逻辑控制电路才能连接使用，所以线路会很多很繁琐。</li>
+<li>该结构下对I/O设备的读写基本都是串行的，会严重影响CPU的运行速度</li>
+<li>由于I/O设备和CPU之间的耦合性过于紧密，所以对于设备的增减过于麻烦</li>
+</ol>
+<h2 id="第二阶段"><a href="#第二阶段" class="headerlink" title="第二阶段"></a>第二阶段</h2><p>这个阶段计算机采用 <strong>总线连接</strong>的结构，(这里关注点在于I/O设备，所以拿单总线结构距离)。如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5%E4%B9%8B%E5%8D%95%E6%80%BB%E7%BA%BF%E8%BF%9E%E6%8E%A5.png" alt="单总线连接"></p>
+<p>这个阶段I/O设备通过 <strong>接口</strong> 挂在在总线上与CPU相连。I/O接口通常包含 <strong>数据通路</strong>、 <strong>控制通路</strong> 两个部分：</p>
+<ul>
+<li>数据通路：用于缓冲数据，可以进行串-并转换，匹配I/O设备和CPU的速度。</li>
+<li>控制通路：用于接收I/O指令</li>
+</ul>
+<p>这个阶段相比第一阶段，补足了缺点，并让CPU和I/O设备并发处理的时间更多，但是还不能做到完全的并发处理</p>
+<h2 id="第三阶段"><a href="#第三阶段" class="headerlink" title="第三阶段"></a>第三阶段</h2><p>这个阶段更适用于I/O设备数量繁多的大型计算机，即在CPU和I/O接口之间又加入了 <strong>通道</strong>，通道用于负责管理整个I/O过程。当通道接收到CPU的指令后，先从主存中取出通道程序，然后单独执行，直至I/O设备输入或输出完毕，再通知CPU完成。这个过程不需要CPU参与，就大大提高了CPU和I/O设备的并行能力。</p>
+<h2 id="第四阶段"><a href="#第四阶段" class="headerlink" title="第四阶段"></a>第四阶段</h2><p>采用I/O处理机，I/O处理机又称 <strong>外围处理机</strong>，其相当于一个小型CPU，基本是独立于CPU进行工作的</p>
+<h1 id="输入输出系统的组成"><a href="#输入输出系统的组成" class="headerlink" title="输入输出系统的组成"></a>输入输出系统的组成</h1><p>输入输出系统主要包含两个部分：I/O软件、I/O硬件</p>
+<h2 id="I-O软件"><a href="#I-O软件" class="headerlink" title="I/O软件"></a>I/O软件</h2><h3 id="I-O指令"><a href="#I-O指令" class="headerlink" title="I/O指令"></a>I/O指令</h3><p>I/O指令时CPU指令集的一部分，如下图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E6%8C%87%E4%BB%A4%E7%9A%84%E4%B8%80%E8%88%AC%E6%A0%BC%E5%BC%8F.png" alt="I/O指令"></p>
+<ul>
+<li>操作码：标明该指令是 I/O指令还是其他指令</li>
+<li>命令码： 标明该指令具体做什么事，比如从I/O设备取出数据到CPU里、或者将数据送到I/O设备里</li>
+<li>设备码：标明要处理的目标对象</li>
+</ul>
+<h3 id="通道指令"><a href="#通道指令" class="headerlink" title="通道指令"></a>通道指令</h3><p>通道指令不是CPU指令集的一部分，通道指令是为拥有通道的I/O系统专门设置的指令，这类指令结构通常如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%80%9A%E9%81%93%E6%8C%87%E4%BB%A4.png" alt="通道指令"></p>
+<p>该指令通常存放再主存中，当需要运行时，由通道从主存中取出并执行。通道程序即由通道指令组成，它完成了某种外围设备与主存之间传送信息的操作。</p>
+<h3 id="区别"><a href="#区别" class="headerlink" title="区别"></a>区别</h3><p>通道是通道自身的指令，用来执行I/O操作；<br>I/O指令是CPU指令系统的一部分，是CPU用来控制输入输出的操作命令。<br>在有通道结构的计算机中，I/O指令不实现I/O数据传输，主要是用于启动、暂停I/O设备；或者查询通道和I/O设备的状态及控制通道所做的其他操作。</p>
+<p>一旦CPU启动了I/O设备后，就由通道接管CPU对I/O设备的管理。</p>
+<h2 id="I-O硬件"><a href="#I-O硬件" class="headerlink" title="I/O硬件"></a>I/O硬件</h2><p>通常包括接口模块和I/O设备两大部分</p>
+<h1 id="I-O设备与主机的联系方式"><a href="#I-O设备与主机的联系方式" class="headerlink" title="I/O设备与主机的联系方式"></a>I/O设备与主机的联系方式</h1><p>这个部分主要解决三个部分：</p>
+<ul>
+<li>设备地址</li>
+<li>设备选择</li>
+<li>传送方式</li>
+<li>CPU和设备间的传输方式</li>
+</ul>
+<h2 id="设备地址"><a href="#设备地址" class="headerlink" title="设备地址"></a>设备地址</h2><ul>
+<li><p>统一编址：<br>将主存划分一部分地址出来作为设备地址，比如在64K地址的存储空间中，划出8K地址作为I/O设备的地址，只要访问的地址在这8K范围内，就是对I/O设备的访问。</p>
+</li>
+<li><p>单独编址<br>单独设置一个存储空间作为I/O设备的地址，使用专用的指令来存储。</p>
+</li>
+</ul>
+<h2 id="设备选择"><a href="#设备选择" class="headerlink" title="设备选择"></a>设备选择</h2><p>用设备选择电路识别是否被选中</p>
+<h2 id="传送方式"><a href="#传送方式" class="headerlink" title="传送方式"></a>传送方式</h2><ul>
+<li>串行</li>
+<li>并行</li>
+</ul>
+<h2 id="联络方式"><a href="#联络方式" class="headerlink" title="联络方式"></a>联络方式</h2><h3 id="立即响应"><a href="#立即响应" class="headerlink" title="立即响应"></a>立即响应</h3><p>信号一到，立即响应</p>
+<h3 id="异步工作-应答信号"><a href="#异步工作-应答信号" class="headerlink" title="异步工作 + 应答信号"></a>异步工作 + 应答信号</h3><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E8%AE%BE%E5%A4%87%E8%AF%BB%E6%B5%81%E7%A8%8B%E4%B9%8B%E5%BC%82%E6%AD%A5%E5%BA%94%E7%AD%94%E8%81%94%E7%BB%9C.png" alt="I/O设备读流程"></p>
+<ol>
+<li>在读过程中，I/O接口发送 <code>READY</code> 信号 给 I/O设备</li>
+<li>I/O设备收到信号后，从I/O接口中取出数据，并回应一个 <code>Strobe</code> 信号给I/O接口</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E5%86%99%E6%B5%81%E7%A8%8B%E4%B9%8B%E5%BC%82%E6%AD%A5%E5%BA%94%E7%AD%94%E8%81%94%E7%BB%9C.png" alt="I/O设备写流程"></p>
+<ol>
+<li>在写过程中，I/O设备发送数据到I/O接口中，并发送信号<code>Strobe</code></li>
+<li>I/O接口收到信号后，通知CPU中断处理，然后返回<code>READY</code>信号给I/O设备</li>
+</ol>
+<h1 id="I-O设备的控制方式"><a href="#I-O设备的控制方式" class="headerlink" title="I/O设备的控制方式"></a>I/O设备的控制方式</h1><h2 id="程序查询控制"><a href="#程序查询控制" class="headerlink" title="程序查询控制"></a>程序查询控制</h2><h2 id="程序中断控制"><a href="#程序中断控制" class="headerlink" title="程序中断控制"></a>程序中断控制</h2><h2 id="DMA控制"><a href="#DMA控制" class="headerlink" title="DMA控制"></a>DMA控制</h2>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjk0syr2y003s28vjw0gro3ys" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">存储器之高速缓冲器(Cache)(下)</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 13.33px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 18.33px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 11.67px;">设计模式</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/25/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/">存储器之高速缓冲器(Cache)(下)</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/20/存储器（八）之高速缓冲器（上）/">存储器之高速缓冲器(Cache)(上篇)</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
