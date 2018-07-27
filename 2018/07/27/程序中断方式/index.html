@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>程序中断方式 | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="概述计算机在执行程序得过程中，当出现异常情况或特殊请求时，计算机停止现行程序（（正在运行的程序）），转向对这些异常情况或特殊请求得处理，处理后再返回到现行程序的间断处。 由于CPU和IO设备速度的不匹配，CPU通常要等待一段时间，才能实现主机与IO设备之间的信息交换。所以当CPU启动了IO设备之后，就转去执行现行程序，让IO设备准备好后主动通知（中断）CPU，CPU转去执行中断程序，进行数据交换。">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="程序中断方式">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/27/程序中断方式/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="概述计算机在执行程序得过程中，当出现异常情况或特殊请求时，计算机停止现行程序（（正在运行的程序）），转向对这些异常情况或特殊请求得处理，处理后再返回到现行程序的间断处。 由于CPU和IO设备速度的不匹配，CPU通常要等待一段时间，才能实现主机与IO设备之间的信息交换。所以当CPU启动了IO设备之后，就转去执行现行程序，让IO设备准备好后主动通知（中断）CPU，CPU转去执行中断程序，进行数据交换。">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2FIO%E4%B8%AD%E6%96%AD%E6%89%93%E5%8D%B0%E6%9C%BA%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2FD%E3%80%81INTR%E3%80%81MASK%E4%B8%89%E8%80%85%E7%9A%84%E4%BF%A1%E6%81%AF%E5%85%B3%E7%B3%BB.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E9%93%BE%E5%BC%8F%E6%8E%92%E9%98%9F%E5%99%A8.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E9%93%BE%E5%BC%8F%E6%8E%92%E9%98%9F%E5%99%A8%E4%B8%BE%E4%BE%8B%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-07-27T15:29:27.460Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="程序中断方式">
+<meta name="twitter:description" content="概述计算机在执行程序得过程中，当出现异常情况或特殊请求时，计算机停止现行程序（（正在运行的程序）），转向对这些异常情况或特殊请求得处理，处理后再返回到现行程序的间断处。 由于CPU和IO设备速度的不匹配，CPU通常要等待一段时间，才能实现主机与IO设备之间的信息交换。所以当CPU启动了IO设备之后，就转去执行现行程序，让IO设备准备好后主动通知（中断）CPU，CPU转去执行中断程序，进行数据交换。">
+<meta name="twitter:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2FIO%E4%B8%AD%E6%96%AD%E6%89%93%E5%8D%B0%E6%9C%BA%E7%A4%BA%E6%84%8F%E5%9B%BE.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-程序中断方式" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/27/程序中断方式/" class="article-date">
+  <time datetime="2018-07-27T07:02:53.000Z" itemprop="datePublished">2018-07-27</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      程序中断方式
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>计算机在执行程序得过程中，当出现异常情况或特殊请求时，计算机停止现行程序（（正在运行的程序）），转向对这些异常情况或特殊请求得处理，处理后再返回到现行程序的间断处。</p>
+<p>由于CPU和IO设备速度的不匹配，CPU通常要等待一段时间，才能实现主机与IO设备之间的信息交换。所以当CPU启动了IO设备之后，就转去执行现行程序，让IO设备准备好后主动通知（中断）CPU，CPU转去执行中断程序，进行数据交换。这就是IO中断。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2FIO%E4%B8%AD%E6%96%AD%E6%89%93%E5%8D%B0%E6%9C%BA%E7%A4%BA%E6%84%8F%E5%9B%BE.png" alt="打印机的中断]"></p>
+<h1 id="中断方式的电路"><a href="#中断方式的电路" class="headerlink" title="中断方式的电路"></a>中断方式的电路</h1><h2 id="中断请求触发器和中断屏蔽触发器"><a href="#中断请求触发器和中断屏蔽触发器" class="headerlink" title="中断请求触发器和中断屏蔽触发器"></a>中断请求触发器和中断屏蔽触发器</h2><p>每台外部设备都必须配置一个中断请求触发器INTR，当其为“1”时，表示该设备向CPU提出中断请求。同时也需要一个配对的 <strong>中断屏蔽器</strong>，用于屏蔽一些低优先级的中断请求（面对多个中断请求时），当它为“1”时，表示封锁其中断源。其电路逻辑图如下所示</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2FD%E3%80%81INTR%E3%80%81MASK%E4%B8%89%E8%80%85%E7%9A%84%E4%BF%A1%E6%81%AF%E5%85%B3%E7%B3%BB.png" alt="接口电路中D、INTR、MASK和中断查询信号的关系"></p>
+<p>当设备准备就绪D为“1”、且该设备MASK不为“0”时，由CPU在指令执行结束阶段时，由CPU发出中断查询信号，将INTR设置为“1”</p>
+<h2 id="排队器"><a href="#排队器" class="headerlink" title="排队器"></a>排队器</h2><p>当多个中断源同时向CPU发出请求时，CPU会根据中断源的不同性质对其排队，给予不同等级的优先权，并按优先级等级给予响应。</p>
+<blockquote>
+<p>通常来说速度越快的IO设备，优先级越高，因为不及时响应高速的IO请求，信息可能会发生丢失。</p>
+</blockquote>
+<p>排队器分为硬件排队器和软件排队器：这里只介绍硬件排队器，下图是硬件排队器的电路</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E9%93%BE%E5%BC%8F%E6%8E%92%E9%98%9F%E5%99%A8.png" alt="链式排队器"></p>
+<p>当各个中断源无请求时，各个INTR<sup>-</sup>均为高电平。一旦某个中断源提出中断请求时，就会让优先级低的中断源变为低电平，封锁其中的中断请求。比如当2、3号中断源同时有请求时（INTR2<sup>-</sup>、INTR3<sup>-</sup>均为0），流程如图所示</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E9%93%BE%E5%BC%8F%E6%8E%92%E9%98%9F%E5%99%A8%E4%B8%BE%E4%BE%8B%E5%9B%BE.png" alt="链式排队器距离图"></p>
+<p>INTR<sub>i</sub><sup>-</sup> 没有提出请求时均为高电平，根据例子，二、三号中断源提出请求，二、三号输入低电压，由于二号经过与非门输出高电压，经过三号的非门，输出低电压，让三号无法被选。此时因为INTP<sub>1</sub><sup>‘</sup>和INTP<sub>2</sub><sup>‘</sup>输出都为高电压，又通过INTP<sub>i</sub>来和输出信号进行与运算，最终输出INTP<sub>2</sub></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序中断方式/" data-id="cjk45ah9f003m7ovjbyzuu3wk" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/27/程序查询方式/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">程序查询方式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 13.33px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 18.33px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 11.67px;">设计模式</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>

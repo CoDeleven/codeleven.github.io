@@ -20,7 +20,10 @@
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%80%9A%E9%81%93%E6%8C%87%E4%BB%A4.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E8%AE%BE%E5%A4%87%E8%AF%BB%E6%B5%81%E7%A8%8B%E4%B9%8B%E5%BC%82%E6%AD%A5%E5%BA%94%E7%AD%94%E8%81%94%E7%BB%9C.png">
 <meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E5%86%99%E6%B5%81%E7%A8%8B%E4%B9%8B%E5%BC%82%E6%AD%A5%E5%BA%94%E7%AD%94%E8%81%94%E7%BB%9C.png">
-<meta property="og:updated_time" content="2018-07-25T07:15:48.092Z">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F%E6%B5%81%E7%A8%8B%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-07-25T13:58:19.164Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="输入输出系统之概述">
 <meta name="twitter:description" content="I/O设备的发展第一阶段早期计算机采用 分散连接(指计算机各个部件间相连的方式) 的结构，如下图所示。每一个部件之间都需要连接。  以下是分散连接的抽象图  缺点：  由于一个I/O设备需要一个专用的逻辑控制电路才能连接使用，所以线路会很多很繁琐。 该结构下对I/O设备的读写基本都是串行的，会严重影响CPU的运行速度 由于I/O设备和CPU之间的耦合性过于紧密，所以对于设备的增减过于麻烦  第二阶">
@@ -157,11 +160,24 @@
 <li>在写过程中，I/O设备发送数据到I/O接口中，并发送信号<code>Strobe</code></li>
 <li>I/O接口收到信号后，通知CPU中断处理，然后返回<code>READY</code>信号给I/O设备</li>
 </ol>
-<h1 id="I-O设备的控制方式"><a href="#I-O设备的控制方式" class="headerlink" title="I/O设备的控制方式"></a>I/O设备的控制方式</h1><h2 id="程序查询控制"><a href="#程序查询控制" class="headerlink" title="程序查询控制"></a>程序查询控制</h2><h2 id="程序中断控制"><a href="#程序中断控制" class="headerlink" title="程序中断控制"></a>程序中断控制</h2><h2 id="DMA控制"><a href="#DMA控制" class="headerlink" title="DMA控制"></a>DMA控制</h2>
+<h3 id="同步工作采用同步时钟"><a href="#同步工作采用同步时钟" class="headerlink" title="同步工作采用同步时钟"></a>同步工作采用同步时钟</h3><h1 id="I-O设备的控制方式"><a href="#I-O设备的控制方式" class="headerlink" title="I/O设备的控制方式"></a>I/O设备的控制方式</h1><h2 id="程序查询控制"><a href="#程序查询控制" class="headerlink" title="程序查询控制"></a>程序查询控制</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png" alt="程序查询方式"></p>
+<p>该方式主要在于CPU读I/O设备状态，然后检查状态是否就绪，如果没有就绪就循环查询。该查询方式会消耗很多时间在状态检查上（一直检查），同时还会花费部分时间在数据交互上。</p>
+<h2 id="程序中断控制"><a href="#程序中断控制" class="headerlink" title="程序中断控制"></a>程序中断控制</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F.png" alt="程序中断"></p>
+<p>当CPU执行原程序时，如果遇到了I/O指令启动了I/O设备后，等待I/O接口数据缓冲区满了后，再通知CPU中断，执行中断服务程序</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%96%B9%E5%BC%8F%E6%B5%81%E7%A8%8B%E5%9B%BE.png" alt="程序中断流程图"></p>
+<p>这个控制方式相比中断方式，CPU不需要长时间轮询状态，只需要启动I/O设备后，就能转头去做其他事情。直到I/O设备发回中断请求，CPU停止做事情，转去执行中断服务程序（交换信息）。</p>
+<h2 id="DMA控制"><a href="#DMA控制" class="headerlink" title="DMA控制"></a>DMA控制</h2><p>由于程序中断在数据交换过程仍然要CPU参与，会在一定程度上影响CPU速度。</p>
+<p>DMA控制主要通过以下三个手段实现：</p>
+<ol>
+<li>主存和I/O之间架一条通路</li>
+<li>不中断现行程序</li>
+<li>周期挪用</li>
+</ol>
+
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjk0syr2y003s28vjw0gro3ys" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjk45ah9z00427ovj9t2w5m3x" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -172,19 +188,19 @@
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/27/程序查询方式/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          《七周七并发模型》第一章第一天
+          程序查询方式
         
       </div>
     </a>
   
   
-    <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/25/IO接口/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">存储器之高速缓冲器(Cache)(下)</div>
+      <div class="article-nav-title">IO接口</div>
     </a>
   
 </nav>
@@ -235,23 +251,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
           </li>
         
           <li>
             <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/">存储器之高速缓冲器(Cache)(下)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/20/存储器（八）之高速缓冲器（上）/">存储器之高速缓冲器(Cache)(上篇)</a>
           </li>
         
       </ul>

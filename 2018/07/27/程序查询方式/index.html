@@ -3,18 +3,24 @@
 <head>
   <meta charset="utf-8">
   
-  <title>Archives: 2018/4 | CoDeleven的个人博客</title>
+  <title>程序查询方式 | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="Codeleven的博客">
-<meta property="og:type" content="website">
-<meta property="og:title" content="CoDeleven的个人博客">
-<meta property="og:url" content="http://yoursite.com/GithubPages/archives/2018/04/page/2/index.html">
+  <meta name="description" content="概述程序查询方式的核心问题在于 每时每刻不断查询IO设备是否准备就绪，查询流程图如下所示  当IO设备比较多的时候，CPU会按照各个IO设备的优先级逐个查询，流程图如下所示  程序查询流程  CPU先保存自己的寄存器情况 设置计数器，即要读取多少次 设置要存放的位置的起始位置 启动IO设备 获取IO设备状态标志到CPU，检查IO设备是否准备就绪：如果准备就绪，开始读取数据，反之原地踏步 CPU执行">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="程序查询方式">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/27/程序查询方式/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="Codeleven的博客">
+<meta property="og:description" content="概述程序查询方式的核心问题在于 每时每刻不断查询IO设备是否准备就绪，查询流程图如下所示  当IO设备比较多的时候，CPU会按照各个IO设备的优先级逐个查询，流程图如下所示  程序查询流程  CPU先保存自己的寄存器情况 设置计数器，即要读取多少次 设置要存放的位置的起始位置 启动IO设备 获取IO设备状态标志到CPU，检查IO设备是否准备就绪：如果准备就绪，开始读取数据，反之原地踏步 CPU执行">
 <meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%A4%9AIO%E8%AE%BE%E5%A4%87%E7%9A%84%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%B5%81%E7%A8%8B%E5%9B%BE.png">
+<meta property="og:updated_time" content="2018-07-27T01:54:46.443Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="CoDeleven的个人博客">
-<meta name="twitter:description" content="Codeleven的博客">
+<meta name="twitter:title" content="程序查询方式">
+<meta name="twitter:description" content="概述程序查询方式的核心问题在于 每时每刻不断查询IO设备是否准备就绪，查询流程图如下所示  当IO设备比较多的时候，CPU会按照各个IO设备的优先级逐个查询，流程图如下所示  程序查询流程  CPU先保存自己的寄存器情况 设置计数器，即要读取多少次 设置要存放的位置的起始位置 启动IO设备 获取IO设备状态标志到CPU，检查IO设备是否准备就绪：如果准备就绪，开始读取数据，反之原地踏步 CPU执行">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -63,44 +69,79 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main">
-  
-  
-    
-    
-      
-      
-      <section class="archives-wrap">
-        <div class="archive-year-wrap">
-          <a href="/codeleven.github.io/archives/2018" class="archive-year">2018</a>
-        </div>
-        <div class="archives">
-    
-    <article class="archive-article archive-type-post">
-  <div class="archive-article-inner">
-    <header class="archive-article-header">
-      <a href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/" class="archive-article-date">
-  <time datetime="2018-04-04T01:13:24.000Z" itemprop="datePublished">Apr 4</time>
+        <section id="main"><article id="post-程序查询方式" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/27/程序查询方式/" class="article-date">
+  <time datetime="2018-07-27T01:28:43.000Z" itemprop="datePublished">2018-07-27</time>
 </a>
-      
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
   
-    <h1 itemprop="name">
-      <a class="archive-article-title" href="/codeleven.github.io/2018/04/04/为什么Thread-suspend和resume被弃用/">为什么Thread.suspend和resume被弃用</a>
+    <h1 class="article-title" itemprop="name">
+      程序查询方式
     </h1>
   
 
-    </header>
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h1><p>程序查询方式的核心问题在于 <strong>每时每刻不断查询IO设备是否准备就绪</strong>，查询流程图如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png" alt="程序查询方式"></p>
+<p>当IO设备比较多的时候，CPU会按照各个IO设备的优先级逐个查询，流程图如下所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%A4%9AIO%E8%AE%BE%E5%A4%87%E7%9A%84%E6%9F%A5%E8%AF%A2%E6%96%B9%E5%BC%8F.png" alt="多IO设备的查询方式"></p>
+<h1 id="程序查询流程"><a href="#程序查询流程" class="headerlink" title="程序查询流程"></a>程序查询流程</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%A8%8B%E5%BA%8F%E6%9F%A5%E8%AF%A2%E6%B5%81%E7%A8%8B%E5%9B%BE.png" alt="程序查询流程图"></p>
+<ol>
+<li>CPU先保存自己的寄存器情况</li>
+<li>设置计数器，即要读取多少次</li>
+<li>设置要存放的位置的起始位置</li>
+<li>启动IO设备</li>
+<li>获取IO设备状态标志到CPU，检查IO设备是否准备就绪：如果准备就绪，开始读取数据，反之原地踏步</li>
+<li>CPU执行IO指令，或从IO接口中的数据缓冲寄存器中读取一个数据，或者写入数据到IO接口的数据缓冲寄存器内</li>
+<li>修改主存地址</li>
+<li>修改计数器（比如从正数递减到0，或从负数递增到0）</li>
+<li>结束IO传输</li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序查询方式/" data-id="cjk45ah97003f7ovj7ps6dzkb" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
   </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/07/27/程序中断方式/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          程序中断方式
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">输入输出系统之概述</div>
+    </a>
+  
+</nav>
+
+  
 </article>
-  
-  
-    </div></section>
-  
 
-
-  <nav id="page-nav">
-    <a class="extend prev" rel="prev" href="/codeleven.github.io/archives/2018/04/">&laquo; __('prev')</a><a class="page-number" href="/codeleven.github.io/archives/2018/04/">1</a><span class="page-number current">2</span>
-  </nav>
 </section>
         
           <aside id="sidebar">

@@ -65,6 +65,153 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-ForkJoin并不是银弹" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/26/ForkJoin并不是银弹/" class="article-date">
+  <time datetime="2018-04-26T07:11:46.000Z" itemprop="datePublished">2018-04-26</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/26/ForkJoin并不是银弹/">ForkJoin并不是银弹</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>这是一段难受的排Bug的经历，ForkJoin框架的粗浅理解让我在单核服务器下发生了<strong>栈溢出</strong>，因为”ForkJoinPool.invokeAll()”的底层原理不仅会调用空闲的线程，也会调用当前的线程。如果处理不好，在单核服务器下就会发生死循环，最终产生栈溢出。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Exception in thread <span class="string">"main"</span> java.util.concurrent.ExecutionException: java.lang.St</span><br><span class="line">ackOverflowError</span><br><span class="line">        at java.util.concurrent.FutureTask.report(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.get(Unknown Source)</span><br><span class="line">        at cn.codeleven.App.main(App.java:<span class="number">20</span>)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.NativeConstructorAccessorImpl.newInstance(Unknown Source)</span><br><span class="line"></span><br><span class="line">        at sun.reflect.DelegatingConstructorAccessorImpl.newInstance(Unknown Sou</span><br><span class="line">rce)</span><br><span class="line">        at java.lang.reflect.Constructor.newInstance(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.getThrowableException(Unknown Sourc</span><br><span class="line">e)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.reportException(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.join(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.XiCiHandler.handleDocument2IPEntity(XiCiHandler.</span><br><span class="line">java:<span class="number">40</span>)</span><br><span class="line">        at cn.codeleven.Crawler.start(Crawler.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.Crawler.run(Crawler.java:<span class="number">20</span>)</span><br><span class="line">        at java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)</span><br><span class="line">        at java.util.concurrent.FutureTask.run(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)</span><br><span class="line">        at java.lang.Thread.run(Unknown Source)</span><br><span class="line">Caused by: java.lang.StackOverflowError</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>$<span class="number">1</span>.&lt;init&gt;(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline$<span class="number">3</span>.opWrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapSink(Unknown Source)</span><br><span class="line">        at java.util.stream.AbstractPipeline.wrapAndCopyInto(Unknown Source)</span><br><span class="line">        at java.util.stream.ReduceOps$ReduceOp.evaluateSequential(Unknown Source</span><br><span class="line">)</span><br><span class="line">        at java.util.stream.AbstractPipeline.evaluate(Unknown Source)</span><br><span class="line">        at java.util.stream.ReferencePipeline.collect(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">34</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br><span class="line">        at java.util.concurrent.RecursiveTask.exec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doExec(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.doInvoke(Unknown Source)</span><br><span class="line">        at java.util.concurrent.ForkJoinTask.invokeAll(Unknown Source)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">36</span>)</span><br><span class="line">        at cn.codeleven.handler.MyTask.compute(MyTask.java:<span class="number">13</span>)</span><br></pre></td></tr></table></figure></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/26/ForkJoin并不是银弹/" data-id="cjk45ah5700087ovjyov9rdn2" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-记一次List.subList的错误" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/" class="article-date">
+  <time datetime="2018-04-24T14:31:43.000Z" itemprop="datePublished">2018-04-24</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/24/记一次List.subList的错误/">标题没想好，不过一定是写List集合的</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>以后有空完整了解下ArrayList和相关集合<br>这次先解决一个这样的问题，看下面代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">List&lt;Integer&gt; foo = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="keyword">for</span>(<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">10</span>; ++i)&#123;</span><br><span class="line">    foo.add(i);</span><br><span class="line">&#125;</span><br><span class="line">List&lt;Integer&gt; foo1 = foo.subList(<span class="number">0</span>, <span class="number">3</span>);</span><br><span class="line">List&lt;Integer&gt; foo2 = foo.subList(<span class="number">3</span>, <span class="number">5</span>);</span><br><span class="line">foo2.add(<span class="number">1</span>);</span><br><span class="line">System.out.println(foo1.size());</span><br></pre></td></tr></table></figure>
+<p>读者感觉是否挺正常的，没有<strong>迭代</strong>，没有在<strong>多线程</strong>下，单纯的给<em>foo1</em>列表添加一个值好像没什么问题。但是在运行后会抛出“ConcurrentModificationException”，这就很气了。博主因为这个问题思来想去，从<strong>迭代</strong>到<strong>多线程</strong>，每个角度都思考过，后来进入源码一看<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SubList是ArrayList的内部类</span></span><br><span class="line"><span class="comment">/* parent = ArrayList.this</span></span><br><span class="line"><span class="comment"> * offset = 0</span></span><br><span class="line"><span class="comment"> * 剩下两个就不用解释了</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">SubList(AbstractList&lt;E&gt; parent,</span><br><span class="line">        <span class="keyword">int</span> offset, <span class="keyword">int</span> fromIndex, <span class="keyword">int</span> toIndex) &#123;</span><br><span class="line">    <span class="keyword">this</span>.parent = parent;</span><br><span class="line">    <span class="keyword">this</span>.parentOffset = fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.offset = offset + fromIndex;</span><br><span class="line">    <span class="keyword">this</span>.size = toIndex - fromIndex;</span><br><span class="line">    <span class="comment">// 注意，这里从ArrayList.this获取了modCount</span></span><br><span class="line">    <span class="keyword">this</span>.modCount = ArrayList.<span class="keyword">this</span>.modCount;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>在进入add等修改方法后，可以看到最终递增modCount的方法<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">ensureExplicitCapacity</span><span class="params">(<span class="keyword">int</span> minCapacity)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 可以看到，这里递增的只是ArrayList.this的modCount</span></span><br><span class="line">    modCount++;</span><br><span class="line">    <span class="comment">// overflow-conscious code</span></span><br><span class="line">    <span class="keyword">if</span> (minCapacity - elementData.length &gt; <span class="number">0</span>)</span><br><span class="line">        grow(minCapacity);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>所以通过<em>size()</em>，<em>add()</em>等方法对<em>SubList内部类</em>的修改会引起<em>外部类的modCount变化</em>，但是<em>其他内部类的modCount</em> (作修改的内部类的modCount会改变)不改变就会产生不一致，所以抛出这个异常</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/24/记一次List.subList的错误/" data-id="cjk45ah9j003s7ovj2s5ozfcn" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-了解AQS之Condition" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/04/06/了解AQS之Condition/" class="article-date">
+  <time datetime="2018-04-06T01:54:53.000Z" itemprop="datePublished">2018-04-06</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/04/06/了解AQS之Condition/">了解AQS之Condition</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在实现生产队列和消费队列时，第一个想到的大多数都是<em>Object.wait()</em> 和 <em>Object.notify()</em> ，而今天要介绍一个<em>ReentrantLock</em> 自带的一个工具<em>Condition</em>。它相比<em>Object</em> 在唤醒方面多了一些可控性，阻塞方面多了一个限时功能。两者的等待唤醒机制几乎一致，宏观流程图如下所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SimpleConditionObjectWaitFlow.png" alt="宏观的Condition和Object的等待唤醒机制"></p>
+<ol>
+<li>在当前线程A获取到锁</li>
+<li>调用对象的等待方法（AQS是Condition.await(),Object是Object.wait()），并进入阻塞</li>
+<li>其他线程B获取锁（是不是发现了问题，为什么B线程可以获取锁？）</li>
+<li>B线程唤醒阻塞的A线程（AQS是Condition.signal()，Object是Object.notify()）；B线程释放锁（如果A线程解除阻塞会做什么？）</li>
+<li>A线程尝试获取锁（为什么要尝试获取锁？）</li>
+<li>A线程执行下文</li>
+<li>A线程释放锁</li>
+</ol>
+<p>由于Object的实现机制涉及到<em>native方法</em>，所以这里趁机讲解一波AQS的实现过程，我猜测两者的实现原理不会相差太大。这里根据宏观流程图的①、②、③等序号分别进行解释</p>
+<h2 id="流程详解"><a href="#流程详解" class="headerlink" title="流程详解"></a>流程详解</h2><ol>
+<li>当<em>Condition</em>对象调用了<em>await()</em> 方法时，<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/whenWait%28%291.png" alt="*await()*方法的执行细节"></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">await</span><span class="params">()</span> <span class="keyword">throws</span> InterruptedException </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (Thread.interrupted())</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> InterruptedException();</span><br><span class="line">    <span class="comment">// 将当前线程封装成结点，加入Condition队列尾部，类似enq()方法，但是在锁内进行await()，不需要CAS</span></span><br><span class="line">    Node node = addConditionWaiter();</span><br><span class="line">    <span class="comment">// 释放当前线程持有的所有锁，在这个操作之后很有可能出现竞态条件</span></span><br><span class="line">    <span class="keyword">int</span> savedState = fullyRelease(node);</span><br><span class="line">    <span class="keyword">int</span> interruptMode = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 结点在同步队列里时就返回true</span></span><br><span class="line">    <span class="comment">// 结点在CONDITION队列里时就返回false</span></span><br><span class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node)) &#123;</span><br><span class="line">        <span class="comment">// 当唤醒线程调用unlock()时就会解除该线程的等待</span></span><br><span class="line">        LockSupport.park(<span class="keyword">this</span>);</span><br><span class="line">        <span class="comment">/* 第一种情况，该线程被中断，就会将interruptMode设置为THROW_IE</span></span><br><span class="line"><span class="comment">         * 第二种情况，该线程被中断且在检查过程中状态改变（比如中断时，被唤醒），就会将mode设置为REINTERRUPT</span></span><br><span class="line"><span class="comment">         * 第三种情况，该线程被正常signal(notify)，此时结点状态值为0</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> ((interruptMode = checkInterruptWhileWaiting(node)) != <span class="number">0</span>)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 加入获取锁的 Sync队列中，获取成功时判断一下mode类型</span></span><br><span class="line">    <span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</span><br><span class="line">        interruptMode = REINTERRUPT;</span><br><span class="line">    <span class="comment">// 如果当前结点有后续结点，那么就清理一下链表</span></span><br><span class="line">    <span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></span><br><span class="line">        unlinkCancelledWaiters();    </span><br><span class="line">    <span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</span><br><span class="line">        <span class="comment">// 这里判断事抛出异常还是简单的中断</span></span><br><span class="line">        reportInterruptAfterWait(interruptMode);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>在看到<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">```java</span><br><span class="line">final boolean isOnSyncQueue(Node node) &#123;</span><br><span class="line">    // node是CONDITION状态 或者 是CONDITION队列里的第一个</span><br><span class="line">    if (node.waitStatus == Node.CONDITION || node.prev == null)</span><br><span class="line">        return false;</span><br><span class="line">    // 该状态一般发生在两个以上Condition处于wait且被唤醒一个</span><br><span class="line">    if (node.next != null) </span><br><span class="line">        return true;</span><br><span class="line">    /*</span><br><span class="line">     * node.prev can be non-null, but not yet on queue because</span><br><span class="line">     * the CAS to place it on queue can fail. So we have to</span><br><span class="line">     * traverse from tail to make sure it actually made it.  It</span><br><span class="line">     * will always be near the tail in calls to this method, and</span><br><span class="line">     * unless the CAS failed (which is unlikely), it will be</span><br><span class="line">     * there, so we hardly ever traverse much.</span><br><span class="line">     */</span><br><span class="line">     // 当前结点是尾结点返回true；反之返回false</span><br><span class="line">    return findNodeFromTail(node);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol start="2">
+<li><p>当其他线程唤醒等待线程，因为这部分比较简单就省略了前面的内容，讲一下重要的地方。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">transferForSignal</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 更改node结点的状态；如果更改失败就是已经取消了</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (!compareAndSetWaitStatus(node, Node.CONDITION, <span class="number">0</span>))</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 将当前结点接入Sync队列，让这个结点加入等待；如果结点处于取消状态或者CAS</span></span><br><span class="line"><span class="comment">     * 设置状态失败，都会重新唤醒结点所在的线程，重新来过（在这一步会有一些不影</span></span><br><span class="line"><span class="comment">     * 响整体的小错误）</span></span><br><span class="line"><span class="comment">     */</span> </span><br><span class="line">    Node p = enq(node);</span><br><span class="line">    <span class="keyword">int</span> ws = p.waitStatus;</span><br><span class="line">    <span class="comment">// 如果这边修改状态失败了，那么就直接唤醒线程；否则交给release()方法来唤醒</span></span><br><span class="line">    <span class="keyword">if</span> (ws &gt; <span class="number">0</span> || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))</span><br><span class="line">        LockSupport.unpark(node.thread);</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>阻塞线程被唤醒后，检查结点状态，然后设置interruptMode，最后进入争夺锁的过程里</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">checkInterruptWhileWaiting</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">     <span class="comment">// 判断是否有中断</span></span><br><span class="line">     <span class="keyword">return</span> Thread.interrupted() ?</span><br><span class="line">         (transferAfterCancelledWait(node) ? THROW_IE : REINTERRUPT) :</span><br><span class="line">         <span class="number">0</span>;</span><br><span class="line"> &#125;</span><br><span class="line"><span class="function"><span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">transferAfterCancelledWait</span><span class="params">(Node node)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (compareAndSetWaitStatus(node, Node.CONDITION, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="comment">// 加入Sync队列，这一步做了signal()做的事</span></span><br><span class="line">        enq(node);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 该线程先被signal()后又被中断，我们就等该signal()流程结束。</span></span><br><span class="line"><span class="comment">     * 因为transfer过程不会太长，就选择自选</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">while</span> (!isOnSyncQueue(node))</span><br><span class="line">        Thread.yield();</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 这里是await()的后半部分</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// 加入锁的获取，因为后半部分还有lock.unlock()，所以必须要重新获取锁</span></span><br><span class="line"><span class="keyword">if</span> (acquireQueued(node, savedState) &amp;&amp; interruptMode != THROW_IE)</span><br><span class="line">    interruptMode = REINTERRUPT;</span><br><span class="line"><span class="keyword">if</span> (node.nextWaiter != <span class="keyword">null</span>) <span class="comment">// clean up if cancelled</span></span><br><span class="line">    unlinkCancelledWaiters();</span><br><span class="line"><span class="keyword">if</span> (interruptMode != <span class="number">0</span>)</span><br><span class="line">    <span class="comment">// 如果该线程是被中断的，那么就重新抛出异常</span></span><br><span class="line">    <span class="comment">// 如果该线程是被唤醒且中断的，那么就重新设置中断标志，交给程序员自己处理</span></span><br><span class="line">    reportInterruptAfterWait(interruptMode);</span><br></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>AQS的锁机制主要依靠双向的链表，而Condition的等待唤醒机制只需要普通链表即可实现。<br>这里对整体流程又进行了个总结。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/summary4AQS_Condition.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/04/06/了解AQS之Condition/" data-id="cjk45ah6b001j7ovjftmrq31h" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-了解AQS之ExclusiveLock" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/04/05/了解AQS之ExclusiveLock/" class="article-date">
@@ -179,7 +326,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjk0syqz8001s28vj2thx19o5" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解AQS之ExclusiveLock/" data-id="cjk45ah8b002r7ovjvlk9ahoz" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -255,7 +402,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjk0syr2c003e28vjgsk2sebz" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/深入Unsafe/" data-id="cjk45ah97003d7ovj8tp4ysu1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -314,7 +461,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjk0syqzk002028vjbr4aqv0o" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解LockSupport的原理/" data-id="cjk45ah87002n7ovj70aaq4nc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -378,7 +525,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjk0syqzg001x28vjbyk4pkpd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/05/了解HashMap原理/" data-id="cjk45ah8b002p7ovjpjeqxmy4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li></ul>
@@ -430,7 +577,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjk0syqz6001q28vjxqp7g44u" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/04/为什么Thread-suspend和resume被弃用/" data-id="cjk45ah6b001g7ovjkp6i09fq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -490,23 +637,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
           </li>
         
           <li>
             <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/">存储器之高速缓冲器(Cache)(下)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/20/存储器（八）之高速缓冲器（上）/">存储器之高速缓冲器(Cache)(上篇)</a>
           </li>
         
       </ul>

@@ -65,6 +65,316 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-存储器（五）之校验码（上）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/" class="article-date">
+  <time datetime="2018-07-17T00:28:13.000Z" itemprop="datePublished">2018-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/">存储器之校验码（上）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在数据传输过程中，难免会有数据出现问题，所以需要及时发现错误和纠错。</p>
+<h1 id="校验码的相关术语"><a href="#校验码的相关术语" class="headerlink" title="校验码的相关术语"></a>校验码的相关术语</h1><ul>
+<li>编码的距离：一串代码A 和 另一串代码B 相比较，两串代码相同位置上的不同位的个数称为码组的距离。</li>
+<li><p>编码的最小距离（码距）：任意两组代码之间的最小二进制位数的差异。</p>
+   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">根据纠错理论得出如下得公式：</span><br><span class="line">L - 1 = D + C</span><br></pre></td></tr></table></figure>
+<p>编码最小距离（L）越大，能检测的位数（D） 和 能纠错的位数（C）就越大，且纠错能力恒小于等于检错能力。</p>
+</li>
+</ul>
+<h2 id="什么是检测和纠错"><a href="#什么是检测和纠错" class="headerlink" title="什么是检测和纠错"></a>什么是检测和纠错</h2><ul>
+<li>检测：当收到的信息按一定规则推导时，发现一个以上的错误位置，而通过已知信息无法推导孰对孰错，只能是知道有错误而已。</li>
+<li>纠错：当收到的信息按一定规则推导时，发现错误位置且能纠正错误位置。<br>这两方面的内容基本都是通过 <strong>添加相关冗余位</strong> 来实现的。</li>
+</ul>
+<p>以下是<a href="http://www.voidcn.com/article/p-kskihivf-gu.html" target="_blank" rel="noopener">详解差错控制之码距、检错与纠错</a>一文看到的例子，觉得讲的很透彻。</p>
+<blockquote>
+<p>有很多网友和学员不明白，为什么有些编码能检查出错误，而不能纠正错误?下面来举一个生活当中简单的例子来说明这一点。若希赛公司发出一个通知：“明天14:00~16:00开会”，但在通知过程中由于行政部工作人员疏忽，变成了“明天10:00~16:00开会”。员工收到这个错误通知后由于无法判断其正确与否，就会按这个错误时间去安排与组织。</p>
+</blockquote>
+<blockquote>
+<p>为了使接收者能判断正误，可以在通知内容中增加“下午”两个字，即改为：“明天下午14:00~16:00开会”。这时，如果仍错为：“明天下午10:00~16:00开会，则收到此通知后，根据“下午”与“10:00”信息即可判断出通知发生了错误。但仍不能纠正其错误，因为无法判断是“下午”与“10:00”哪一信息出错，即无法判断公司原来制定开会的具体时间。这时，接收者可以告诉发送方再发一次通知(员工向行政部人员询问，行政部再次确认会议时间)，这就是检错重发(这也就是我们所说的能检错，但无法纠错)。</p>
+</blockquote>
+<blockquote>
+<p>为了实现不但能判断通知准确性(检错)，同时还能正确判断会议开始的具体时间(纠错)，行政部可以把通知内容再增加“两个小时”四个字，即改为：“明天下午14:00~16:00开会两个小时”。这样，如果其中“14:00”错为“10:00”，不但能判断出错误，同时还能纠正错误，因为其中增加的“两个小时”这个标识可以判断出正确的时间为“14:00~16:00”。当然，这显然也增加了信息的冗余，降低了数据处理的效率。但随着带宽的不断提高，数据执行与处理的能力日益增强，可靠性与效率的均衡，这是值得的。</p>
+</blockquote>
+<h2 id="码距和纠错检错有什么关系？"><a href="#码距和纠错检错有什么关系？" class="headerlink" title="码距和纠错检错有什么关系？"></a>码距和纠错检错有什么关系？</h2><p>规则1. “A”字母代表1，“B”字母代表0。</p>
+<p>1) 当发送端发送“1” 和 “0”，接收端收到“1” 和 “1”时。接收端无法通过规则推导判断孰对孰错。<br>2) 现在在规则1的基础上增加规则2：每次发送的第0位都是和第1位相同的代码。</p>
+<pre><code>* 当发送端发送“11” 和 “00”时，接收端收到“10” 和 “00”时。接收端能通过已有规则得知第一串代码有误，但是无法得知第一串代码哪里有错（此规则下，通常会让客户端重发）。
+</code></pre><p>3) 现在在规则1、规则2的基础上增加规则3：每次发送的第0位和第1位、第2位均相同。</p>
+<pre><code>* 当发送端发送“111” 和 “000”时，接收端收到“101” 和 “000”时。接收端能通过已有规则得知第一串代码有误，而根据 **误码少的概率大于误码多的概率的规律**，判断第一串代码应该是“111”。
+</code></pre><p>上面的规则不是很严谨，但是确实说明了接收端和发送端的最小码距越大，检错和纠错能力越强。</p>
+<p><em>笔者个人认为最小码距是指 <strong>编码后</strong> 和 <strong>编码前</strong> 的最小长度差异（这句是笔者的观点）。</em></p>
+<p>比如发送“1”代表A，如果按规则1和规则2编码，客户端会发送“11”。“11” 和 “1”相比多了一位，即最小长度为1，检测位数为2，纠错位数为0；如果按规则1、2、3编码，客户端会发送“111”。“111” 和 “1” 相比多了两位，检测位数为2（问题Q1），纠错位数为1（问题Q2）</p>
+<ul>
+<li><p>问题Q1<br>为什么检测位数不是3，换句话说不可能是3个全错？<br>答：三个同时发生的几率很低，不考虑</p>
+</li>
+<li><p>问题Q2<br>为什么纠错位数不是2？<br>答：因为规则3后面是根据“少数服从多数”判断的，必然有两个数是一样的，另外一个被校正为和其他。被校正位只会有一个，所以纠错位为1</p>
+</li>
+</ul>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>处理前的数据（又称原数据） –“规则”–&gt; 处理后的数据</p>
+<p><em>处理后的数据长度 - 处理前的数据长度 = 最小码距 （这句是笔者的观点）</em></p>
+<p>根据检测和纠错的例子，我们可以看出来“规则”就是如何处理 原数据，即 <strong>如何添加检测位</strong> 以及 <strong>检测位如何倒推</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjk45ah8n002z7ovjaaweo9z0" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-存储器 (三）之随机存储器" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/存储器 (三）之随机存储器/" class="article-date">
+  <time datetime="2018-07-13T06:03:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器 (三）之随机存储器/">存储器（三）之随机存储器</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="随机存储器"><a href="#随机存储器" class="headerlink" title="随机存储器"></a>随机存储器</h1><p>随机存储器根据 <strong>存储信息的原理不同</strong>，分为静态随机存储器和动态随机存储器。</p>
+<h2 id="静态RAM"><a href="#静态RAM" class="headerlink" title="静态RAM"></a>静态RAM</h2><h3 id="静态RAM基本单元电路"><a href="#静态RAM基本单元电路" class="headerlink" title="静态RAM基本单元电路"></a>静态RAM基本单元电路</h3><p>存储器中用于寄存 “0” 和 “1”代码的电路称为存储器的基本单元电路。如下图所示，图中T<sub>1</sub> ~ T<sub>4</sub>是一个由MOS管组成的触发器基本电路，T5、T6受行地址选择信号控制，只要有高电压进来，该开关就会被打开（连通，否则就阻断）。T7和T8是列选择器，列选择器是共有的，不包含在基本单元电路内，而是芯片同一列的各个基本单元电路所共有的。</p>
+<p>假设触发器内已经保存有 “1”这个信息，即A点为高电平。当需读出时，只要使行、列地址选择信号均有效，使T5、T6、T7、T8均导通，A点高电平通过T6，再由位线A通过T8作为读出放大器的输入信号，在读选择有效时，将1信号输出。</p>
+<p>由于静态RAM是用触发器工作原理存储信息，因此即使信息读出后，它仍保持其原状态，不需要再生。但电源掉电时，原存信息丢失，故属于易失性半导体存储器。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%9D%99%E6%80%81RAM%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="静态RAM存储结构"></p>
+<p>当要写入“1”时，数据从D<sub>IN</sub>进入写电路，通过写左边的写放大器，向T7输入低电压；经过右边的写放大器，向T8输入高电压。选中的那行及那列就会导通（即T1~T6被导通），A点就是高电压，A’点就是低电压。这样就把欲写入的信息写到了该基本单元电路中。</p>
+<h3 id="静态RAM举例"><a href="#静态RAM举例" class="headerlink" title="静态RAM举例"></a>静态RAM举例</h3><p>2144芯片由6个MOS管组成，如图所示A<sub>9</sub> ~ A<sub>0</sub> 为地址输入端；I/O<sub>1</sub> ~ I/O<sub>4</sub>为数据输入/输出端；CS<sup>-</sup> 为片选信号（低电平有效）；WE<sup>-</sup>为写允许信号（低电平为写，高电平为读）；V<sub>cc</sub>为电源端；GND为接地端。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/2144%E8%8A%AF%E7%89%87%E5%A4%96%E7%89%B9%E6%80%A7.png" alt="2144芯片外特性"></p>
+<p>下图为2144芯片结构的说明图，A3~A8作为行地址选择先，共有2<sup>^6</sup>条。而因为I/O线有4条，所以每次读/写都应该产生四个数据，所以列选择器也会有四个。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/2144%E8%8A%AF%E7%89%87%E7%BB%93%E6%9E%84.png" alt="2144芯片结构"></p>
+<p>举个例子，如果现在要向某个单元格进行写入，先通过行地址线和列地址线选择出具体的单元格。如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/SRAM%E9%80%89%E6%8B%A9%E7%BB%93%E6%9E%84.png" alt="地址单元选择示意图"></p>
+<p>找到对应的地址单元后，如果做读操作，先使CS<sup>-</sup>为低电平（被选中），然后WE<sup>-</sup>为高电平（执行写操作），然后在四个I/O口输出数据。如果做写操作，先将数据送到四个I/O口处，并使CS<sup>-</sup>为低电平、WE<sup>-</sup>为高电平，这样输入数据就会被写入到指定单元格内。</p>
+<h3 id="静态RAM读时序"><a href="#静态RAM读时序" class="headerlink" title="静态RAM读时序"></a>静态RAM读时序</h3><ol>
+<li>WE<sup>-</sup>的低电平信号长期有效</li>
+<li>在t<sub>A</sub> - t<sub>CO</sub>的时间内，必须发出片选信号</li>
+<li>在t<sub>CO</sub>的时间内，经过t<sub>cx</sub>时间（注意t<sub>cx</sub>不能超过t<sub>CO</sub>），必须发出数据，并在t片选信号失效前保证数据稳定</li>
+<li>在片选信号失效后，t<sub>OTD</sub> - t<sub>OHA</sub>这段时间里，数据仍有效。</li>
+<li>在地址、片选信号均失效后，在OHA时间里数据仍有效</li>
+</ol>
+<p>注意，<strong>第四项、第五项都表明了，即使当片选信号、地址失效后，数据也不是立马就消失的</strong>。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AF%BB%E6%97%B6%E5%BA%8F.png" alt="读时序"></p>
+<h3 id="静态RAM写时序"><a href="#静态RAM写时序" class="headerlink" title="静态RAM写时序"></a>静态RAM写时序</h3><p>注意：</p>
+<ol>
+<li>这里的滞后时间，是因为上一个操作结束后留下来的。为了避免无效数据的写入，所以需要等待一段时间。</li>
+<li>tWR &gt; tDH是为了有充足的时间进行写入</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%86%99%E6%97%B6%E5%BA%8F.png" alt="写时序"></p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>在静态RAM的每个读写周期内，地址都是有效的。</p>
+<h2 id="动态RAM"><a href="#动态RAM" class="headerlink" title="动态RAM"></a>动态RAM</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E7%AE%A1MOS%E5%8A%A8%E6%80%81RAM.png" alt="三管MOS动态RAM"></p>
+<h3 id="读过程"><a href="#读过程" class="headerlink" title="读过程"></a>读过程</h3><ol>
+<li>对T<sub>4</sub>进行预充电，T<sub>4</sub>被打开，使读数据线的电压达到V<sub>DD</sub>。</li>
+<li>读选择线打开T<sub>2</sub></li>
+<li>如果电容C<sub>g</sub>里有电容（即存储的数据为“1”时），T<sub>1</sub>被打开</li>
+<li>因为T<sub>2</sub> 和 T<sub>1</sub> 被接通，导地，读数据线变为低电平，输出0</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E7%AE%A1MOS%E5%8A%A8%E6%80%81RAM%E4%B9%8B%E8%AF%BB%E6%93%8D%E4%BD%9C.png" alt="3管MOS读过程"></p>
+<h3 id="写过程"><a href="#写过程" class="headerlink" title="写过程"></a>写过程</h3><ol>
+<li>写选择线打开T<sub>3</sub></li>
+<li>写数据经过写数据线，C<sub>g</sub>就能保存一个电平</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E7%AE%A1MOS%E5%8A%A8%E6%80%81RAM%E4%B9%8B%E5%86%99%E6%93%8D%E4%BD%9C.png" alt="3管MOS写过程"></p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8D%95%E7%AE%A1MOS%E8%AF%BB%E4%B8%8E%E5%86%99.png" alt="单管MOS动态RAM"></p>
+<h3 id="读过程-1"><a href="#读过程-1" class="headerlink" title="读过程"></a>读过程</h3><ol>
+<li>字线传来高电平，使T导通</li>
+<li>如果C<sub>s</sub>内包含数据，则向数据线输出</li>
+</ol>
+<h3 id="写过程-1"><a href="#写过程-1" class="headerlink" title="写过程"></a>写过程</h3><ol>
+<li>字线传来低电平，使T导通</li>
+<li>若数据线内为高电平，经T管对C<sub>s</sub>进行充电</li>
+</ol>
+<h2 id="三管MOS动态RAM举例"><a href="#三管MOS动态RAM举例" class="headerlink" title="三管MOS动态RAM举例"></a>三管MOS动态RAM举例</h2><p>这是1K x 1位的存储芯片，每一个小方块都代表一个三管MOS基本电路。<br>由于三管MOS读选择线和写选择先不是通过一条线的一个高低电平就能决定的(需要两条线各控制读/写)。<br>所以行地址译码器比5条多一条，每一行都会占用读、写两条选择线。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%89%E7%AE%A1MOS%E5%8A%A8%E6%80%81RAM%E4%BE%8B%E5%AD%90%E4%B8%80.png" alt="三管MOS动态RAM"></p>
+<p>读出时预充电信号，只有在行、列选择器共同作用下的基本单元电路才能将信息从D输出。</p>
+<p>写入时，受行地址译码器选中一行，受列地址译码器选中一列，从D获取信息写入到，行、列选择器共同作用的基本电路单元格中。</p>
+<h2 id="单管动态RAM举例"><a href="#单管动态RAM举例" class="headerlink" title="单管动态RAM举例"></a>单管动态RAM举例</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8D%95MOS%E5%8A%A8%E6%80%81RAM%E4%BE%8B%E4%B8%80.png" alt="单管动态RAM4116芯片"></p>
+<p>该存储器自带了一个小的控制器（顶部的长方形）：</p>
+<ul>
+<li>RAS<sup>-</sup>表示行选通信号</li>
+<li>CAS<sup>-</sup>表示列选通信号</li>
+<li>WE<sup>-</sup>表示写/读信号</li>
+</ul>
+<p>它们对应的输出行时钟、列时钟、写时钟。</p>
+<p>本来4116芯片是16K x 1位的（即2<sup>^7</sup> x 2<sup>^7</sup>），但由于4116的外特性，它只能拥有7个管脚。所以写入行地址时，需要传7位，暂存到行地址缓冲器中；写入列地址时，传七位到列地址缓冲器中。</p>
+<p>比如说行地址输入:0111111（6个1，即64），列地址输入0000000（7个0，即0）：</p>
+<ol>
+<li>确定行地址63，打开63行的MOS管；确定列地址0，打开0列的MOS管</li>
+<li>假设电容C<sub>s</sub>里存有数据“1”，那么在读放大器左边就是“1”；反之则是“0”</li>
+<li>“1”即高电压，经过读放大器后，会往右输出“0”即低电压。</li>
+<li>由于一路的MOS管都已经打开，就理所当然的进入I/O缓冲器内</li>
+<li>最后输出</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/4116%E8%AF%BB%E4%BF%A1%E5%8F%B7.png" alt="4116读信号"></p>
+<p>比如说行地址输入：0000000（7个0，即0），列地址输入0000000（7个0，即0）。其写流程如下所示：</p>
+<ol>
+<li>确定行地址0，打开第0行的MOS管；确定列地址0，打开0列的MOS管。</li>
+<li>输入的信息只能通过已打开的电路</li>
+<li>经过读放大器后进入相反的一侧，例如存入数据“1”，则从右往左经过读放大器的时候会变成“0”，信息就写入到电容里了。</li>
+</ol>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/4116%E5%86%99%E4%BF%A1%E5%8F%B7.png" alt="4116写信号"></p>
+<p>注意，由于经过读放大器都会进入相反的状态，所以存“1”（实际存“0”），取出来时（实际取“0”），经过读放大器成为取“1”。</p>
+<h3 id="动态RAM刷新"><a href="#动态RAM刷新" class="headerlink" title="动态RAM刷新"></a>动态RAM刷新</h3><p>刷新的实质是刷新放大器将原信息读出，再由刷新放大器形成原信息再写入的过程。<br>上面的4116芯片里的读放大器、三管MOS动态RAM里的刷新放大器都是起到刷新的作用。</p>
+<p>由于存储单元被访问是随机的，无法确定哪些存储单元会被访问，所以需要隔一段时间就对全部的基本单元电路进行刷新，一般取2ms。这个时间称刷新周期，又称再生周期。</p>
+<p>刷新是 <strong>一行行</strong>进行的，由专用的刷新电路来完成对基本单元电路的逐行刷新，才能保证动态RAM内的信息不丢失。</p>
+<p>1) 集中刷新<br>集中刷新是指 <strong>每行数据的刷新时间集中在一段时间内刷新</strong>。如图所示，假设对于128 x 128的矩阵来说，读/写周期为0.5us，刷新时间需要2us。2ms（刷新周期内）内会占4000个存取周期，而在这4000个周期里，3872个周期用来读/写；128个周期用来刷新。</p>
+<p>这128个周期（占64us）被称为“死时间”，又称“死区”，所占比率为 128 / 4000 * 100% = 3.2%。在死时间内，CPU无法访问存储器。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%9B%86%E4%B8%AD%E5%88%B7%E6%96%B0.png" alt="集中刷新"></p>
+<p>2) 分散刷新<br>分散刷新是指 <strong>每行存储单元在存储时都进行一次刷新</strong>。如图所示，假设对于128 x 128的矩阵来说，读/写一次所花费的时间为（0.5us + 0.5us），128us就刷新一次完所有行。而要求只需要在2000us内刷新，所以在电容失效之前的这段时间里总共刷新15.625次，极其浪费资源。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E5%88%B7%E6%96%B0.png" alt="分散刷新"></p>
+<p>3) 异步刷新<br>异步刷新是指 <strong>前两种方式的结合，在一段时间内进行刷新</strong>。该方法相比集中式刷新，解决了死区范围过大的问题；相比分散刷新，将每行刷新的时间控制在最大限度内。<br>如图所示<br>每一次完整的刷新需要在2ms内，总共128行，所以每隔（2000 / 128） us 要刷新一行</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%BC%82%E6%AD%A5%E5%88%B7%E6%96%B0.png" alt="异步刷新"></p>
+<p>如果动态RAM的刷新安排在CPU对指令的译码阶段，由于这个阶段CPU不访问存储器，所以不会出现集中刷新里面的“大量死区”的问题。</p>
+<h2 id="总结-1"><a href="#总结-1" class="headerlink" title="总结"></a>总结</h2><table>
+<thead>
+<tr>
+<th>条目</th>
+<th style="text-align:center">动态RAM</th>
+<th style="text-align:right">静态RAM</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>速度</td>
+<td style="text-align:center">慢（体现在电容上）</td>
+<td style="text-align:right">快</td>
+</tr>
+<tr>
+<td>价格</td>
+<td style="text-align:center">便宜</td>
+<td style="text-align:right">贵</td>
+</tr>
+<tr>
+<td>集成度</td>
+<td style="text-align:center">高</td>
+<td style="text-align:right">低</td>
+</tr>
+<tr>
+<td>功耗</td>
+<td style="text-align:center">低</td>
+<td style="text-align:right">高</td>
+</tr>
+</tbody>
+</table>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8A%A8%E6%80%81RAM%E5%92%8C%E9%9D%99%E6%80%81RAM%E6%80%BB%E7%BB%93.png" alt=""></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjk45ah8v00337ovjqyyfhgih" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-存储器 (二）之主存与CPU的联系" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/" class="article-date">
+  <time datetime="2018-07-13T06:03:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/">存储器之主存与CPU的联系</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="主存储器"><a href="#主存储器" class="headerlink" title="主存储器"></a>主存储器</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90.png" alt="主存的基本构成"></p>
+<p>主存储器需要根据MAR中的地址访问某个存储单元，还需要经过地址译码、驱动等电路，才能找到所需要访问的单元。</p>
+<p>当主存储器写入时，会从MDR中取出数据经过写入电路，才会被写入到选中的单元中。</p>
+<p>当主存储器被读时，会从 <strong>被选中单元</strong>中取出数据，经过读取放大器，最后送入到MDR。</p>
+<h1 id="主存和CPU的联系"><a href="#主存和CPU的联系" class="headerlink" title="主存和CPU的联系"></a>主存和CPU的联系</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E5%92%8CCPU%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB.png" alt=""></p>
+<p>现代主存通常将 <strong>译码器</strong>、 <strong>驱动器</strong>、 <strong>读/写电路</strong>做在主存储器中；将 <strong>MDR</strong>、 <strong>MAR</strong> 集成在CPU中。两者通过总线相连接。</p>
+<p>当CPU要读取数据时：</p>
+<ol>
+<li>CPU会将待读取地址发送到MAR，地址经MAR发送到主存</li>
+<li>CPU发出读命令。</li>
+<li>主存接到命令后，读取指定地址单元上的内容</li>
+<li>将单元的内容读至数据总线上</li>
+</ol>
+<p>当CPU要写入数据时：</p>
+<ol>
+<li>CPU会将待写地址发送到MAR，地址经MAR发送到主存</li>
+<li>CPU将要写入的数据发送到MDR，数据经MDR发送到主存</li>
+<li>CPU发出写入命令</li>
+<li>主存街道命令，将数据线上的信息写入到对应地址单元。</li>
+</ol>
+<h2 id="主存中存储单元地址分配"><a href="#主存中存储单元地址分配" class="headerlink" title="主存中存储单元地址分配"></a>主存中存储单元地址分配</h2><p>不同的机器，存储字长不同，通常存储字长是8的倍数。CPU可按字地址查找，也可以通过字节查找。如果存储字长为8位，机器字长32位（每一个字有32位），每个字都包含4个可独立寻址的字节，字地址是用该字的高位字节来表示的。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IBM370%E5%92%8CPDP-11.png" alt="不同机器的字地址和字节地址"></p>
+<p>如图a所示，对24位地址线的主存而言，按字节寻址的范围是 2^24 bit，按字寻址的范围是 2^22 bit（先算出按字节算的个数，然后再除以一个字占用的字节）。<br>如图b所示，对24位地址线的主存而言，按字节寻址的范围是，2^24 bit，按字寻址的范围是 2^23 bit。</p>
+<h2 id="主存的技术指标"><a href="#主存的技术指标" class="headerlink" title="主存的技术指标"></a>主存的技术指标</h2><h3 id="存储容量"><a href="#存储容量" class="headerlink" title="存储容量"></a>存储容量</h3><p>存储容量是指 <strong>主存能存放二进制代码的总位数</strong>，即<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">    存储容量 = 存储单元个数 X 存储字长         </span><br><span class="line">或</span><br><span class="line">    存储容量 = 存储单元个数 X 存储字长 / 8</span><br></pre></td></tr></table></figure></p>
+<h3 id="存储速度"><a href="#存储速度" class="headerlink" title="存储速度"></a>存储速度</h3><p>存储速度是由存取时间和存取周期来表示的。<br>存取时间又称为 <strong>存储器的访问时间(Memory Access Time)</strong> ， 是指启动一次存储器操作(读或写)到完成该操作所需的全部时间。</p>
+<p>存取时间分为 <strong>读出时间</strong> 和 <strong>写入时间</strong>：</p>
+<ul>
+<li>读出时间：存储器接收到有戏地址开始，到产生有效输出所需的全部时间。</li>
+<li>写入时间：存储器接受到有效地址开始，到数据写入被选中单元为止所需的全部时间。</li>
+</ul>
+<p>存取周期是指存储器进行连续 <strong>开始</strong> 两次独立的存储操作所需的最小间隔时间（开始读取操作到下一次开始读取操作这段时间称为存取周期）。</p>
+<h2 id="译码驱动方式"><a href="#译码驱动方式" class="headerlink" title="译码驱动方式"></a>译码驱动方式</h2><h3 id="线选法"><a href="#线选法" class="headerlink" title="线选法"></a>线选法</h3><p>一根字选择先，直接选中一个存储单元（比如一个字节）。这种方式适用于容量不大的存储芯片，因为容量大了之后所需要的字线根数就会很大。如图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BA%BF%E9%80%89%E6%B3%95.png" alt=""></p>
+<h3 id="重合法"><a href="#重合法" class="headerlink" title="重合法"></a>重合法</h3><p>对于1K X 1位存储芯片，采用重合法就只需要32 + 32根选择线，重合法就和x、y轴确定一个点一样，所以当地址线输入全为0时，x<sub>0</sub>和y<sub>0</sub>就有效了，矩阵中第0行、第0列共同选中的那行就被选中了。所以当x、y线都被选中时才能决定地址，所以称为重合法。<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%87%8D%E5%90%88%E6%B3%95.png" alt="重合法"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjk45ah8f002t7ovjcn0ycb7z" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-（未埋）存储器（四）之CPU和存储器的链接" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" class="article-date">
@@ -92,7 +402,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjk0syr2s003q28vjwkdbkf3u" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjk45ah9j003u7ovjz01hdcag" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -137,7 +447,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjk0syr09002m28vjbvxgllyp" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjk45ah8v00357ovjv12ln9ci" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -185,7 +495,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjk0syr2h003i28vj3t8vz8xe" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjk45ah9n003w7ovjpmdp11u4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
@@ -280,7 +590,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjk0syr2m003m28vjb4fku3y7" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjk45ah9f003q7ovje22hb2qi" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -365,7 +675,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjk0syr2p003o28vjialcm36o" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjk45ah9n003y7ovjkg850wc8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -451,7 +761,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjk0syr28003c28vjxrsbsbxw" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjk45ah9b003j7ovjh7us8xrq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -489,326 +799,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjk0syqzn002228vjfx3fvfb1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjk45ah8j002x7ovj3i7i0qtq" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-绪论" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/18/绪论/" class="article-date">
-  <time datetime="2018-06-18T13:37:12.000Z" itemprop="datePublished">2018-06-18</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/18/绪论/">绪论</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>使用某种信息处理工具，遵照一定的规则，明确而机械化地执行。</p>
-<p>所谓算法需要具备以下几个要素</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/18/绪论/" data-id="cjk0syr2k003k28vj4tkqx5gz" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《深入Java虚拟机》之类加载" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/" class="article-date">
-  <time datetime="2018-06-08T10:45:09.000Z" itemprop="datePublished">2018-06-08</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/08/《深入Java虚拟机》之类加载/">《深入Java虚拟机》之类加载</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>类加载总共分为以下几个阶段：</p>
-<ol>
-<li>加载</li>
-<li>验证</li>
-<li>准备</li>
-<li>解析</li>
-<li>初始化</li>
-<li>使用</li>
-<li>卸载</li>
-</ol>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/ClassLoading.png" alt=""></p>
-<p>每个阶段并非按部就班的执行或完成，而是混合式进行的，通常会在一个阶段执行的过程中调用、激活。</p>
-<p>类加载会在以下几种情况下被触发：</p>
-<ol>
-<li>遇到<code>new</code>、<code>putstatic</code>、<code>getstatic</code>、<code>invokestatic</code>这四条字节码指令时，如果类没有进行过初始化，则需先触发其初始化。上述四条指令分别对应：<strong>创建新对象</strong>、 <strong>对静态字段赋值</strong>、 <strong>获取静态字段（对final属性无效，因为final属性在编译阶段就在常量池里）</strong>、 <strong>调用静态方法</strong> 这四个场景。</li>
-<li>使用java.lang.reflect包的方法对类进行反射调用的时候，如果类没有进行过初始化，则先触发其初始化</li>
-<li>当初始化一个类时，该类的父类尚未初始化，则先初始化父类</li>
-<li>虚拟机启动时，初始化用户指定执行的 <strong>包含main()方法的主类</strong></li>
-<li>当使用JDK7的动态语言支持时，如果一个<code>java.lang.invoke.MethodHandle</code>实例最后的解析结果是<code>REF_getstatic</code>、<code>REF_putstatic</code>、<code>REF_invokestatic</code>的方法句柄，并且这个方法句柄对应的类没有初始化，则触发初始化。</li>
-</ol>
-<p>有且只有以上五种场景被成为 <strong>主动引用</strong>，除此之外所有引用类的方式都不会触发初始化。</p>
-<h2 id="被动式引用一"><a href="#被动式引用一" class="headerlink" title="被动式引用一"></a>被动式引用一</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Super</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Super Init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> String hello = <span class="string">"nice"</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Sub</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Sub Init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    System.out.println(Sub.hello);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/** </span></span><br><span class="line"><span class="comment"> * 最后会输出 "Super Init"</span></span><br><span class="line"><span class="comment"> * 因为调用的是Super类的hello字段</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
-<h2 id="被动式引用二"><a href="#被动式引用二" class="headerlink" title="被动式引用二"></a>被动式引用二</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Super[] supers = <span class="keyword">new</span> Super[<span class="number">10</span>];</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 该操作不会输出 "Super Init"</span></span><br><span class="line"><span class="comment"> * 因为虚拟机实例化的不是Super对象，而是 [Super</span></span><br><span class="line"><span class="comment"> * 该类由虚拟机生成，创建动作由字节码指令newarray触发</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
-<h2 id="被动式引用三"><a href="#被动式引用三" class="headerlink" title="被动式引用三"></a>被动式引用三</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Super</span></span>&#123;</span><br><span class="line">    <span class="keyword">static</span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Super Init"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> <span class="keyword">final</span> String hello = <span class="string">"nice"</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    System.out.println(Super.hello);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 该例子不会输出 "Super Init"</span></span><br><span class="line"><span class="comment"> * 因为final变量会在编译阶段就进入常量池</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
-<hr>
-<h1 id="加载"><a href="#加载" class="headerlink" title="加载"></a>加载</h1><p>在加载阶段，虚拟机需要完成以下三件事：</p>
-<ol>
-<li>通过一个类的全限定名读取该类的二进制文件（没有定义来源，可以是网络、ZIP包中读取的、生成的）</li>
-<li>将字节流里定义的静态数据结构转换成运行时数据结构</li>
-<li>在内存中生成一个代表这个类的java.lang.Class对象，在方法区内提供该类的数据入口</li>
-</ol>
-<p><strong>类加载</strong> 过程中，加载这个阶段对 <strong>非数组类</strong>的限制是最少的，开发人员对其的可控性也是最高的。因为加载阶段可以由开发人员提供自定义的ClassLoader（覆盖loadClass()方法）</p>
-<p>对于 <strong>数组类</strong>来说，数组类本身不会通过类加载器创建，它是由虚拟机直接创建的。不过数组类的元素类型（去掉所有维度的类型）最终是要靠类加载器去创建的：</p>
-<ul>
-<li>如果数组的组件类型（数组去掉一个维度的类型）是引用类型，那么就正常加载，数组C会在 <strong>加载该组件类型的类加载器的类名称空间里</strong> 被标记</li>
-<li>如果数组的组件类型不是引用类型（比如int[])，那么虚拟机会把数组标记为与引导类加载器关联</li>
-<li>数组类的可见性与它的组件类型的可见性一致，如果组件类型不是引用类型，那数组类的可见性将默认为public</li>
-</ul>
-<p>加载完毕后，类的二进制流会按照虚拟机所需的格式存放在方法区内，然后在内存中实例化一个Class类的对象（不同虚拟机里实现不同，HotSpot里，Class对象是存放在方法区里面），这个对象作为程序访问方法区数据的入口。</p>
-<p>加载阶段和连接阶段是交叉进行的，下一个阶段会在加载阶段尚未完成的时候就开始。夹在加载阶段之中进行的动作，仍然属于连接阶段，这两个阶段的开始时间仍然保持着固定的先后顺序。</p>
-<h1 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h1><p>该阶段主要验证来源不明的Class文件，因为Class文件可以通过16进制修改器直接修改，如果完全新任，不检查它，可能会因为载入有害的字节流而导致系统崩溃。该阶段直接决定了虚拟机是否能承受恶意的代码攻击。该阶段分为四个部分：</p>
-<ol>
-<li>文件格式验证</li>
-<li>元数据验证</li>
-<li>字节码验证</li>
-<li>符号引用验证</li>
-</ol>
-<h2 id="文件格式验证"><a href="#文件格式验证" class="headerlink" title="文件格式验证"></a>文件格式验证</h2><p>因为字节流的来源不明，所以需要校验一下文件格式是否符合Class文件的定义：</p>
-<ul>
-<li>是否以魔数 0xCAFEBABE 开头</li>
-<li>主、次版本号是否在当前虚拟机处理范围之内</li>
-<li>常量池的常量中是否有不被支持的常量类型</li>
-<li>指向常量的各种索引值中是否有指向不存在的常量或不符合类型的常量</li>
-<li>CONSTANT_Utf8_info 型的常量中是否有不符合UTF8编码规范的数据</li>
-<li>Class文件中各个部分及文件本身是否有被删除或附加的信息</li>
-<li>……</li>
-</ul>
-<p>该阶段的目的是保证输入的字节流能被正确解析成方法区的数据结构并存于方法区之内，只有经过这个阶段，字节流才会进入内存的方法区中进行存储，所以后面的阶段都是基于方法区的存储结构进行的，不会再直接操作字节流。</p>
-<h2 id="元数据验证"><a href="#元数据验证" class="headerlink" title="元数据验证"></a>元数据验证</h2><p>对类的信息进行语义分析，保证每个类符合规范：</p>
-<ul>
-<li>这个类是否有父类（除了Object类以外，所有类都应该有父类）</li>
-<li>这个类的是否继承了不该继承的类（被final修饰的类）</li>
-<li>如果这个类不是抽象类且继承了抽象类（或接口），是否实现了其父类的所有抽象方法（或实现接口的所有方法）</li>
-<li>类中的字段、方法是否与父类产生矛盾（覆盖了父类的final字段，或者出现不符合规则的方法重载，例如方法签名都一样，但是返回值不同）</li>
-<li>……</li>
-</ul>
-<p>第二阶段的主要目的是对元数据信息进行语义检验，保证不存在不符合Java规范的元数据信息。</p>
-<h2 id="字节码验证"><a href="#字节码验证" class="headerlink" title="字节码验证"></a>字节码验证</h2><p>主要校验代码逻辑是否正确：</p>
-<ul>
-<li>保证操作数栈的类型和指令代码序列能一一对应。比如从操作数栈取出的类型为int，而指令代码序列却是用long类型</li>
-<li>保证跳转指令不会跳转到方法体以外的字节码指令上</li>
-<li>保证方法体中的类型转换是有效的</li>
-<li>……</li>
-</ul>
-<p>如果类文件没通过字节码验证，那么一定是不安全的；如果通过字节码验证，也不能说明绝对安全。一个著名的问题——停机问题，可以告诉我们程序不可能准确算出程序是否能在有限时间结束。</p>
-<p>JVM为了解决检验时间过长的问题，在方法的code属性表中增加了一项名为“StackMapTable”的属性，这项属性描述了方法体中所有的基本块（按照控制流拆分的代码块）开始时本地变量表和操作栈应有的状态，在字节码验证期间，就不需要根据程序推导这些状态的合法性，只需要检查StackMapTable中的记录是否合法即可。同样，该属性也有被篡改的可能。</p>
-<h2 id="符合引用验证"><a href="#符合引用验证" class="headerlink" title="符合引用验证"></a>符合引用验证</h2><p>该阶段的校验发生在虚拟机将符号引用转换为直接引用的时候，这个转换动作将在连接的第三阶段——解析阶段中发生。主要作用就是检验各个引用是否存在匹配项：</p>
-<ul>
-<li>全限定名是否能找到对应的类</li>
-<li>指定类中是否存在符合方法的字段描述符以及简单名称所描述的方法和字段</li>
-</ul>
-<p>如果开发人员对所有的代码都很了解，确定没有恶意代码，可以考虑使用 <code>-Xverify:none</code> 参数来关闭大部分类的验证措施，以缩短虚拟机的加载时间</p>
-<h1 id="准备"><a href="#准备" class="headerlink" title="准备"></a>准备</h1><p>该阶段只会初始类里面的static域（不会初始化实体类的普通属性），通常情况下会将static域初始化成默认值（int为0，float为0.0等等）</p>
-<p>而如果该static域被final修饰了，那么当该属性所属的类在编译期就会产生一个ConstantValue。在类的加载过程中，static域就会被初始化为对应的ConstantValue</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> a = <span class="number">128</span>;</span><br><span class="line"><span class="comment">// 当在准备阶段时，该类的a属性被初始化为0</span></span><br></pre></td></tr></table></figure>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> a = <span class="number">128</span>;</span><br><span class="line"><span class="comment">// 在编译期时，128作为ConstantValue被存储到Class文件中</span></span><br><span class="line"><span class="comment">// 在准备阶段时，该类的a属性值立刻被初始化为128</span></span><br></pre></td></tr></table></figure>
-<h1 id="解析"><a href="#解析" class="headerlink" title="解析"></a>解析</h1><p>虚拟机将常量池内的符号引用转换成直接引用的过程，符号引用在Class文件中以 CONSTANT_Class_info 、CONSTANT_Methodref_info、CONSTANT_Field_info形式进行记录。</p>
-<ul>
-<li>符号引用：符号引用以一组符号来描述所引用的目标，符号可以是任何形式的字面量，只要使用时能无歧义地定位到目标即可。符号引用在各虚拟机里表现不同，内存布局也不同，但是虚拟机能够接受的符号引用都是一样的，因为这是java虚拟机规范</li>
-<li>直接引用：直接引用是一个在运行时的概念，可以是指向目标的指针、相对偏移量或是一个能间接定位到目标的句柄。直接引用和内存布局是相关的，同一个符号引用在不同虚拟机上会转换出的直接引用一般不同。如果有了直接引用，那引用目标必定已经存在内存里了。</li>
-</ul>
-<p>虚拟机会在遇到以下指令之前触发解析</p>
-<ul>
-<li>anewarray</li>
-<li>checkcast</li>
-<li>getfield</li>
-<li>getstatic</li>
-<li>instanceof</li>
-<li>invokedynamic</li>
-<li>invokeinterface</li>
-<li>invokespecial</li>
-<li>invokestatic</li>
-<li>invokevirtual</li>
-<li>ldc</li>
-<li>ldc_w</li>
-<li>multianewarray</li>
-<li>new </li>
-<li>putfield</li>
-<li>putstatic<br>这16个指令囊括一下就有以下的规律：</li>
-<li>创建的时候——anewarray、new、multianewarray、ldc、ldc_w（后两个创建字符串时会触发</li>
-<li>类型判断或转换的时候——checkcast、instanceof</li>
-<li>调用方法时——invokedynamic、invokeinterface、invokespecial、invokestatic、invokevirtual</li>
-<li>获取字段/赋值——getfield、getstatic、putfield、putstatic</li>
-</ul>
-<p>触发解析阶段可能会在加载类时就触发，也可能运行到以上指令前触发，这是根据具体虚拟机的实现而定的。</p>
-<p>除invokedynamic指令以外的指令满足如下条件：<br>虚拟机可能会对同一个符号引用调用很多次，但是虚拟机通常会将第一次解析结果进行缓存（通过在运行时常量池记录直接引用以及标记符号引用已被解析），但是仍然会发生多次解析同一个符号引用的情形，那么虚拟机需要保证第一次解析成功，后续对其的解析也必须成功；同理，如果第一次解析失败，后续的解析都要抛出相同的异常。</p>
-<p>而invokedynamic之所以如此特别，主要在于它是用于动态语言的指令，它所对应的引用称为 <strong>动态调用限定符</strong>，这里动态的意思是指必须等到实际程序运行到该条命令时，解析动作才能进行。其余的指令，可以在运行到指令前（加载时）就可以触发解析。</p>
-<h2 id="类解析"><a href="#类解析" class="headerlink" title="类解析"></a>类解析</h2><p>当解析类或接口时，假设当前执行的代码类是D。<br>如果遇到了一个类，需要把一个从未解析过的符号引用N解析为一个类或接口C的直接引用，虚拟机要完成以下三个步骤：</p>
-<ol>
-<li>如果该类不是数组类，那虚拟机会将代表N的全限定名传给D的类加载器去加载该类或接口C。在加载过程中，无论哪个阶段抛出异常，解析过程就宣告失败。</li>
-<li>如果该类是数组类，并且数组元素的类型为对象，也就是N的描述符是类似”[java/lang/String”的形式，那么会采用第一点的规则加载数组元素类型。假设N的描述符和上述一样，那么需要加载的数组元素类型就是”java.lang.String”，接着会由虚拟机生成一个代表此维度和元素的数组对象</li>
-<li>如果上面的步骤没有问题，那么C已经成为一个有效的类或接口，但在解析完成之前还要进行符号引用验证，即确认D是否具备对C的访问权限。如果发现不具备，将抛出java.lang.IllegalAccessError。</li>
-</ol>
-<h2 id="字段解析"><a href="#字段解析" class="headerlink" title="字段解析"></a>字段解析</h2><p>要解析一个未被解析过的字段符号引用，首先需要对该字段所处的类进行解析，也就是类或接口的符号引用。如果在解析这个类或接口过程中失败，都会导致字段符号引用的解析失败。如果解析成功完成，那将这个字段所属的类或接口用C表示，虚拟机会后续对字段符号引用进行如下查找：</p>
-<ol>
-<li>如果C本身就是该字段的引用类型，且简单名称和字段描述符都与目标字段相匹配，则返回这个字段的直接引用，查找结束</li>
-<li>否则，如果C实现了接口，那么就从接口里（递归查找）进行查找，如果接口中包含了简单名称和字段描述都与目标字段相匹配，则返回这个字段的直接引用。</li>
-<li>否则，如果C继承了父类，那么就从父类进行递归查找，如果在父类中包含了简单名称和字段描述符都与目标字段相匹配的字段，则返回这个字段的直接引用。</li>
-<li>否则查找失败，抛出NoSuchFieldError异常</li>
-<li>查找成功后，进行访问权限的校验</li>
-</ol>
-<p>注意，实际虚拟机的编译器实现会比上述更严格一些，即实现的接口、继承的类都声明了同个字段，可能会提示字段混淆的异常。</p>
-<h2 id="类方法解析"><a href="#类方法解析" class="headerlink" title="类方法解析"></a>类方法解析</h2><p>对于被调用的方法，先解析它所属类或接口的符号引用，如果解析成功，我们依然用C表示这个类，接下来会按以下的规则进行查找：</p>
-<ol>
-<li>类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError</li>
-<li>如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
-<li>否则在C的父类中递归查找是否有简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
-<li>否则在C实现的接口列表及它们的父接口中递归查找简单名称和描述符都匹配的目标方法，如果存在匹配方法，说明类C是抽象类方法（因为前面的可能都不存在），抛出AbstractMethodError</li>
-<li>否则，抛出NoSuchMethodError</li>
-<li>返回直接引用时，并对这个方法进行权限校验</li>
-</ol>
-<blockquote>
-<p>Your newly packaged library is not backward binary compatible (BC) with old version. For this reason some of the library clients that are not recompiled may throw the exception.<br>This is a complete list of changes in Java library API that may cause clients built with an old version of the library to throw java.lang.IncompatibleClassChangeError if they run on a new one (i.e. breaking BC):<br>Non-final field become static,</p>
-</blockquote>
-<blockquote>
-<p>Non-constant field become non-static,</p>
-</blockquote>
-<blockquote>
-<p>Class become interface,</p>
-</blockquote>
-<blockquote>
-<p>Interface become class,</p>
-</blockquote>
-<blockquote>
-<p>if you add a new field to class/interface (or add new super-class/super-interface) then a static field from a super-interface of a client class C may hide an added field (with the same name) inherited from the super-class of C (very rare case).</p>
-</blockquote>
-<h2 id="接口方法解析"><a href="#接口方法解析" class="headerlink" title="接口方法解析"></a>接口方法解析</h2><p>对于被调用的接口，先查找该方法所属的接口，如果解析成功，我们用C表示这个类，接下来按以下的规则进行查找：</p>
-<ol>
-<li>类方法和接口方法的符号引用定义是分开的，先校验C这个类继承的是否正确，比如原本继承的AInterface是接口类型，在运行时如果AInterface变成抽象类，那么就会报错：IncompatibleClassChangeError</li>
-<li>如果通过第一步，那么在C里查找简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
-<li>否则查找C的父类接口，直到java.lang.Object，如果找到简单名称和描述符都匹配的目标方法，找到则返回其直接引用</li>
-<li>否则抛出，NoSuchMethodError<br>由于interface里面都是public方法，所以不用校验权限</li>
-</ol>
-<h1 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h1><p>类加载阶段里的准备阶段已经将常量（final修饰）的变量进行初始化为给定数值，把非常量的静态变量初始化为默认值。而该阶段就是将非常量的静态变量按照开发人员的意图进行初始化：</p>
-<ol>
-<li>编译期收集一个类的全部静态类型（包括static字段、static块）</li>
-<li>按收集顺序（程序里的排列顺序）依次排序到 <cinit></cinit></li>
-</ol>
-<p><cinit>不是必须的，如果父类或者接口类没有静态字段或者静态块，编译期就不会生成<cinit>方法。另外，与类不同的是，接口的静态字段需要等到用户真正调用时才会初始化。遇到多个线程初始化同一个类的情况时，虚拟机会保证只有一个线程执行<cinit>，其他线程就会进入阻塞状态直到该线程执行完初始化；</cinit></cinit></cinit></p>
-<p>虚拟机会保证先执行父类的<cinit>，再执行子类的<cinit>，所以java.lang.Object一定是第一个被初始化的类。</cinit></cinit></p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/classload_summary.png" alt=""></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/08/《深入Java虚拟机》之类加载/" data-id="cjk0syqz1001l28vjzeawocoh" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《深入Java虚拟机》之回收策略及实践" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/" class="article-date">
-  <time datetime="2018-06-05T14:35:31.000Z" itemprop="datePublished">2018-06-05</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/06/05/《深入Java虚拟机》之回收策略及实践/">《深入Java虚拟机》之回收策略及实践</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>新生代分为Eden区和Survivor区，Survivor会按1：1划分成From、To两个区域。示意图如下所示</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/jvm/YoungGen.png" alt="新生代布局"></p>
-<h2 id="新生代比例划分"><a href="#新生代比例划分" class="headerlink" title="新生代比例划分"></a>新生代比例划分</h2><p>布局比例会按 <code>-XX:SurvivorRatio=x</code> 划分，这个虚拟机参数是指 <strong>Eden区:Survivor区=z</strong> ，即Eden区和Survivor区之比为x。计算方式如下：</p>
-<blockquote>
-<p>z <em> x + 2 </em> x = 新生代大小</p>
-</blockquote>
-<pre><code>如果z = 6，新生代大小为10240K，那么6 * x + 2 * x = 10240K，解出x = 1280K；那么Eden区的大小就是7680K？？？
-</code></pre><p>理论上的确是7680K，但是当该数值除以1024时，无法得到整数值（个人猜测为了内存对齐吧）。所以实际上Eden区的大小为8192K，即8MB。</p>
-<pre><code>如果z = 6， 新生代大小为102400K（100MB），那么6 * x + 2 * x = 102400K，解出x = 12800K，那么Eden区就是76800K？
-</code></pre><p>嗯，真的是76800K。</p>
-<p>总而言之，解出来的Eden区数值（单位一定是K）如果无法被整出，则向上取一个能被1024整除的数。</p>
-<h2 id="内存分配规则"><a href="#内存分配规则" class="headerlink" title="内存分配规则"></a>内存分配规则</h2><p><img src="https://blog-1252749790.file.myqcloud.com/jvm/GC_flowchart.png" alt="GC流程示意图，不严谨版"></p>
-<p>当直接分配对象时，优先考虑 <code>Eden区</code>。如果不能则考虑是否能直接放入 <code>Old Gen</code>，由 <code>-XX:PretenureSizeThreshold</code>控制多大的对象能直接进入 <code>Old Gen</code>。如果仍不能放入 <code>Old Gen</code> 则触发minor GC。发生 minor gc时，就先清空Eden区和其中一块Survivor区，然后放入另外一块空的里面（注意这里针对发生过一次GC以上的情况）。</p>
-<h3 id="要点一"><a href="#要点一" class="headerlink" title="要点一"></a>要点一</h3><p>对象优先在Eden区分配，如果Eden区不够分配了，剩余空间已经不足以分配新对象了，因此发生Minor GC。GC期间，发现已有的对象都不能全部放入Survivor空间，所以只能通过<code>分配担保机制</code>提前转移到 <code>Old Gen</code>。</p>
-<h3 id="要点二"><a href="#要点二" class="headerlink" title="要点二"></a>要点二</h3><p>当分配一个大对象。打对象容易导致内存还有不少空间就提前触发垃圾收集以获取足够大的空间安置它们。虚拟机提供了 <code>-XX:PretenureSizeThreshold</code>参数，当对象的大小大于等于设置的参数时，对象就会直接被分配到 <code>Old Gen</code>。该参数只对 <code>Serial</code> 和 <code>ParNew</code>两款收集器有效。</p>
-<h3 id="要点三"><a href="#要点三" class="headerlink" title="要点三"></a>要点三</h3><p>虚拟机给每个对象定义了一个年龄计数器字段 <code>Age</code>，该字段会记录 自从Eden出生后，经过Minor GC 的次数。每经过一次 Minor GC，Age就会加一，当它的年龄到达15时，就会晋升到 <code>Old Gen</code>。晋升年龄可以用参数 <code>-XX:MaxTenuringThreshold</code>控制。</p>
-<h3 id="要点四"><a href="#要点四" class="headerlink" title="要点四"></a>要点四</h3><p>如果Survivor空间里有一半及以上的对象年龄相同，那么大于等于该年龄的对象可以直接进入Old Gen，无须等待<code>-XX:MaxTenuringThreshold</code>的参数</p>
-<h3 id="要点五"><a href="#要点五" class="headerlink" title="要点五"></a>要点五</h3><p>在发生Minor GC之前，虚拟机会先检查老年代最大可用的连续空间 是否 大于新生代所有对象总空间。<br>如果这个条件成立，那么Minor GC的担保可以确保是安全的。<br>如果这个条件不成立，则设置<code>-XX:+/-HandlePromotionFailure</code>允许担保，那么发生minor gc 前，会判断一下 <strong>老年代最大可用连续空间</strong> 是否大于 <strong>历次晋升到老年代的平均大小</strong>。如果大于，那么会尝试发生一次Minor GC（不确定是否安全的）；如果小于，或者没有开启 <code>-XX:+/-HandlePromotionFailure</code>，就发生 Full GC。</p>
-<p>一般都会开启 <code>-XX:+/-HandlePromotionFailure</code> ，因为即使条件不满足，也要尝试进行一次 Minor GC；否则直接进行 Full GC，对系统的负担就会比较大。<br>在JDK6 Update24之后，<code>-XX:+/-HandlePromotionFailure</code>参数已经失效了，默认为：<strong>老年代的连续空间</strong> 大于 <strong>新生代对象总大小</strong> 或者 <strong>大于历次晋升的平均大小</strong>就发生Minor GC</p>
-<hr>
-<blockquote>
-<p>而是将内存分为一块较大的Eden区和两块较小的Survivor空间里，每次使用Eden和其中一块Survivor。</p>
-</blockquote>
-<p>上面的句子摘自《深入Java虚拟机 第二版》，这句子可能会给一些读者带来误解：以为Survivor也会作为一块内存空间用来 <strong>分配</strong> 对象。这直接会让我们以为当 <code>其中一块Survivor</code>和<code>Eden区</code>都满了后才会触发Minor GC。其实不然，在HotSpot虚拟机里，所有新生对象都是闲分配到 <code>Eden区</code>中（特殊情况分配到 <code>Old Gen</code>）。当<code>Eden区</code>不够，触发了Minor GC后，会将 <code>Eden区</code> 里的幸存对象复制到 <code>Survivor的From区</code>里。在第一次Minor GC后，对象才 <strong>真真正正的只在Eden区和其中一块Survivor里</strong>。<strong>即发生第一次Minor GC前，只有Eden区存放对象</strong></p>
-<h2 id="实践阶段"><a href="#实践阶段" class="headerlink" title="实践阶段"></a>实践阶段</h2><p>emmmmmm，以后补充；</p>
-<ol>
-<li>当新分配的对象直接超出了<code>Eden区</code>的可用最大值时，直接放入<code>OldGen</code><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">-Xms20M  <span class="comment">// 最小内存20M</span></span><br><span class="line">-Xmx20M  <span class="comment">// 最大内存20M</span></span><br><span class="line">-Xmn18M  <span class="comment">// 年轻代10M，老年代也就10M</span></span><br><span class="line">-XX:SurvivorRatio=<span class="number">8</span>  <span class="comment">// eden区比例，如果为8，就是8：1：1；如果为3，就是3：1：1</span></span><br><span class="line">-XX:+PrintHeapAtGC <span class="comment">// 打印GC前后的信息</span></span><br></pre></td></tr></table></figure>
-</li>
-</ol>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/06/05/《深入Java虚拟机》之回收策略及实践/" data-id="cjk0syqym001428vjcxg3h3l0" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
 
     </footer>
   </div>
@@ -865,23 +859,23 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
           </li>
         
           <li>
             <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/">存储器之高速缓冲器(Cache)(下)</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/20/存储器（八）之高速缓冲器（上）/">存储器之高速缓冲器(Cache)(上篇)</a>
           </li>
         
       </ul>

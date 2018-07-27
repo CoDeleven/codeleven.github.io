@@ -3,22 +3,25 @@
 <head>
   <meta charset="utf-8">
   
-  <title>存储器之概述 | CoDeleven的个人博客</title>
+  <title>IO接口 | CoDeleven的个人博客</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="主存：可以和CPU直接交换信息 辅存：是主存的后援存储器，用来存放当前暂时不用的程序和数据。它不能和CPU直接交换信息。 缓存：用在两个速度不同的部件之中 闪速存储器：类似于辅存，用于保存数据的媒介">
+  <meta name="description" content="接口可以是两个部件之间连接的电路，IO接口通常是指CPU和IO设备间的硬件电路和控制软件，而不同的IO设备通常都通过IO接口和CPU取得联系的。 IO接口的功能有如下几个：  实现IO设备的选择 匹配IO设备和CPU的速度 实现数据的串-并转换 实现电平的转换 发送控制信号 保存状态信息，供CPU进行查询  这里举个四功能的接口，看看它的功能和组成  组成介绍设备选择线：该线是用于传输设备码的，它">
 <meta name="keywords" content="计算机组成">
 <meta property="og:type" content="article">
-<meta property="og:title" content="存储器之概述">
-<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/index.html">
+<meta property="og:title" content="IO接口">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/07/25/IO接口/index.html">
 <meta property="og:site_name" content="CoDeleven的个人博客">
-<meta property="og:description" content="主存：可以和CPU直接交换信息 辅存：是主存的后援存储器，用来存放当前暂时不用的程序和数据。它不能和CPU直接交换信息。 缓存：用在两个速度不同的部件之中 闪速存储器：类似于辅存，用于保存数据的媒介">
+<meta property="og:description" content="接口可以是两个部件之间连接的电路，IO接口通常是指CPU和IO设备间的硬件电路和控制软件，而不同的IO设备通常都通过IO接口和CPU取得联系的。 IO接口的功能有如下几个：  实现IO设备的选择 匹配IO设备和CPU的速度 实现数据的串-并转换 实现电平的转换 发送控制信号 保存状态信息，供CPU进行查询  这里举个四功能的接口，看看它的功能和组成  组成介绍设备选择线：该线是用于传输设备码的，它">
 <meta property="og:locale" content="zh">
-<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8C%89%E4%BD%9C%E7%94%A8%E5%88%86%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
-<meta property="og:updated_time" content="2018-07-19T15:20:15.470Z">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%84%E6%88%90.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%BE%E5%A4%87%E9%80%89%E6%8B%A9.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%91%BD%E4%BB%A4%E5%AF%84%E5%AD%98%E5%99%A8%E5%92%8C%E8%AF%91%E7%A0%81%E5%99%A8.png">
+<meta property="og:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90.png">
+<meta property="og:updated_time" content="2018-07-26T06:24:33.256Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="存储器之概述">
-<meta name="twitter:description" content="主存：可以和CPU直接交换信息 辅存：是主存的后援存储器，用来存放当前暂时不用的程序和数据。它不能和CPU直接交换信息。 缓存：用在两个速度不同的部件之中 闪速存储器：类似于辅存，用于保存数据的媒介">
-<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8C%89%E4%BD%9C%E7%94%A8%E5%88%86%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png">
+<meta name="twitter:title" content="IO接口">
+<meta name="twitter:description" content="接口可以是两个部件之间连接的电路，IO接口通常是指CPU和IO设备间的硬件电路和控制软件，而不同的IO设备通常都通过IO接口和CPU取得联系的。 IO接口的功能有如下几个：  实现IO设备的选择 匹配IO设备和CPU的速度 实现数据的串-并转换 实现电平的转换 发送控制信号 保存状态信息，供CPU进行查询  这里举个四功能的接口，看看它的功能和组成  组成介绍设备选择线：该线是用于传输设备码的，它">
+<meta name="twitter:image" content="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%84%E6%88%90.png">
   
     <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
   
@@ -67,10 +70,10 @@
   </div>
 </header>
       <div class="outer">
-        <section id="main"><article id="post-存储器（一）之概述" class="article article-type-post" itemscope itemprop="blogPost">
+        <section id="main"><article id="post-IO接口" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/13/存储器（一）之概述/" class="article-date">
-  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
+    <a href="/codeleven.github.io/2018/07/25/IO接口/" class="article-date">
+  <time datetime="2018-07-25T05:38:56.000Z" itemprop="datePublished">2018-07-25</time>
 </a>
     
   </div>
@@ -81,7 +84,7 @@
         
   
     <h1 class="article-title" itemprop="name">
-      存储器之概述
+      IO接口
     </h1>
   
 
@@ -89,18 +92,41 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8C%89%E4%BD%9C%E7%94%A8%E5%88%86%E7%9A%84%E5%AD%98%E5%82%A8%E7%BB%93%E6%9E%84.png" alt="按作用分的存储结构"></p>
+        <p>接口可以是两个部件之间连接的电路，IO接口通常是指CPU和IO设备间的硬件电路和控制软件，而不同的IO设备通常都通过IO接口和CPU取得联系的。</p>
+<p>IO接口的功能有如下几个：</p>
+<ol>
+<li>实现IO设备的选择</li>
+<li>匹配IO设备和CPU的速度</li>
+<li>实现数据的串-并转换</li>
+<li>实现电平的转换</li>
+<li>发送控制信号</li>
+<li>保存状态信息，供CPU进行查询</li>
+</ol>
+<p>这里举个四功能的接口，看看它的功能和组成</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%84%E6%88%90.png" alt="接口的功能和组成"></p>
+<h1 id="组成介绍"><a href="#组成介绍" class="headerlink" title="组成介绍"></a>组成介绍</h1><p>设备选择线：<br>该线是用于传输设备码的，它的根数取决于I/O指令设备码的位数。</p>
+<p>命令线：<br>该线是单项的，通常由CPU发出，用于传输CPU的I/O指令</p>
+<p>状态线：<br>反馈IO设备的状态，该线也是单项的，通常</p>
+<p>数据线：<br>双向的，用于传输数据，其根数一般等于存储字长的长度</p>
+<h1 id="功能介绍"><a href="#功能介绍" class="headerlink" title="功能介绍"></a>功能介绍</h1><h2 id="选址功能"><a href="#选址功能" class="headerlink" title="选址功能"></a>选址功能</h2><p>IO总线与所有设备的接口相连，但CPU究竟选择哪台设备，还得通过设备选择线上的设备码来确定。</p>
+<p>每个接口会带有选址功能，当设备线上的设备码与I/O设备的设备码一致时，应发出设备选中信号SEL。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%BE%E5%A4%87%E9%80%89%E6%8B%A9.png" alt="设备选择"></p>
+<h2 id="传送命令功能"><a href="#传送命令功能" class="headerlink" title="传送命令功能"></a>传送命令功能</h2><p>当CPU向IO设备发出命令时，要求IO设备能做出响应。如果设备不具备传送命令的信息功能，设备将无法响应。所以通常在IO接口中设有存放命令的寄存器以及命令译码器。</p>
+<p>命令寄存器用来存放IO指令中的指令码，只有当设备选择电路有效，SEL信号有效，才能存放命令道寄存器中。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%91%BD%E4%BB%A4%E5%AF%84%E5%AD%98%E5%99%A8%E5%92%8C%E8%AF%91%E7%A0%81%E5%99%A8.png" alt="命令寄存器"></p>
+<h2 id="传送数据的功能"><a href="#传送数据的功能" class="headerlink" title="传送数据的功能"></a>传送数据的功能</h2><p>IO设备和CPU之间通过接口的数据通路进行数据交互，接口还会有数据缓冲的功能，它用来暂存IO设备和CPU间要交换的数据。数据通路的位数取决于设备的种类。</p>
+<h2 id="IO设备工作状态"><a href="#IO设备工作状态" class="headerlink" title="IO设备工作状态"></a>IO设备工作状态</h2><p>为了使CPU能时刻了解IO设备的运行状况，接口通常会设置一些反映设备状态的触发器。<br>比如工作触发器B、完成触发器D、中断触发器INTR，屏蔽触发器MASK</p>
 <ul>
-<li>主存：可以和CPU直接交换信息</li>
-<li>辅存：是主存的后援存储器，用来存放当前暂时不用的程序和数据。它不能和CPU直接交换信息。</li>
-<li>缓存：用在两个速度不同的部件之中</li>
-<li>闪速存储器：类似于辅存，用于保存数据的媒介</li>
+<li>D = 0, B = 0时，表示设备处于暂停</li>
+<li>D = 1, B = 0时，表示设备已准备就绪</li>
+<li>D = 0, B = 1时，表示设备处于准备状态</li>
 </ul>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90.png" alt="IO接口的基本组成"></p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjk45ah8v00357ovjv12ln9ci" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/IO接口/" data-id="cjk45ah5200047ovjkxwq6rut" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -111,19 +137,19 @@
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
-          存储器之CPU和存储器的链接
+          输入输出系统之概述
         
       </div>
     </a>
   
   
-    <a href="/codeleven.github.io/2018/07/12/观察者模式/" id="article-nav-older" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/07/22/存储器（九）之高速缓冲器（下）/" id="article-nav-older" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">观察者模式</div>
+      <div class="article-nav-title">存储器之高速缓冲器(Cache)(下)</div>
     </a>
   
 </nav>
