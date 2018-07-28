@@ -130,7 +130,78 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjk45ah8n002z7ovjaaweo9z0" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjk4qwpvp0034n4vj48z2w87a" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-存储器 (二）之主存与CPU的联系" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/" class="article-date">
+  <time datetime="2018-07-13T06:03:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/">存储器之主存与CPU的联系</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="主存储器"><a href="#主存储器" class="headerlink" title="主存储器"></a>主存储器</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90.png" alt="主存的基本构成"></p>
+<p>主存储器需要根据MAR中的地址访问某个存储单元，还需要经过地址译码、驱动等电路，才能找到所需要访问的单元。</p>
+<p>当主存储器写入时，会从MDR中取出数据经过写入电路，才会被写入到选中的单元中。</p>
+<p>当主存储器被读时，会从 <strong>被选中单元</strong>中取出数据，经过读取放大器，最后送入到MDR。</p>
+<h1 id="主存和CPU的联系"><a href="#主存和CPU的联系" class="headerlink" title="主存和CPU的联系"></a>主存和CPU的联系</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E5%92%8CCPU%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB.png" alt=""></p>
+<p>现代主存通常将 <strong>译码器</strong>、 <strong>驱动器</strong>、 <strong>读/写电路</strong>做在主存储器中；将 <strong>MDR</strong>、 <strong>MAR</strong> 集成在CPU中。两者通过总线相连接。</p>
+<p>当CPU要读取数据时：</p>
+<ol>
+<li>CPU会将待读取地址发送到MAR，地址经MAR发送到主存</li>
+<li>CPU发出读命令。</li>
+<li>主存接到命令后，读取指定地址单元上的内容</li>
+<li>将单元的内容读至数据总线上</li>
+</ol>
+<p>当CPU要写入数据时：</p>
+<ol>
+<li>CPU会将待写地址发送到MAR，地址经MAR发送到主存</li>
+<li>CPU将要写入的数据发送到MDR，数据经MDR发送到主存</li>
+<li>CPU发出写入命令</li>
+<li>主存街道命令，将数据线上的信息写入到对应地址单元。</li>
+</ol>
+<h2 id="主存中存储单元地址分配"><a href="#主存中存储单元地址分配" class="headerlink" title="主存中存储单元地址分配"></a>主存中存储单元地址分配</h2><p>不同的机器，存储字长不同，通常存储字长是8的倍数。CPU可按字地址查找，也可以通过字节查找。如果存储字长为8位，机器字长32位（每一个字有32位），每个字都包含4个可独立寻址的字节，字地址是用该字的高位字节来表示的。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IBM370%E5%92%8CPDP-11.png" alt="不同机器的字地址和字节地址"></p>
+<p>如图a所示，对24位地址线的主存而言，按字节寻址的范围是 2^24 bit，按字寻址的范围是 2^22 bit（先算出按字节算的个数，然后再除以一个字占用的字节）。<br>如图b所示，对24位地址线的主存而言，按字节寻址的范围是，2^24 bit，按字寻址的范围是 2^23 bit。</p>
+<h2 id="主存的技术指标"><a href="#主存的技术指标" class="headerlink" title="主存的技术指标"></a>主存的技术指标</h2><h3 id="存储容量"><a href="#存储容量" class="headerlink" title="存储容量"></a>存储容量</h3><p>存储容量是指 <strong>主存能存放二进制代码的总位数</strong>，即<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">    存储容量 = 存储单元个数 X 存储字长         </span><br><span class="line">或</span><br><span class="line">    存储容量 = 存储单元个数 X 存储字长 / 8</span><br></pre></td></tr></table></figure></p>
+<h3 id="存储速度"><a href="#存储速度" class="headerlink" title="存储速度"></a>存储速度</h3><p>存储速度是由存取时间和存取周期来表示的。<br>存取时间又称为 <strong>存储器的访问时间(Memory Access Time)</strong> ， 是指启动一次存储器操作(读或写)到完成该操作所需的全部时间。</p>
+<p>存取时间分为 <strong>读出时间</strong> 和 <strong>写入时间</strong>：</p>
+<ul>
+<li>读出时间：存储器接收到有戏地址开始，到产生有效输出所需的全部时间。</li>
+<li>写入时间：存储器接受到有效地址开始，到数据写入被选中单元为止所需的全部时间。</li>
+</ul>
+<p>存取周期是指存储器进行连续 <strong>开始</strong> 两次独立的存储操作所需的最小间隔时间（开始读取操作到下一次开始读取操作这段时间称为存取周期）。</p>
+<h2 id="译码驱动方式"><a href="#译码驱动方式" class="headerlink" title="译码驱动方式"></a>译码驱动方式</h2><h3 id="线选法"><a href="#线选法" class="headerlink" title="线选法"></a>线选法</h3><p>一根字选择先，直接选中一个存储单元（比如一个字节）。这种方式适用于容量不大的存储芯片，因为容量大了之后所需要的字线根数就会很大。如图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BA%BF%E9%80%89%E6%B3%95.png" alt=""></p>
+<h3 id="重合法"><a href="#重合法" class="headerlink" title="重合法"></a>重合法</h3><p>对于1K X 1位存储芯片，采用重合法就只需要32 + 32根选择线，重合法就和x、y轴确定一个点一样，所以当地址线输入全为0时，x<sub>0</sub>和y<sub>0</sub>就有效了，矩阵中第0行、第0列共同选中的那行就被选中了。所以当x、y线都被选中时才能决定地址，所以称为重合法。<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%87%8D%E5%90%88%E6%B3%95.png" alt="重合法"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjk4qwpvk002yn4vjcwb3mar7" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -292,78 +363,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjk45ah8v00337ovjqyyfhgih" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-存储器 (二）之主存与CPU的联系" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/" class="article-date">
-  <time datetime="2018-07-13T06:03:34.000Z" itemprop="datePublished">2018-07-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/">存储器之主存与CPU的联系</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="主存储器"><a href="#主存储器" class="headerlink" title="主存储器"></a>主存储器</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90.png" alt="主存的基本构成"></p>
-<p>主存储器需要根据MAR中的地址访问某个存储单元，还需要经过地址译码、驱动等电路，才能找到所需要访问的单元。</p>
-<p>当主存储器写入时，会从MDR中取出数据经过写入电路，才会被写入到选中的单元中。</p>
-<p>当主存储器被读时，会从 <strong>被选中单元</strong>中取出数据，经过读取放大器，最后送入到MDR。</p>
-<h1 id="主存和CPU的联系"><a href="#主存和CPU的联系" class="headerlink" title="主存和CPU的联系"></a>主存和CPU的联系</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E5%92%8CCPU%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB.png" alt=""></p>
-<p>现代主存通常将 <strong>译码器</strong>、 <strong>驱动器</strong>、 <strong>读/写电路</strong>做在主存储器中；将 <strong>MDR</strong>、 <strong>MAR</strong> 集成在CPU中。两者通过总线相连接。</p>
-<p>当CPU要读取数据时：</p>
-<ol>
-<li>CPU会将待读取地址发送到MAR，地址经MAR发送到主存</li>
-<li>CPU发出读命令。</li>
-<li>主存接到命令后，读取指定地址单元上的内容</li>
-<li>将单元的内容读至数据总线上</li>
-</ol>
-<p>当CPU要写入数据时：</p>
-<ol>
-<li>CPU会将待写地址发送到MAR，地址经MAR发送到主存</li>
-<li>CPU将要写入的数据发送到MDR，数据经MDR发送到主存</li>
-<li>CPU发出写入命令</li>
-<li>主存街道命令，将数据线上的信息写入到对应地址单元。</li>
-</ol>
-<h2 id="主存中存储单元地址分配"><a href="#主存中存储单元地址分配" class="headerlink" title="主存中存储单元地址分配"></a>主存中存储单元地址分配</h2><p>不同的机器，存储字长不同，通常存储字长是8的倍数。CPU可按字地址查找，也可以通过字节查找。如果存储字长为8位，机器字长32位（每一个字有32位），每个字都包含4个可独立寻址的字节，字地址是用该字的高位字节来表示的。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IBM370%E5%92%8CPDP-11.png" alt="不同机器的字地址和字节地址"></p>
-<p>如图a所示，对24位地址线的主存而言，按字节寻址的范围是 2^24 bit，按字寻址的范围是 2^22 bit（先算出按字节算的个数，然后再除以一个字占用的字节）。<br>如图b所示，对24位地址线的主存而言，按字节寻址的范围是，2^24 bit，按字寻址的范围是 2^23 bit。</p>
-<h2 id="主存的技术指标"><a href="#主存的技术指标" class="headerlink" title="主存的技术指标"></a>主存的技术指标</h2><h3 id="存储容量"><a href="#存储容量" class="headerlink" title="存储容量"></a>存储容量</h3><p>存储容量是指 <strong>主存能存放二进制代码的总位数</strong>，即<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">    存储容量 = 存储单元个数 X 存储字长         </span><br><span class="line">或</span><br><span class="line">    存储容量 = 存储单元个数 X 存储字长 / 8</span><br></pre></td></tr></table></figure></p>
-<h3 id="存储速度"><a href="#存储速度" class="headerlink" title="存储速度"></a>存储速度</h3><p>存储速度是由存取时间和存取周期来表示的。<br>存取时间又称为 <strong>存储器的访问时间(Memory Access Time)</strong> ， 是指启动一次存储器操作(读或写)到完成该操作所需的全部时间。</p>
-<p>存取时间分为 <strong>读出时间</strong> 和 <strong>写入时间</strong>：</p>
-<ul>
-<li>读出时间：存储器接收到有戏地址开始，到产生有效输出所需的全部时间。</li>
-<li>写入时间：存储器接受到有效地址开始，到数据写入被选中单元为止所需的全部时间。</li>
-</ul>
-<p>存取周期是指存储器进行连续 <strong>开始</strong> 两次独立的存储操作所需的最小间隔时间（开始读取操作到下一次开始读取操作这段时间称为存取周期）。</p>
-<h2 id="译码驱动方式"><a href="#译码驱动方式" class="headerlink" title="译码驱动方式"></a>译码驱动方式</h2><h3 id="线选法"><a href="#线选法" class="headerlink" title="线选法"></a>线选法</h3><p>一根字选择先，直接选中一个存储单元（比如一个字节）。这种方式适用于容量不大的存储芯片，因为容量大了之后所需要的字线根数就会很大。如图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BA%BF%E9%80%89%E6%B3%95.png" alt=""></p>
-<h3 id="重合法"><a href="#重合法" class="headerlink" title="重合法"></a>重合法</h3><p>对于1K X 1位存储芯片，采用重合法就只需要32 + 32根选择线，重合法就和x、y轴确定一个点一样，所以当地址线输入全为0时，x<sub>0</sub>和y<sub>0</sub>就有效了，矩阵中第0行、第0列共同选中的那行就被选中了。所以当x、y线都被选中时才能决定地址，所以称为重合法。<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%87%8D%E5%90%88%E6%B3%95.png" alt="重合法"></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjk45ah8f002t7ovjcn0ycb7z" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjk4qwpvo0032n4vjtk2yhmg6" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -402,7 +402,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjk45ah9j003u7ovjz01hdcag" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjk4qwpxc0042n4vjk1igiuil" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -447,7 +447,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjk45ah8v00357ovjv12ln9ci" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjk4qwpvh002wn4vjgvk8nzmn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -495,7 +495,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjk45ah9n003w7ovjpmdp11u4" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjk4qwpwm003qn4vjd8er7t2m" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
@@ -590,7 +590,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjk45ah9f003q7ovje22hb2qi" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjk4qwpx00040n4vjk11vtlmd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -675,7 +675,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjk45ah9n003y7ovjkg850wc8" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjk4qwpwp003sn4vjyn6stghk" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -761,7 +761,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjk45ah9b003j7ovjh7us8xrq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjk4qwpwd003mn4vjhy4f7h58" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -799,7 +799,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjk45ah8j002x7ovj3i7i0qtq" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjk4qwpug001wn4vjqjqn2p80" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -859,11 +859,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/07/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
@@ -875,7 +875,7 @@
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
+            <a href="/codeleven.github.io/2018/07/25/IO接口/">IO接口</a>
           </li>
         
       </ul>

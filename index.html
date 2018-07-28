@@ -67,8 +67,8 @@
   
     <article id="post-(未埋)了解阻塞队列之PriorityBlockingQueue" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/" class="article-date">
-  <time datetime="2018-07-27T15:31:44.075Z" itemprop="datePublished">2018-07-27</time>
+    <a href="/codeleven.github.io/2018/07/28/(未埋)了解阻塞队列之PriorityBlockingQueue/" class="article-date">
+  <time datetime="2018-07-28T01:36:53.912Z" itemprop="datePublished">2018-07-28</time>
 </a>
     
   </div>
@@ -79,7 +79,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+      <a class="article-title" href="/codeleven.github.io/2018/07/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
     </h1>
   
 
@@ -92,7 +92,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjk45ah5200057ovjinpn2qet" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/28/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjk4qwpss0001n4vjhdswa9rn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
@@ -106,8 +106,8 @@
   
     <article id="post-《七周七并发模型》第一章第一天" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/" class="article-date">
-  <time datetime="2018-07-27T15:31:43.894Z" itemprop="datePublished">2018-07-27</time>
+    <a href="/codeleven.github.io/2018/07/28/《七周七并发模型》第一章第一天/" class="article-date">
+  <time datetime="2018-07-28T01:36:53.733Z" itemprop="datePublished">2018-07-28</time>
 </a>
     
   </div>
@@ -118,7 +118,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+      <a class="article-title" href="/codeleven.github.io/2018/07/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
     </h1>
   
 
@@ -202,7 +202,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/27/《七周七并发模型》第一章第一天/" data-id="cjk45ah67001e7ovjvpq477mo" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/28/《七周七并发模型》第一章第一天/" data-id="cjk4qwptr000yn4vjy32j9lvr" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -251,11 +251,51 @@
 <p>当各个中断源无请求时，各个INTR<sup>-</sup>均为高电平。一旦某个中断源提出中断请求时，就会让优先级低的中断源变为低电平，封锁其中的中断请求。比如当2、3号中断源同时有请求时（INTR2<sup>-</sup>、INTR3<sup>-</sup>均为0），流程如图所示</p>
 <p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E9%93%BE%E5%BC%8F%E6%8E%92%E9%98%9F%E5%99%A8%E4%B8%BE%E4%BE%8B%E5%9B%BE.png" alt="链式排队器距离图"></p>
 <p>INTR<sub>i</sub><sup>-</sup> 没有提出请求时均为高电平，根据例子，二、三号中断源提出请求，二、三号输入低电压，由于二号经过与非门输出高电压，经过三号的非门，输出低电压，让三号无法被选。此时因为INTP<sub>1</sub><sup>‘</sup>和INTP<sub>2</sub><sup>‘</sup>输出都为高电压，又通过INTP<sub>i</sub>来和输出信号进行与运算，最终输出INTP<sub>2</sub></p>
+<h2 id="中断向量地址形成部件（设备编址器）"><a href="#中断向量地址形成部件（设备编址器）" class="headerlink" title="中断向量地址形成部件（设备编址器）"></a>中断向量地址形成部件（设备编址器）</h2><p>CPU一旦响应了IO中断，就要暂停现行程序，转去执行该设备的中断服务程序。不同的设备有不同的中断服务程序，每个服务程序都有一个入口，而CPU需要通过设备编址码找到中断服务程序实际所在的位置。</p>
+<p>设备编址码的输入是来自排队器的输出INTP<sub>i</sub>，它的输出是中断源的位置</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E8%AE%BE%E5%A4%87%E7%BC%96%E7%A0%81%E5%99%A8.png" alt="设备编码器"></p>
+<p>比如编址器输出12H，CPU就能从主存的12H的位置查找（假设是统一编址），找到对应的中断服务程序的入口地址</p>
+<h1 id="IO中断处理过程"><a href="#IO中断处理过程" class="headerlink" title="IO中断处理过程"></a>IO中断处理过程</h1><h2 id="中断的条件和时间"><a href="#中断的条件和时间" class="headerlink" title="中断的条件和时间"></a>中断的条件和时间</h2><ol>
+<li>CPU中的EINT(允许中断触发器)为“1”，该触发器用开中断置位，用关中断使其复位</li>
+<li>CPU响应中断的时间一定是在每条指令执行阶段的结束时刻</li>
+</ol>
+<p>接下来以输入设备为例，结合流程示意图进行讲解，流程图如下所示<br><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E7%A8%8B%E5%BA%8F%E4%B8%AD%E6%96%AD%E6%8E%A5%E5%8F%A3%E7%94%B5%E8%B7%AF%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90.png" alt="中断流程图"></p>
+<p>当选中设备后，设备选择电路发出SEL信号</p>
+<ol>
+<li>CPU发出启动命令，将触发器B置为“1”，D为“0”</li>
+<li>接口启动输入设备，设备开始工作</li>
+<li>IO设备将数据送入数据缓冲寄存器</li>
+<li>当输入设备发出设备工作结束信号后，D被置为“1”，B被置为“0”，标志设备准备就绪</li>
+<li>当设备准备就绪，且本设备未被屏蔽时，在指令执行结束阶段，CPU会发出中断查询信号</li>
+<li>设备中断请请求触发器INTR被置为“1”，向CPU提出中断请求，INTR送至排队器，进行中断判优</li>
+<li>若CPU允许中断（ENIT=1），设备又被排队选中，即进入中断响应阶段，由中断响应信号INTA将排队器输出送至编码器形成的向量地址</li>
+<li>向量地址送至CPU，作为下一条指令的地址</li>
+<li>向量地址里存放的是无条件转移指令（看中断流程图），待转移指令执行完毕，就转去对应设备的服务程序入口地址，开始执行中断服务程序，通过输入指令将数据缓冲寄存器的输入数据送至CPU的通用寄存器，再存入主存相关单元</li>
+<li>中断服务程序的最后一条指令是中断返回指令，当其执行结束时，中断返回至原程序的断点处。</li>
+</ol>
+<h1 id="中断服务程序的流程"><a href="#中断服务程序的流程" class="headerlink" title="中断服务程序的流程"></a>中断服务程序的流程</h1><p>总共分为四个阶段</p>
+<ol>
+<li>保护现场</li>
+<li>中断服务</li>
+<li>恢复现场</li>
+<li>中断返回</li>
+</ol>
+<h2 id="保护现场"><a href="#保护现场" class="headerlink" title="保护现场"></a>保护现场</h2><p>其一是保存程序的断点，其二是保存通用寄存器和状态寄存器的内容。前者涉及到中断隐指令，后者由中断服务程序完成。中断服务程序会在程序的起始部分安排若干条存数指令，将寄存器的内容存至存储器中保存；或者用进栈指令将各个寄存器的内容压入堆栈中保存。</p>
+<h2 id="中断服务"><a href="#中断服务" class="headerlink" title="中断服务"></a>中断服务</h2><p>不同的设备中断服务不一样，比如打印机要求CPU将需要打印的字符代码送入打印机的缓冲器内；显示器设备要求CPU将需要显示的字符代码送入显示存储器中</p>
+<h2 id="恢复现场"><a href="#恢复现场" class="headerlink" title="恢复现场"></a>恢复现场</h2><p>在中断服务程序退出前，将中断的现行程序恢复回来。通常可用取数指令或出栈指令，将保存在存储器中的信息送回到原来的寄存器中</p>
+<h2 id="中断返回"><a href="#中断返回" class="headerlink" title="中断返回"></a>中断返回</h2><p>中断服务程序的最后一条指令通常是一条中断返回指令，使其返回到原程序的断点处</p>
+<h2 id="单重中断和多重中断"><a href="#单重中断和多重中断" class="headerlink" title="单重中断和多重中断"></a>单重中断和多重中断</h2><p>当CPU响应了一个中断源的中断请求后，EINT会被置为“0”，无法让其他中断源继续请求。对于单重中断，在保护完现场后，即刻去执行设备服务，直到恢复完现场后，才将EINT置为“1”并返回。而对于多重中断来说，在保护完现场后，就立刻将EINT设置为“1”，允许其他中断源插入中断请求。示意图如下所示</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E5%8D%95%E9%87%8D%E4%B8%AD%E6%96%AD%E5%92%8C%E5%A4%9A%E9%87%8D%E4%B8%AD%E6%96%AD.png" alt="单重中断和多重中断"></p>
+<p>多重中断就和方法里面再调用其他方法一样，如下图所示<br><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E5%A4%9A%E9%87%8D%E4%B8%AD%E6%96%AD%E5%B5%8C%E5%A5%97%E8%B0%83%E7%94%A8.png" alt="嵌套调用"></p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>从宏观上看，中断方式克服了程序查询方式的原地踏步，CPU和IO设备是并行操作的，提高了CPU的资源利用率</p>
+<p>从微观上看，CPU在处理中断服务程序时仍然需要暂停原程序的运行，尤其是当高速IO或辅助存储器频繁地与主存交换信息时，需要不断打断CPU执行主程序而执行中断服务程序。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FIOSystem%2F%E4%B8%BB%E7%A8%8B%E5%BA%8F%E5%92%8C%E6%9C%8D%E5%8A%A1%E7%A8%8B%E5%BA%8F%E6%8A%A2%E5%8D%A0CPU.png" alt="主程序和服务程序抢占CPU资源"></p>
+<p>为了完善中断程序，人们提出了DMA控制方式。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序中断方式/" data-id="cjk45ah9f003m7ovjbyzuu3wk" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序中断方式/" data-id="cjk4qwpwa003kn4vjjgc4xk8a" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -309,7 +349,75 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序查询方式/" data-id="cjk45ah97003f7ovj7ps6dzkb" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序查询方式/" data-id="cjk4qwpw7003in4vjhzlxudnh" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-IO接口" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/25/IO接口/" class="article-date">
+  <time datetime="2018-07-25T05:38:56.000Z" itemprop="datePublished">2018-07-25</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/25/IO接口/">IO接口</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>接口可以是两个部件之间连接的电路，IO接口通常是指CPU和IO设备间的硬件电路和控制软件，而不同的IO设备通常都通过IO接口和CPU取得联系的。</p>
+<p>IO接口的功能有如下几个：</p>
+<ol>
+<li>实现IO设备的选择</li>
+<li>匹配IO设备和CPU的速度</li>
+<li>实现数据的串-并转换</li>
+<li>实现电平的转换</li>
+<li>发送控制信号</li>
+<li>保存状态信息，供CPU进行查询</li>
+</ol>
+<p>这里举个四功能的接口，看看它的功能和组成</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%84%E6%88%90.png" alt="接口的功能和组成"></p>
+<h1 id="组成介绍"><a href="#组成介绍" class="headerlink" title="组成介绍"></a>组成介绍</h1><p>设备选择线：<br>该线是用于传输设备码的，它的根数取决于I/O指令设备码的位数。</p>
+<p>命令线：<br>该线是单项的，通常由CPU发出，用于传输CPU的I/O指令</p>
+<p>状态线：<br>反馈IO设备的状态，该线也是单项的，通常</p>
+<p>数据线：<br>双向的，用于传输数据，其根数一般等于存储字长的长度</p>
+<h1 id="功能介绍"><a href="#功能介绍" class="headerlink" title="功能介绍"></a>功能介绍</h1><h2 id="选址功能"><a href="#选址功能" class="headerlink" title="选址功能"></a>选址功能</h2><p>IO总线与所有设备的接口相连，但CPU究竟选择哪台设备，还得通过设备选择线上的设备码来确定。</p>
+<p>每个接口会带有选址功能，当设备线上的设备码与I/O设备的设备码一致时，应发出设备选中信号SEL。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%BE%E5%A4%87%E9%80%89%E6%8B%A9.png" alt="设备选择"></p>
+<h2 id="传送命令功能"><a href="#传送命令功能" class="headerlink" title="传送命令功能"></a>传送命令功能</h2><p>当CPU向IO设备发出命令时，要求IO设备能做出响应。如果设备不具备传送命令的信息功能，设备将无法响应。所以通常在IO接口中设有存放命令的寄存器以及命令译码器。</p>
+<p>命令寄存器用来存放IO指令中的指令码，只有当设备选择电路有效，SEL信号有效，才能存放命令道寄存器中。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%91%BD%E4%BB%A4%E5%AF%84%E5%AD%98%E5%99%A8%E5%92%8C%E8%AF%91%E7%A0%81%E5%99%A8.png" alt="命令寄存器"></p>
+<h2 id="传送数据的功能"><a href="#传送数据的功能" class="headerlink" title="传送数据的功能"></a>传送数据的功能</h2><p>IO设备和CPU之间通过接口的数据通路进行数据交互，接口还会有数据缓冲的功能，它用来暂存IO设备和CPU间要交换的数据。数据通路的位数取决于设备的种类。</p>
+<h2 id="IO设备工作状态"><a href="#IO设备工作状态" class="headerlink" title="IO设备工作状态"></a>IO设备工作状态</h2><p>为了使CPU能时刻了解IO设备的运行状况，接口通常会设置一些反映设备状态的触发器。<br>比如工作触发器B、完成触发器D、中断触发器INTR，屏蔽触发器MASK</p>
+<ul>
+<li>D = 0, B = 0时，表示设备处于暂停</li>
+<li>D = 1, B = 0时，表示设备已准备就绪</li>
+<li>D = 0, B = 1时，表示设备处于准备状态</li>
+</ul>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90.png" alt="IO接口的基本组成"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/IO接口/" data-id="cjk4qwpt00005n4vj5u9w2pej" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -422,75 +530,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjk45ah9z00427ovj9t2w5m3x" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-IO接口" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/25/IO接口/" class="article-date">
-  <time datetime="2018-07-25T05:38:56.000Z" itemprop="datePublished">2018-07-25</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/25/IO接口/">IO接口</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>接口可以是两个部件之间连接的电路，IO接口通常是指CPU和IO设备间的硬件电路和控制软件，而不同的IO设备通常都通过IO接口和CPU取得联系的。</p>
-<p>IO接口的功能有如下几个：</p>
-<ol>
-<li>实现IO设备的选择</li>
-<li>匹配IO设备和CPU的速度</li>
-<li>实现数据的串-并转换</li>
-<li>实现电平的转换</li>
-<li>发送控制信号</li>
-<li>保存状态信息，供CPU进行查询</li>
-</ol>
-<p>这里举个四功能的接口，看看它的功能和组成</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%8A%9F%E8%83%BD%E5%92%8C%E7%BB%84%E6%88%90.png" alt="接口的功能和组成"></p>
-<h1 id="组成介绍"><a href="#组成介绍" class="headerlink" title="组成介绍"></a>组成介绍</h1><p>设备选择线：<br>该线是用于传输设备码的，它的根数取决于I/O指令设备码的位数。</p>
-<p>命令线：<br>该线是单项的，通常由CPU发出，用于传输CPU的I/O指令</p>
-<p>状态线：<br>反馈IO设备的状态，该线也是单项的，通常</p>
-<p>数据线：<br>双向的，用于传输数据，其根数一般等于存储字长的长度</p>
-<h1 id="功能介绍"><a href="#功能介绍" class="headerlink" title="功能介绍"></a>功能介绍</h1><h2 id="选址功能"><a href="#选址功能" class="headerlink" title="选址功能"></a>选址功能</h2><p>IO总线与所有设备的接口相连，但CPU究竟选择哪台设备，还得通过设备选择线上的设备码来确定。</p>
-<p>每个接口会带有选址功能，当设备线上的设备码与I/O设备的设备码一致时，应发出设备选中信号SEL。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E8%AE%BE%E5%A4%87%E9%80%89%E6%8B%A9.png" alt="设备选择"></p>
-<h2 id="传送命令功能"><a href="#传送命令功能" class="headerlink" title="传送命令功能"></a>传送命令功能</h2><p>当CPU向IO设备发出命令时，要求IO设备能做出响应。如果设备不具备传送命令的信息功能，设备将无法响应。所以通常在IO接口中设有存放命令的寄存器以及命令译码器。</p>
-<p>命令寄存器用来存放IO指令中的指令码，只有当设备选择电路有效，SEL信号有效，才能存放命令道寄存器中。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%91%BD%E4%BB%A4%E5%AF%84%E5%AD%98%E5%99%A8%E5%92%8C%E8%AF%91%E7%A0%81%E5%99%A8.png" alt="命令寄存器"></p>
-<h2 id="传送数据的功能"><a href="#传送数据的功能" class="headerlink" title="传送数据的功能"></a>传送数据的功能</h2><p>IO设备和CPU之间通过接口的数据通路进行数据交互，接口还会有数据缓冲的功能，它用来暂存IO设备和CPU间要交换的数据。数据通路的位数取决于设备的种类。</p>
-<h2 id="IO设备工作状态"><a href="#IO设备工作状态" class="headerlink" title="IO设备工作状态"></a>IO设备工作状态</h2><p>为了使CPU能时刻了解IO设备的运行状况，接口通常会设置一些反映设备状态的触发器。<br>比如工作触发器B、完成触发器D、中断触发器INTR，屏蔽触发器MASK</p>
-<ul>
-<li>D = 0, B = 0时，表示设备处于暂停</li>
-<li>D = 1, B = 0时，表示设备已准备就绪</li>
-<li>D = 0, B = 1时，表示设备处于准备状态</li>
-</ul>
-<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IO%E6%8E%A5%E5%8F%A3%E7%9A%84%E5%9F%BA%E6%9C%AC%E7%BB%84%E6%88%90.png" alt="IO接口的基本组成"></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/25/IO接口/" data-id="cjk45ah5200047ovjkxwq6rut" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjk4qwpwt003un4vj9wdbnji9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -579,7 +619,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjk45ah8j002v7ovjgn1p4k7d" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjk4qwpvw003an4vj24l2txmw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -686,7 +726,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/20/存储器（八）之高速缓冲器（上）/" data-id="cjk45ah8z00397ovjing13d88" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/20/存储器（八）之高速缓冲器（上）/" data-id="cjk4qwpw2003en4vj9s7y3frh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -801,7 +841,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/" data-id="cjk45ah8r00317ovj7qi3gis6" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/" data-id="cjk4qwpvr0036n4vjlbjknv4w" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -888,7 +928,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjk45ah8z00377ovjq44ajxoy" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjk4qwpvu0038n4vjj2cq1v3y" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -948,11 +988,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/27/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/07/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/27/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/07/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
@@ -964,7 +1004,7 @@
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/25/输入输出系统概述/">输入输出系统之概述</a>
+            <a href="/codeleven.github.io/2018/07/25/IO接口/">IO接口</a>
           </li>
         
       </ul>
