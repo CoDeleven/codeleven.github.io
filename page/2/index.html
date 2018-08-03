@@ -65,6 +65,93 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-存储器（七）之主存结构" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/17/存储器（七）之主存结构/" class="article-date">
+  <time datetime="2018-07-17T00:28:13.000Z" itemprop="datePublished">2018-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/17/存储器（七）之主存结构/">存储器之主存结构</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h1><p>前面了解过，CPU速度 提升的会越来越快，存储芯片速度 提升的相比来说就会比较慢。比如CPU五年提高50%，存储芯片10年提高50%。<br>因为CPU需要的程序、数据都在存储器里；CPU又需要将计算结果存储在存储器里；所以如果两者的执行速度差就会越来越大，那么即使CPU速度再快也无济于事。<br>这种问题在业界内称为 <strong>存储墙问题</strong></p>
+<p>所以为了提高存储芯片的性能，我们前面介绍了以下几种方法：</p>
+<ul>
+<li>提高芯片性能（SRAM、DRAM等等）</li>
+<li>存储系统的层次结构（CPU-缓存-主存）</li>
+</ul>
+<p>本节就是要讲另外一种提高存储器速度的方法：<strong>改变主存内部的结构</strong></p>
+<h1 id="主存的结构"><a href="#主存的结构" class="headerlink" title="主存的结构"></a>主存的结构</h1><h2 id="单体多字处理系统"><a href="#单体多字处理系统" class="headerlink" title="单体多字处理系统"></a>单体多字处理系统</h2><p>单体多字系统的核心在于：扩展存储字长。<br>比如原来是一个 存储字长（=机器字长），现在将存储字长提高为原来的N倍。</p>
+<p>假设现在机器字长为16位，存储字长为64位。如下图所示：</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%8D%95%E4%BD%93%E5%A4%9A%E5%AD%97%E7%B3%BB%E7%BB%9F.png" alt="单体多字处理系统"></p>
+<p>单体多字处理系统的要点：</p>
+<ol>
+<li>图中存储体那行，其实分成了四块（每一块的存储字长都是和机器字长相等的，即16位），共组成了一个64位的存储单元</li>
+<li>当CPU要获取数据时，先将 <strong>一个存储单元内</strong>的数据（即64位） 读到 <strong>数据寄存器</strong>中，下一次要用时可以直接用</li>
+</ol>
+<p>这样就能提高存储器的带宽，但是它也有自己的缺点：</p>
+<ol>
+<li>CPU每次写入时，由于只能写入16位的数据，所以每次都需要先写入图中的单字寄存器，然后由单字寄存器写回存储体。但是对于存储体来说，每次应该写入64位，所以在写入过程中可能会发生误伤的情况（覆盖了不必要的数据）</li>
+<li>CPU读取数据时，如果数据不是连续的，就会产生浪费。比如读到一条指令，该指令要跳转到后面的存储地址，那么此次读就会产生浪费</li>
+</ol>
+<h2 id="多体并行之高位交叉"><a href="#多体并行之高位交叉" class="headerlink" title="多体并行之高位交叉"></a>多体并行之高位交叉</h2><p>多体并行的核心在于：让多个存储体并行操作，每个存储体有各自独立的地址寄存器（MAR）、数据寄存器（MDR）、地址译码、驱动电路、读/写电路等等。而高位交叉如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%A4%9A%E4%BD%93%E7%B3%BB%E7%BB%9F%E4%B9%8B%E9%AB%98%E4%BD%8D%E4%BA%A4%E5%8F%89.png" alt="多体并行之高位交叉"></p>
+<p>高位表示体号、低位表示体内地址（可以参考字扩展），由于程序因按体内地址顺序存放（一个体存满后，再存入下一个体），故又有顺序存储之称。这种编码方式，只要合理调动，使不同的请求源访问不同的体，便可实现并行工作。</p>
+<p>缺点：<br>如果CPU经常访问同一个个体，其他个体就会空闲着，就会产生“一体有难，三核围观”的现象。</p>
+<h2 id="多体并行之低位交叉（又称交叉存储）"><a href="#多体并行之低位交叉（又称交叉存储）" class="headerlink" title="多体并行之低位交叉（又称交叉存储）"></a>多体并行之低位交叉（又称交叉存储）</h2><p>多体并行就不赘述了，这里讲一下低位交叉，因为高位交叉是顺序存储的，只有当一个存储体全部用完后才会使用后面的存储体，所以多体并行就可能发生CPU一直访问一个存储体，而不访问其他存储体的问题。</p>
+<p>而低位交叉正好解决了这个问题，让低位作为体号，高位作为体内地址，如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%A4%9A%E4%BD%93%E7%B3%BB%E7%BB%9F%E4%B9%8B%E4%BD%8E%E4%BD%8D%E4%BA%A4%E5%8F%89.png" alt="多体并行之低位交叉"></p>
+<p>每次先将第一排放满，再放第二排，第三排…</p>
+<h2 id="多体并行的总结"><a href="#多体并行的总结" class="headerlink" title="多体并行的总结"></a>多体并行的总结</h2><p>虽然对于每个存储操作来说，周期没有缩短，但由于CPU交叉访问各体，使四个存储体的读/写重叠在一起，最终在一个存储周期内完成，存储器向CPU提供了四个存储字。时间关系如下图所示</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%BA%A4%E5%8F%89%E8%AE%BF%E9%97%AE%E7%9A%84%E6%97%B6%E9%97%B4%E5%85%B3%E7%B3%BB.png" alt="交叉访问的时间关系"></p>
+<p>在每一个读写周期内，会执行多次总线传输。保证<code>T(存取周期) = n(存储体个数) * τ(总线传输周期)</code>。注意，读写周期并没有缩短，而是让读/写过程重叠进行，最终在一个存取周期内 <strong>开始</strong>（注意图，不是完成，而是启动存储体的时间，正好在一个存取周期内。），存储器最终向CPU提供了4个字节。</p>
+<p>用流水线表示低位交叉的多体并行系统的图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%9B%9B%E4%BD%93%E4%BD%8E%E4%BD%8D%E4%BA%A4%E5%8F%89%E6%B5%81%E6%B0%B4%E7%BA%BF%E5%9B%BE.png" alt="四体低位交叉系统"></p>
+<p>很明显，读取四个字所花费的时间是 <code>T + 3τ</code>：在第一个存取周期内开始所有体的读/写操作。并在延迟3τ之后全部完成。</p>
+<p>可见，对于低位交叉来说，如果连续读取n个 <strong>字</strong>，所需要花费的时间为：<code>t = T + (n - 1) * τ</code></p>
+<p>对于高位交叉（即顺序存储）来说，如果连续读取n个 <strong>字</strong>，所需要花费的时间为：<code>t = n * T</code></p>
+<blockquote>
+<p>注意这里的概念：存取周期是指连续开始两次读/写操作的间隔时间，这个指标是对于存储器来说的；总线传输周期是指完成地址分配、传指、传数、结束阶段的时间。总线传输周期总会小于存取周期，因为CPU的处理速度几乎远大于主存处理的速度。</p>
+</blockquote>
+<p>例子：<br>设有四个模块组成的四体存储器结构，每个体的存储字长为32 位，存取周期为200ns。</p>
+<p>假设数据总线宽度为32 位，总线传输周期为50ns，试求顺序存储和交叉存储的存储器带宽。</p>
+<p>解：</p>
+<ol>
+<li>对于四个低位存储体来说，连续读取4个字所花费的时间为：<code>t = T + (n - 1) * τ = 200 + 3 * 50 = 350ns</code></li>
+<li><p>对于四个高位存储体来说，连续读取4个字所花费的时间为：<code>t = T * n = 200 * 4 = 800ns</code></p>
+</li>
+<li><p>交叉存储的带宽即为：<code>32 * n / t = 32b * 4 / 350ns = 0.3657 * 10^9 bps</code></p>
+</li>
+<li>顺序存储的带宽即为：<code>32 * n / t = 32b * 4 / 800ns = 0.16 * 10^9 bps</code></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjke4f7fd002i2wvj8bfiry35" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-存储器（五）之校验码（上）" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/" class="article-date">
@@ -130,7 +217,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjk4qwpvp0034n4vj48z2w87a" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjke4f7fe002k2wvjlw27rhis" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -201,7 +288,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjk4qwpvk002yn4vjcwb3mar7" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjke4f7fg002o2wvj6dq00h7q" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -363,46 +450,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjk4qwpvo0032n4vjtk2yhmg6" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-（未埋）存储器（四）之CPU和存储器的链接" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" class="article-date">
-  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/">存储器之CPU和存储器的链接</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>未埋</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjk4qwpxc0042n4vjk1igiuil" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjke4f7ff002m2wvjm68yiu2y" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -447,7 +495,46 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjk4qwpvh002wn4vjgvk8nzmn" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjke4f7f9002b2wvjivzzk5g5" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-（未埋）存储器（四）之CPU和存储器的链接" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" class="article-date">
+  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/">存储器之CPU和存储器的链接</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>未埋</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjke4f7fw003f2wvjlvua5xi4" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -495,7 +582,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjk4qwpwm003qn4vjd8er7t2m" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjke4f7fx003h2wvj0d64pc3m" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
@@ -590,7 +677,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjk4qwpx00040n4vjk11vtlmd" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjke4f7fv003d2wvji5vua1gt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -675,7 +762,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjk4qwpwp003sn4vjyn6stghk" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjke4f7fm002y2wvjmizli4ij" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -761,45 +848,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjk4qwpwd003mn4vjhy4f7h58" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-处理器" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/03/处理器/" class="article-date">
-  <time datetime="2018-07-03T11:11:05.000Z" itemprop="datePublished">2018-07-03</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/03/处理器/">处理器（一）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/03/处理器/" data-id="cjk4qwpug001wn4vjqjqn2p80" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjke4f7fo00302wvji618atd8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -846,7 +895,7 @@
   <div class="widget-wrap">
     <h3 class="widget-title">Archives</h3>
     <div class="widget">
-      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
     </div>
   </div>
 
@@ -859,11 +908,15 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/28/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/08/03/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/07/28/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/08/03/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/02/DMA方式/">DMA方式</a>
           </li>
         
           <li>
@@ -872,10 +925,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/25/IO接口/">IO接口</a>
           </li>
         
       </ul>
