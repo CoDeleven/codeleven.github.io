@@ -65,6 +65,329 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-《Java并发编程的艺术》之ConcurrentLinkedQueue" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" class="article-date">
+  <time datetime="2018-05-11T01:39:55.000Z" itemprop="datePublished">2018-05-11</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/">《Java并发编程的艺术》之ConcurrentLinkedQueue</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>队列这个数据结构已经很熟悉了，就不多介绍，主要还是根据代码理解Doug Lea大师的一些其他技巧。</p>
+<h2 id="入队"><a href="#入队" class="headerlink" title="入队"></a>入队</h2><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_state.png" alt="offer状态图"><br>如图所示，很多人可能会很疑惑，为什么第一次入队后，TAIL没有指向Node2？答案是为了效率！Σ(っ °Д °;)っ 那这还能叫队列吗？当然，它依然符合先进先出（FIFO）的规则。只是TAIL变量不一定指向尾结点，那么来看看大师是怎么做的。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">offer</span><span class="params">(E e)</span> </span>&#123;</span><br><span class="line">    checkNotNull(e);</span><br><span class="line">    <span class="keyword">final</span> Node&lt;E&gt; newNode = <span class="keyword">new</span> Node&lt;E&gt;(e);</span><br><span class="line">    <span class="keyword">for</span> (Node&lt;E&gt; t = tail, p = t;;) &#123;</span><br><span class="line">        Node&lt;E&gt; q = p.next;</span><br><span class="line">        <span class="keyword">if</span> (q == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// p是tail结点</span></span><br><span class="line">            <span class="keyword">if</span> (p.casNext(<span class="keyword">null</span>, newNode)) &#123;</span><br><span class="line">                <span class="comment">// 判断p结点是否是尾结点</span></span><br><span class="line">                <span class="comment">// 这一步不执行的话，不会对整体流程造成影响，至多是多一次循</span></span><br><span class="line">                <span class="comment">// 环，相比CAS操作，更愿意多一次循环</span></span><br><span class="line">                <span class="keyword">if</span> (p != t) </span><br><span class="line">                    <span class="comment">// 交换Tail结点，如果CAS更新失败表示已经有其他线程对其进行更新</span></span><br><span class="line">                    casTail(t, newNode);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// CAS竞争失败，重新循环，竞争失败后q一般不会为null，除非又发生了出队</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// HEAD和TAIL都指向同一个结点</span></span><br><span class="line">        <span class="comment">// 一个线程执行入队，一个线程执行出队，假设前面都没有更新tail和head</span></span><br><span class="line">        <span class="comment">// 执行出队的线程更新HEAD并设置其为自引用</span></span><br><span class="line">        <span class="comment">// 那么就会发生这个条件想要的现象</span></span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (p == q)</span><br><span class="line">            <span class="comment">// 如果tail发生了改变，那么就为p设置t，并重新寻找</span></span><br><span class="line">            <span class="comment">// 如果tail未发生改变，head发生了改变，保</span></span><br><span class="line">            <span class="comment">// 险方法就是重新从新head开始遍历</span></span><br><span class="line">            <span class="comment">// 注意： -----只要在读取前完成tail发生更新就行了-----</span></span><br><span class="line">            p = (t != (t = tail)) ? t : head;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="comment">// p != t 表示p不是尾结点，发生的原因是 入队时没有更新尾结点</span></span><br><span class="line">            <span class="comment">// t != (t = tail) 更新tail，如果tail被其他线程修改，则返回true</span></span><br><span class="line">            <span class="comment">// 如果为true，重新将p设置为尾结点（此时尾结点已经更新了）</span></span><br><span class="line">            <span class="comment">// 如果为false，p = q，继续循环下去</span></span><br><span class="line">            p = (p != t &amp;&amp; t != (t = tail)) ? t : q;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer.png" alt=""></p>
+<p>第一次入队：</p>
+<ol>
+<li>初始状态下head和tail都指向同一个item为null的结点</li>
+<li>tail没有后继结点</li>
+<li>尝试CAS为tail设置next结点</li>
+<li>p == t，没有更新tail变量，直接返回true<br><strong>注意offer永远都返回true</strong></li>
+</ol>
+<p>第二次入队：</p>
+<ol>
+<li>初始状态下head和tail都指向同一个item为null的结点，但是next指向Node2</li>
+<li>tail有后继结点</li>
+<li>p != q，进入下个if语句</li>
+<li>p == t 返回false，整个三目运算符返回false，p = t</li>
+<li>此时p没有后继结点</li>
+<li>尝试CAS为p设置next</li>
+<li>p != t，更新tail结点，直接返回true</li>
+</ol>
+<p><strong>第二次入队多线程版</strong><br>线程A执行入队，线程B执行出队</p>
+<p>初始状态图如下所示：<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_offer_example1_state.png" alt=""></p>
+<p>操作步骤如下表所示：</p>
+<table>
+<thead>
+<tr>
+<th>次序</th>
+<th>线程A</th>
+<th>线程B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>2</td>
+<td></td>
+<td>node1.item == null，执行下个if语句</td>
+</tr>
+<tr>
+<td>3</td>
+<td></td>
+<td>(q = node1.next) != null，执行下个if语句</td>
+</tr>
+<tr>
+<td>4</td>
+<td></td>
+<td>p != q，执行后面的else语句</td>
+</tr>
+<tr>
+<td>5</td>
+<td></td>
+<td>p = q</td>
+</tr>
+<tr>
+<td>6</td>
+<td></td>
+<td>node2.item != null</td>
+</tr>
+<tr>
+<td>7</td>
+<td></td>
+<td>p != h (p是node2)</td>
+</tr>
+<tr>
+<td>8</td>
+<td></td>
+<td>(q = p.next) == null，故将p设置为头结点，即将node2作为头结点</td>
+</tr>
+<tr>
+<td>9</td>
+<td></td>
+<td>将node1设置为自引用</td>
+</tr>
+<tr>
+<td>10</td>
+<td>q = p.next，即node1.next，因为自引用q == p</td>
+<td>返回item</td>
+</tr>
+<tr>
+<td>11</td>
+<td>q != null</td>
+<td></td>
+</tr>
+<tr>
+<td>12</td>
+<td>p == q</td>
+<td></td>
+</tr>
+<tr>
+<td>13</td>
+<td>t != (t = tail)，即此时tail是否发生改变：true -&gt; p =tail；false -&gt; p = head</td>
+</tr>
+</tbody>
+</table>
+<p>在步骤13，如果有个线程C已经执行了入队且tail发生改变，那么p就直接紧跟着更新后的tail就行了；如果tail没更新，就要设置p = head，然后重新循环遍历。</p>
+<h2 id="出队"><a href="#出队" class="headerlink" title="出队"></a>出队</h2><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_poll_state.png" alt=""></p>
+<p>从图中可以看出每次出队会有<strong>两种可能</strong>：将首结点的item置空，不移除；或是将移除首结点。总结一下，就是每次出队更新HEAD结点时，当HEAD结点里有元素时，直接弹出HEAD结点内的元素，而不会直接更新HEAD结点。只有当HEAD结点里没有元素时，出队操作才会更新HEAD结点。这种做法是为了减少CAS更新HEAD结点的消耗，从而提高出队效率。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> E <span class="title">poll</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    restartFromHead:</span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="comment">// p变量可以理解为游标、当前处理的结点，用于遍历的</span></span><br><span class="line">        <span class="comment">// q变量可以理解为p变量的next</span></span><br><span class="line">        <span class="keyword">for</span> (Node&lt;E&gt; h = head, p = h, q;;) &#123;</span><br><span class="line">            E item = p.item;</span><br><span class="line">            <span class="comment">// ① 先判断当前结点的值不为null 且 CAS更新p变量的item值</span></span><br><span class="line">            <span class="keyword">if</span> (item != <span class="keyword">null</span> &amp;&amp; p.casItem(item, <span class="keyword">null</span>)) &#123;</span><br><span class="line">                <span class="comment">// ②更新成功后，判断当前结点是否是头结点</span></span><br><span class="line">                <span class="comment">// 这一步主要是为了节省CAS操作，因为少更新一次HEAD结点没什么影响</span></span><br><span class="line">                <span class="keyword">if</span> (p != h) </span><br><span class="line">                    <span class="comment">// ③更新头结点</span></span><br><span class="line">                    updateHead(h, ((q = p.next) != <span class="keyword">null</span>) ? q : p);</span><br><span class="line">                <span class="keyword">return</span> item;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// ④ 获取当前结点的下一个结点，判断是否为null</span></span><br><span class="line">            <span class="comment">// 一般发生于只有一个结点的情况</span></span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> ((q = p.next) == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// ⑤ 将当前结点设置为自引用</span></span><br><span class="line">                updateHead(h, p);</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// ⑥ 如果当前结点出现自引用</span></span><br><span class="line">            <span class="comment">// 一般发生在一个线程更新了头结点，让p结点自引用时，p才会等于q</span></span><br><span class="line">            <span class="keyword">else</span> <span class="keyword">if</span> (p == q)</span><br><span class="line">                <span class="comment">// 重新获取一个头结点</span></span><br><span class="line">                <span class="keyword">continue</span> restartFromHead;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                <span class="comment">// p = p.next</span></span><br><span class="line">                p = q;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentLinkedQueue_poll.png" alt="poll的流程图"></p>
+<p>第一次出队：</p>
+<ol>
+<li>初始状态所有item不为null，尝试更新结点的item（一般情况下都是成功的），更新成功后结点item为null</li>
+<li>判断 p == h，不满足条件，直接返回item值</li>
+</ol>
+<p>第二次出队：</p>
+<ol>
+<li>Node1.item为null，进入下个条件</li>
+<li>(q = p.next) != null，进入下个条件</li>
+<li>p != q，进入下个条件</li>
+<li>p = q，重新循环</li>
+<li>Node2.item不为null，尝试更新结点的item，更新成功后结点item为null</li>
+<li>判断 p != h，满足条件</li>
+<li>判断p结点(Node2)是否有后继结点，如果有就将后继结点作为HEAD，否则将P作为HEAD</li>
+<li>返回item值</li>
+</ol>
+<p><strong>第二次出队多线程版1</strong>：<br>线程A和线程B同时执行poll()方法，假设线程A稍快</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">线程A</th>
+<th style="text-align:left">线程B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A1. Node1.item为null</td>
+<td style="text-align:left">B1. Node1.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A2. (q = p.next) != null</td>
+<td style="text-align:left">B2. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A3. p != q</td>
+<td style="text-align:left">B3. p != q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A4. p = q，循环</td>
+<td style="text-align:left">B4. p = q，循环</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A5. Node2.item不为null，尝试更新结点item，更新成功，item值为null</td>
+<td style="text-align:left">B5.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A6. 满足条件 p != h</td>
+<td style="text-align:left">B6. Node2.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A7. 判断p结点(Node2)是否有后继结点</td>
+<td style="text-align:left">B7. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A8.</td>
+<td style="text-align:left">B8. p != q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A9.</td>
+<td style="text-align:left">B9. p = q 循环</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A10.</td>
+<td style="text-align:left">B10. Node3.item不为null，尝试更新结点item，更新成功，item值为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A11. 将后继结点即Node3设置为HEAD</td>
+<td style="text-align:left">B11.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A12. 返回item</td>
+<td style="text-align:left">B12. 满足条件 p != h</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A13.</td>
+<td style="text-align:left">B13. 判断p结点(Node2)是否有后继结点</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A14.</td>
+<td style="text-align:left">B14. 由于HEAD已经被修改，所以CAS更新失败</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A15.</td>
+<td style="text-align:left">B15. 返回item</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>这里主要是想讲即便HEAD更新发生冲突，有一次没有更新，也不会影响整体的流程，大不了下次出队的时候多出队一个。</p>
+<p><strong>第二次出队多线程版2</strong>：<br>线程A和线程B同时执行poll()方法，假设线程A稍快</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">线程A</th>
+<th style="text-align:left">线程B</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A1. Node1.item为null</td>
+<td style="text-align:left">B1. Node1.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A2. (q = p.next) != null</td>
+<td style="text-align:left">B2. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A3. p != q</td>
+<td style="text-align:left">B3. p != q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A4. p = q，循环</td>
+<td style="text-align:left">B4. p = q，循环</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A5. Node2.item不为null，尝试更新结点item，更新成功，item值为null</td>
+<td style="text-align:left">B5.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A6. 满足条件 p != h</td>
+<td style="text-align:left">B6. Node2.item为null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A7. 判断p结点(Node2)是否有后继结点</td>
+<td style="text-align:left">B7.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A8. 将后继结点即Node3设置为HEAD</td>
+<td style="text-align:left">B8.</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A9. 返回item</td>
+<td style="text-align:left">B9. (q = p.next) != null</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A10.</td>
+<td style="text-align:left">B10. p == q</td>
+<td></td>
+</tr>
+<tr>
+<td style="text-align:left">A11.</td>
+<td style="text-align:left">B11. 重新获取HEAD并执行遍历</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<p>这个例子主要表达了当A线程先修改了首结点，并将原来的首结点设置为自引用时，B线程在循环过程中会执行到一条语句<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">## 总结</span><br><span class="line">ConcurrentLinkedQueue主要内容都已经学习过了，其中分析的过程花费了一个早上，吃完饭回来坐下才有了一些思路。学习的难点主要还是在**它不同于普通的队列**，它的tail和head变量不会时刻指向头结点和尾结点，这也造就了代码的复杂性，否则如下所示即可：</span><br><span class="line">```java</span><br><span class="line">public boolean offer(E item)&#123;</span><br><span class="line">    checkNotNull(item);</span><br><span class="line">    for(;;)&#123;</span><br><span class="line">        Node&lt;T&gt; node = new Node(item);</span><br><span class="line">        if(tail.casNext(null, node) &amp;&amp; casTail(tail, node))&#123;</span><br><span class="line">            return true;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>但是这样和上面的例子比起来，就有性能的差距，差距主要体现在CAS写竞争方面：</p>
+<p>最悲观的角度，ConcurrentLinkedQueue的offer方法需要执行两次 CAS （假设不发生竞争，其实我觉得不会有CAS竞争发生），上面的通用代码方法也需要执行两次，这里持平。<br>最乐观的角度，ConcurrentLinkedQueue只需要执行一次CAS，上面的通用方法仍需要两次。<br>原本是参考《Java并发编程的艺术》，但是里面的实现和现在不同了，所以根据现在的实际情况写了一份。当然，里面的主线思路仍然没有发生改变——尽量减少CAS操作。书上的代码是通过hops变量来控制多久需要更新一次值，大致思路如下所示：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">遍历前，hops = 0</span><br><span class="line">HEAD---</span><br><span class="line">      |</span><br><span class="line">    Node1 -&gt; Node2 -&gt; Node3 -&gt; Node4</span><br><span class="line">      |</span><br><span class="line">TAIL---</span><br></pre></td></tr></table></figure>
+<p>假设现在要插入Node5，就要从TAIL变量位置(Node1位置)开始往后遍历，总共要<strong>循环三次</strong>才能找到最后一个尾结点，此时计数器hops就等于3，当Node5插入成功后，判断hops的值是否达到阈值，如果达到了，就更新tail变量；反之则不更新，直接返回。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">遍历完后，hops = 3，达到阈值（假设达到了），将tail变量更新给Node5</span><br><span class="line">HEAD---</span><br><span class="line">      |</span><br><span class="line">    Node1 -&gt; Node2 -&gt; Node3 -&gt; Node4 -&gt; Node5</span><br><span class="line">                                          |</span><br><span class="line">                                    TAIL---</span><br></pre></td></tr></table></figure>
+<p>ConcurrentLinkedQueue初看以为很简单，其实逻辑还是挺复杂的，拓展了对队列的看法。今天在写这篇博客时，感觉一头雾水，因为CAS操作不像锁那样简单，代码块锁住就能放心执行，CAS只对单个操作保证可见性和原子性，很担心后面的线程会对其进行什么修改，今天过后总结了一下写并发容器的思路：</p>
+<ol>
+<li>在了解某个方法的实现时，需要分清局部变量和共享变量，在理清了局部变量的含义后，将重点放在共享变量上</li>
+<li>如果方法里某个语句没看懂（一头雾水型，突然就来了这么一句），请往多线程方向思考。</li>
+<li>多对方法进行多线程分析（有助于理清思路），用md表格的例子写出来，很清晰，如果感觉md表格难以阅读，可以看这个网站 <a href="http://www.tablesgenerator.com/markdown_tables#" target="_blank" rel="noopener">MD表格生成器</a></li>
+</ol>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/05/11/《Java并发编程的艺术》之ConcurrentLinkedQueue/" data-id="cjkflr3vk000ik8vjr5glzbmx" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-《Java并发编程的艺术》之ConcurrentHashMap" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" class="article-date">
@@ -118,7 +441,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjke4f7e2000i2wvjbyyxe8ge" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/10/《Java并发编程的艺术》之ConcurrentHashMap/" data-id="cjkflr3vh000dk8vj6tn9epio" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -169,7 +492,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjke4f7f0001w2wvjj427kryx" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/09/了解AQS之SharedLock/" data-id="cjkflr3wd001wk8vjj3qgczcx" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -208,7 +531,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/08/(未埋)Java动态代理解析/" data-id="cjke4f7d200002wvj7j9wblhg" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/08/(未埋)Java动态代理解析/" data-id="cjkflr3vc0005k8vjc0x0yzqd" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
@@ -270,7 +593,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjke4f7en001b2wvjlrkssu9p" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/06/《Java并发编程的艺术》之延迟初始化/" data-id="cjkflr3vp000rk8vjyl93w8o2" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -350,7 +673,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cjke4f7e6000n2wvjots9wli6" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/05/《Java并发编程的艺术》之happens-before/" data-id="cjkflr3vq000tk8vjv21lw42r" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -411,7 +734,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjke4f7e4000k2wvjnkk47v5r" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/03/《Java并发编程的艺术》之final/" data-id="cjkflr3vl000kk8vjvryzzbbh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -504,7 +827,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjke4f7e8000p2wvjni6984kl" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/02/《Java并发编程的艺术》之synchronized及JUC/" data-id="cjkflr3vu000yk8vj3a8gb3ae" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -607,152 +930,10 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjke4f7ef00112wvj2vdg8dqe" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/05/01/《Java并发编程的艺术》之volatile/" data-id="cjkflr3vt000wk8vjy8pht96a" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-《Java并发编程的艺术》之Java内存模型" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/" class="article-date">
-  <time datetime="2018-04-29T03:13:43.000Z" itemprop="datePublished">2018-04-29</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/04/29/《Java并发编程的艺术》之Java内存模型/">《Java并发编程的艺术》之Java内存模型</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png" alt=""></p>
-<p>整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 <strong>重排序</strong> 和 <strong>写缓冲区</strong> 引发的，重排序又分为 <strong>处理器重排序</strong> 和 <strong>编译器重排序</strong>。面对 <strong>写缓冲区</strong>的问题，像Java这样的高级语言一般无能为力，所以从<strong>重排序</strong> 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。</p>
-<hr>
-<p>相信许多在<strong>多线程</strong>前线作战的伙伴们经常会遇到一种叫做<strong>内存可见性</strong>的大麻烦。这个麻烦可以简单粗暴的用<em>synchronized</em>解决，也可以很巧妙的用一些轻量级的同步原语解决。虽然能解决问题的都是好方案，但是在程序人生的旅途上，后者才是更为远见的选择。</p>
-<p>在面对<strong>内存可见性</strong>这个问题时，我们不得不先去学习一个叫做<strong>内存模型</strong>的东西。这个模型解释了 <strong>如何解决多线程间的通讯</strong> 和 <strong>如何实现多线程间的同步</strong> 两个问题。<br>传统上有两种模型，一种叫做<strong>内存共享模型</strong>，另外一种则时<strong>消息传递模型</strong>。而Java采用了<strong>内存共享模型</strong>，后文简称<strong>JMM</strong>。这个抽象概念主要描述了：</p>
-<pre><code>线程间的共享变量存储在主内存中，每个线程拥有自己的本地内存，每个本地内存上都有该线程读/写变量的副本。
-</code></pre><p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png" alt="JMM概念图"></p>
-<p>然而了解这个模型还不够，我们还要知道在Java编译、运行阶段都会有一种优化手段——<strong>重排序</strong>。重排序分为以下三种类型：</p>
-<ul>
-<li>编译器优化的重排序。在不改变单线程程序语义的前提下，可以重新安排语句的执行顺序</li>
-<li>指令集并行的重排序。现代处理器采用了指令级并行技术（Instruction-Level Parallelism）来将多条指令重叠执行，如果不存在数据以来，处理器可以改变语句对应机器指令的执行顺序。</li>
-<li>内存系统的重排序。由于处理器适用缓存和读/写缓冲区，这使得加载和存储操作看上去是乱序执行的。</li>
-</ul>
-<p>第1类属于<strong>编译器重排序</strong>，第2、3类型属于<strong>处理器重排序</strong>。而JMM作为语言级的内存模型，它确保在不同的编译器和不同的处理器平台之上，禁止特定类型的编译器重排序和处理器重排序，为程序员提供一致的内存可见性保障。</p>
-<p>另外Java尽可能地满足处理器级别的重排序优化，又让程序员自己把握优化程度。正如我们前面所讲的，遇到<strong>内存可见性问题</strong>，可以简单的用<em>synchronized</em> 大范围的禁止重排序，也可以根据实际情况，选用<em>volatile、final等轻量级同步原语</em> 仅仅禁止关键部分的重排序。</p>
-<p>总而言之，发生<strong>内存可见性问题</strong>的原因不外乎两点：</p>
-<ol>
-<li>本地内存（在CPU那个层面理解为缓冲区）在作怪</li>
-<li>重排序</li>
-</ol>
-<p>第一点属于硬件架构问题，基本上是无法从语言层面进行解决。故通过<strong>解决重排序问题</strong>来解决<strong>内存可见性问题</strong>。</p>
-<h1 id="深入底层，了解本地内存"><a href="#深入底层，了解本地内存" class="headerlink" title="深入底层，了解本地内存"></a>深入底层，了解本地内存</h1><p>现代处理器都会配备一个写缓冲区，该缓冲区用来暂存写入的变量，保证指令流水线持续运行，避免CPU停下来等待向内存写入数据而产生的延迟；同时也能合并对同一地址的多次写。虽然写缓冲区好处多多，但是只对自己的CPU可见。这个特性在<strong>重排序</strong>的加持下，容易发生CPU对内存的读/写顺序 和实际内存发生的读/写顺序 不一致的情况。</p>
-<p>假设现在有这样一个情况，线程A和线程B并发执行：</p>
-<ul>
-<li>处理器A：<ul>
-<li>int a = 1;</li>
-<li>int a = b;</li>
-</ul>
-</li>
-<li>处理器B：<ul>
-<li>int b = 2;</li>
-<li>int b = a;</li>
-</ul>
-</li>
-</ul>
-<p>这样的程序偶尔会出现预料之外的结果，比如a和b均为0，或者a=1，b=1等等。具体原因如下图所示</p>
-<p>这里CPU0 和 CPU1 均往自己的缓冲区写入数据，然后从内存中读取共享变量，最后才把写缓冲区中的数据刷新至主内存。当以这种时许执行时，就会出现a = y = 0的情况。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow2.png" alt=""></p>
-<p>从内存理想执行角度看，下面的图例可能更符合直观感受：先写入缓冲区，缓冲区刷新到主内存，最后CPU从主内存中读取。对处理器来说，它认为执行顺序是①、②、③，但是实际操作情况却是①、③、②。此时CPU0的内存操作顺序被重排序了。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow.png" alt=""></p>
-<p>为了解决一些重要操作被重排序导致的问题，处理器提供了一种被称作<strong>内存屏障（Memory Fence）</strong> 的CPU指令，该指令可以处理重排序和可见性问题。Java编译器在生成指令序列时，会在适当位置中插入内存屏障来禁止特定类型的处理器重排序（所以那些同步原语本质都是<strong>内存屏障</strong>在其作用）。JVM把内存屏障分为4类，如下所示：</p>
-<table>
-<thead>
-<tr>
-<th>屏障类型</th>
-<th style="text-align:center">指令示例</th>
-<th style="text-align:center">说明</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>LoadLoad</td>
-<td style="text-align:center">Load1;LoadLoad;Load2</td>
-<td style="text-align:center">在Load2及所有后续读取指令之前，Load1读取数据完毕</td>
-<td></td>
-</tr>
-<tr>
-<td>StoreStore</td>
-<td style="text-align:center">Store1;StoreStore;Store2</td>
-<td style="text-align:center">在Store2及所有后续写入指令执行前，Store1写入的数据对其他处理器可见(将修改的变量都刷新到主内存中，毕竟刷新不可能只刷新Store1这一个数据，而是Store1及前面所有的修改后的共享变量)</td>
-<td></td>
-</tr>
-<tr>
-<td>LoadStore</td>
-<td style="text-align:center">Load1;LoadStore;Store2</td>
-<td style="text-align:center">在Store2及所有后续写入指令刷新到主内存前，Load1读取数据完毕</td>
-<td></td>
-</tr>
-<tr>
-<td>StoreLoad</td>
-<td style="text-align:center">Store1;StoreLoad;Load2</td>
-<td style="text-align:center">在Load2及后续所有读取操作执行前，保证Store1的写入对所有处理器可见(将修改的变量都刷新到主内存中)</td>
-<td></td>
-</tr>
-</tbody>
-</table>
-<p>最后一个StoreLoad指令是万能指令（有些处理器不支持前三种指令），兼具前三种指令的功能，且开销最大。<br>内存屏障在禁止重排序、保证内存可见性方面作用极大，为后续JMM的规则打下了基础。</p>
-<h1 id="解决内存可见性问题"><a href="#解决内存可见性问题" class="headerlink" title="解决内存可见性问题"></a>解决内存可见性问题</h1><p>为了能让JVM在一定程度上(因为重排序就是优化)保持<strong>重排序</strong>，又能解决<strong>内存可见性问题</strong>。Java 在 JSR-133 里推出了Happens-Before规则，修改了<strong>volatile、final等同步原语</strong>。</p>
-<h2 id="程序顺序规则-as-if-serial"><a href="#程序顺序规则-as-if-serial" class="headerlink" title="程序顺序规则(as-if-serial)"></a>程序顺序规则(as-if-serial)</h2><p>上面我们都了解到了<strong>处理器重排序</strong> 对 CPU的影响，现在我们看看<strong>编译器重排序</strong>对单线程的影响<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a = <span class="number">1</span>; <span class="comment">// ①</span></span><br><span class="line"><span class="keyword">int</span> b = <span class="number">3</span>; <span class="comment">// ②</span></span><br><span class="line"><span class="keyword">int</span> c = a * b; <span class="comment">// ③</span></span><br></pre></td></tr></table></figure></p>
-<p>在单线程的环境下运行这段代码，会和直观感受一样，它的结果是3，但是它的执行顺序是否和想象中一样就不得而知了。这就引出了一个这么概念——if as serial，这个概念主要描述了 <strong>不管如何重排序，单线程程序的执行结果不能被改变</strong>，编译器、runtime和处理器都必须遵守这个as-if-serial语义(处理器本身是不会遵守的，但是有JMM的控制)。</p>
-<p>因为③依赖①、②的数据，所以为了保证结果一致，无论如何③都不会被排到①或②之前。</p>
-<p>as-if-serial语义使单线程程序员无需担心重排序会干扰他们，也无需担心内存可见性问题。这是JMM对程序员作的第一个保证：在单线程下，你不用管重排不重排，结果肯定给你保证一样。</p>
-<p>但是面对多线程的情况下，这个语义显得有点单薄，无法保证 多线程的重排序不会对程序有影响。为了能让多线程也无需担心重排序和内存可见性问题，我们需要<strong>同步</strong>，</p>
-<h2 id="顺序一致性模型"><a href="#顺序一致性模型" class="headerlink" title="顺序一致性模型"></a>顺序一致性模型</h2><p>在讲同步之前，需要了解下<strong>顺序一致性模型</strong>，这个模型是一个理论参考模型，它为程序提供了极强的内存可见性，该模型有以下两个特点：</p>
-<ol>
-<li>一个线程中的所有操作必须按照程序的顺序来执行</li>
-<li>（不管程序是否同步）所有线程都只能看到一个单一的操作执行顺序。在顺序一致内存模型中，每个操作都必须原子执行且立刻对所有线程可见</li>
-</ol>
-<p>在顺序一致性内存模型中，假设现有A、B两个线程，A线程先获取锁再执行A1、A2、A3，B线程同上。它的执行顺序图如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInSynchronized.png" alt="SequenceModelInSynchronized"><br>当线程A获取锁时，按顺序依次执行A1到A3；在A释放锁，B获取时，按顺序依次执行B1到B3。</p>
-<p>假设现在不用锁这些同步工具，它的执行顺序如下所示<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png" alt="SequenceModelInNormal"><br>虽然整体执行顺序发生了改变，但是再每个线程依然能看到一个一致的执行顺序，之所以能保证它一致就是因为上述的两个特点：必须按程序顺序执行、每个操作立即对所有线程可见。<br>但是在JMM上却没有这个保证，首先JMM不是顺序一致性模型，而且未同步程序的执行顺序是无需的，而且所有线程看到的执行顺序也可能不一样。就比如A线程先写入了一个数值，缓存在本地内存，A线程以为写进去了，但是本地内存只对A线程可见。其他线程仍然是原来的数值，只有等本地内存将数据刷新到主内存，其他线程才可见。这种情况下，当前线程看到的执行顺序和其他线程顺序将不一致。</p>
-<h3 id="JMM里正确同步地顺序"><a href="#JMM里正确同步地顺序" class="headerlink" title="JMM里正确同步地顺序"></a>JMM里正确同步地顺序</h3><p>讲完了理想的顺序一致性模型，我们回归到现实，看看JMM里的同步程序执行顺序。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> a;</span><br><span class="line"><span class="keyword">int</span> result;</span><br><span class="line"><span class="keyword">boolean</span> flag;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">init</span><span class="params">()</span></span>&#123;</span><br><span class="line">    a = <span class="number">1</span>;</span><br><span class="line">    flag = <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">synchronized</span> <span class="keyword">void</span> <span class="title">doTask</span><span class="params">()</span></span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(flag)&#123;</span><br><span class="line">        result = a;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>在这个代码里，假设A线程执行init()方法，B线程执行doTask()方法。根据JMM规范，只要正确同步的程序，结果都会和顺序一致性内存模型的结果一致。下面是该程序在两个内存模型的时序图。<br>对于JMM来说，在临界区内的代码可任意重排序（但不允许临界区内的代码溢出到临界区外，那样会破坏监视器语言），JMM会在进入临界区和退出临界区时做一些特别的处理，使程序在这两个时间点具有和顺序一致性相同的内存视图。虽然线程A在临界区内进行了重排序，但是在监视器互斥执行的特性下，线程B根本不知道过程，只能观测到结果。这种重排序既提高了效率，又没改变程序的执行结果。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png" alt=""></p>
-<p>从这里我们可以看到JMM在不改变（正确同步）程序执行结果的前提下，尽可能地为编译器和处理器地优化打开了方便之门。</p>
-<h3 id="JMM里没有同步地执行顺序"><a href="#JMM里没有同步地执行顺序" class="headerlink" title="JMM里没有同步地执行顺序"></a>JMM里没有同步地执行顺序</h3><p>在JMM里，对没有正确同步地程序只提供了最小安全性：线程执行时读取到的值，要么时默认值（0，null，false），JMM保证线程读取到的值不会无中生有。为了实现最小安全性，JVM在堆上分配对象时，首先会对内存清零，然后才会在上面分配对象（JVM内部会同步该操作）。因此，在已清零的内存空间中分配对象时，域的默认初始化已经完成了。</p>
-<p>在JMM里，未同步的程序不能保证执行结果和顺序一致性模型的结果一样。因为JVM要这么做的话需要大量禁止重排序，极其影响性能。未同步程序在JMM中的执行顺序整体上是无序的，其执行结果也是不可预测的，在两个模型中的执行特性有如下几个差异。</p>
-<ul>
-<li>顺序一致性模型保证单线程内的操作会按程序的顺序执行，而JMM不保证单线程的操作会按程序顺序执行</li>
-<li>顺序一致性模型保证所有线程只能看到一致的操作顺序，而JMM不保证所有线程能看到一致的操作执行顺序</li>
-<li>JMM不保证对64位的long、double型变量的写操作具有原子性，而顺序一致性保证所有对内存的读写操作都是原子性</li>
-</ul>
-<p>第三点与处理器总线工作机制密切相关。这里放出书上的原话</p>
-<p>JVM在这点上也只是鼓励去做但不强求，因为在一些32位处理器上，要64位的写操作保持原子性是会需要大开销的。所以当JVM在这种处理器上运行时，会把64位long/double型变量拆做两个32位的写操作执行。此时，这种64位变量的写操作将不具有原子性。当单个内存操作不存在原子性时，可能会产生意想不到的后果。<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">Target</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">long</span> a;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span></span>&#123;</span><br><span class="line">    Target target = <span class="keyword">new</span> Target();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = <span class="number">0l</span>).start();</span><br><span class="line">    <span class="keyword">new</span> Thread(() -&gt; <span class="keyword">while</span>(<span class="keyword">true</span>) target.a = Long.MAX_VALUE).start();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span>(<span class="keyword">true</span>)&#123;</span><br><span class="line">        String binary = toBinary(target.a);</span><br><span class="line">        <span class="comment">// 出现不是0，又不是MAX_VALUE的二进制字串是就输出</span></span><br><span class="line">        <span class="keyword">if</span>(!binary.equals(<span class="string">"00000000000000000000000000000000"</span>) &amp;&amp; </span><br><span class="line">        !binary.equals(<span class="string">"01111111111111111111111111111111"</span>))&#123;</span><br><span class="line">            System.out.println(<span class="string">"long不是原子性操作.."</span>);</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">toBinary</span><span class="params">(<span class="keyword">long</span> l)</span> </span>&#123;</span><br><span class="line">    StringBuilder sb = <span class="keyword">new</span> StringBuilder(Long.toBinaryString(l));</span><br><span class="line">    <span class="keyword">while</span> (sb.length() &lt; <span class="number">64</span>) &#123;</span><br><span class="line">        sb.insert(<span class="number">0</span>, <span class="string">"0"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> sb.toString();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
-<p>代码如上所示，假设处理器A写一个了long型变量，同时B处理器要读取这个long型变量。处理器A中的64位操作被拆分为两个32位的写操作，且这两个32位的写操作被分配到不同的事务中执行。同时处理器B 64位的读操作被分配到单个读事务中处理，执行顺序如下图所示时就会发生处理器A写到一半的数据被处理器B看见。<br><img src="https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png" alt=""></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/《Java并发编程的艺术》之Java内存模型/" data-id="cjke4f7eb000t2wvjyx4tyou2" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li></ul>
 
     </footer>
   </div>
@@ -794,7 +975,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjke4f7f800292wvj3jhczwwk" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/04/29/关于final插入StoreStore的疑惑/" data-id="cjkflr3wh0022k8vjoq7rto16" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li></ul>
@@ -854,11 +1035,15 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/03/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/03/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/04/无符号数和有符号数/">处理器（一）</a>
           </li>
         
           <li>
@@ -867,10 +1052,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
           </li>
         
       </ul>

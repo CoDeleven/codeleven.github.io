@@ -65,6 +65,121 @@
       <div class="outer">
         <section id="main">
   
+    <article id="post-存储器（六）之校验码（下）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/17/存储器（六）之校验码（下）/" class="article-date">
+  <time datetime="2018-07-17T07:41:07.000Z" itemprop="datePublished">2018-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/17/存储器（六）之校验码（下）/">存储器之校验码（下）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>额，主要是校验码上篇好像布局有点问题。就拆了一个下篇。</p>
+<h1 id="海明码（又称汉明码）"><a href="#海明码（又称汉明码）" class="headerlink" title="海明码（又称汉明码）"></a>海明码（又称汉明码）</h1><p>根据上篇，我们可以得知海明码主要解决的是“规则”这个问题，主要从以下几个角度进行分析：</p>
+<ul>
+<li>一串数据需要几个检测位</li>
+<li>检测位加在什么地方</li>
+<li>检测位需要监督哪些位置的数据</li>
+<li>如何验证检测位和数据位的关系</li>
+</ul>
+<h2 id="一串数据需要几个检测位"><a href="#一串数据需要几个检测位" class="headerlink" title="一串数据需要几个检测位"></a>一串数据需要几个检测位</h2><p>设欲检测的二进制代码有n位，为使其具有纠错能力，需增加k位，组成n + k的代码。为了能准确对错误定位以及指出代码没错，k需要满足以下关系： <strong>2<sup>k</sup> &gt;= n + k + 1</strong></p>
+<p>这个不等式的意思就是：检测位的所能表示的状态需要大于等于 n + k + 1 个（这里额外加1是全正确的情况下，即000…）</p>
+<h2 id="检测位加在什么地方"><a href="#检测位加在什么地方" class="headerlink" title="检测位加在什么地方"></a>检测位加在什么地方</h2><p>放在 <strong>2<sup>i - 1</sup></strong> 的位置上，比如：</p>
+<ol>
+<li>第一个检测位，就放在第1的位置上</li>
+<li>第二个检测位，就放在第2的位置上</li>
+<li>第三个检测位，就放在第4的位置上<br>…</li>
+</ol>
+<p>数据位按序依次填到检测位和检测位之间的间隔中去。</p>
+<p>比如二进制代码：“0010”</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为3。需要3个检测位</li>
+<li>我们用“?”代替检测位：??0?010</li>
+</ol>
+<h2 id="检测位需要监督哪些位置的数据"><a href="#检测位需要监督哪些位置的数据" class="headerlink" title="检测位需要监督哪些位置的数据"></a>检测位需要监督哪些位置的数据</h2><ol>
+<li>第一个检测位，需要检测1、3、5、7、9…每检测一个跳过一个</li>
+<li>第二个检测位，需要检测2、3、6、7、10、11…每检测两个跳过两个</li>
+<li>第三个检测位，需要检测4、5、6、7、12、13、14、15…每检查四个跳过四个</li>
+</ol>
+<p>用公式总结一下<br>第i个检测位，每检测完 <strong>2<sup>i - 1</sup></strong> ，就跳过 <strong>2<sup>i - 1</sup></strong>，再检测下一个范围 <strong>2<sup>i - 1</sup></strong>…</p>
+<p>这样分组能有以下这些特点：</p>
+<ol>
+<li>每个小组有且仅有一位被该组所独占，该位是其他组没有的。</li>
+<li>每两个小组（g<sub>i</sub>和 g<sub>j</sub>）共同占有一位，该位是其他组没有的。即 g<sub>i</sub>和 g<sub>j</sub> 共同占有第 2<sup>i-1</sup> + 2<sup>j-1</sup> 位</li>
+<li>每三个小组（g<sub>i</sub>、g<sub>j</sub>和g<sub>t</sub>）共同占有一位，该位同样是其他组没有的。即 g<sub>i</sub>、 g<sub>j</sub> 、g<sub>t</sub>共同占有第 2<sup>i-1</sup> + 2<sup>j-1</sup> + 2<sup>t-1</sup>位</li>
+</ol>
+<p>比如二进制代码：“1101 1010”</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为4。需要4个检测位</li>
+<li>我们用“?”代替检测位：??1? 101? 1010</li>
+<li><p>检测位需要对要监督的位置进行异或（⊕）</p>
+<ul>
+<li>第一位检测位：需要检查1、3、5、7、9… 根据题目判断（这里的3、5、7、9表示位置） 3 ⊕ 5 ⊕ 7 ⊕ 9 ⊕ 11 = 1 ⊕ 1 ⊕ 1 ⊕ 1 ⊕ 1 = 0。所以第一位检测位是0。</li>
+<li>第二位检测位：需要检查2、3、6、7… 根据题目判断 3 ⊕ 6 ⊕ 7 ⊕ 10 ⊕ 11 = 1 ⊕ 0 ⊕ 1 ⊕ 0 ⊕ 1 = 1</li>
+<li>…后面的如上所示</li>
+<li>最后得出0110 1010 1010 </li>
+</ul>
+</li>
+</ol>
+<p>为什么使用异或？<br>答：因为异或运算符正好满足相同为0，不同为1的情况</p>
+<h2 id="如何验证检测位和数据位的关系"><a href="#如何验证检测位和数据位的关系" class="headerlink" title="如何验证检测位和数据位的关系"></a>如何验证检测位和数据位的关系</h2><p>P<sub>i</sub>表示从左到右的位数。</p>
+<p>比如第一组，只要验证P1 ⊕ P3 ⊕ P5 ⊕ P7 ⊕ P9 ⊕ P11 = 0 即可。<br>如果所有的小组异或后为0，那么就代表数据没有问题</p>
+<p>比如：<br>|情况| P8 | P4 | P2 | P1 |<br>| :-: | :-: | :-: | :-: | :-: |<br>| 1 | 0 | 0 | 0 | 0 |<br>| 2 | 0 | 1 | 1 | 0 |<br>| 3 | 1 | 1 | 0 | 0 | </p>
+<ul>
+<li>第一种情况，所有的数据全部正确</li>
+<li>第二种情况，P2和P4的数据有问题，说明P2和P4的交叉位置有错。将二进制转换成十进制，可以直接得出第6位数据有误（第6位正好是P2组和P4组负责的）。</li>
+<li>第三种情况，P4和P8的数据有问题，说明P4和P8的交叉位置有错。将二进制转换成十进制，可以直接得出第12位数据有误。</li>
+</ul>
+<h2 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h2><p>按配奇原则（偶数个数的“1”，用1表示；奇数个数的“1”，用0表示）配置1100 101的海明码</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为4。需要4个检测位</li>
+<li>??1?100?101</li>
+<li>计算校验位<ul>
+<li>P1 = P3 ⊕ P5 ⊕ P7 ⊕ P9 ⊕ P11… = 1</li>
+<li>P2 = P3 ⊕ P6 ⊕ P7 ⊕ P10 ⊕ P11…= 1</li>
+<li>P4 = P5 ⊕ P6 ⊕ P7 ⊕ P12 ⊕ P13 ⊕ P14 ⊕ P15…= 0；</li>
+<li>P8 = P9 ⊕ P10 ⊕ P11 ⊕ P12 ⊕ P13… = 1；</li>
+</ul>
+</li>
+<li>新配置的汉明码为1110 1001 101</li>
+</ol>
+<p>按配偶原则（偶数个数的“1”，用0表示；奇数个数的“1”，用1表示）配置0110 101的海明码</p>
+<ol>
+<li>通过2<sup>k</sup> &gt;= n + k + 1，解出k为4。需要4个检测位</li>
+<li>??0?110?101</li>
+<li>P1 = 1；P2 = 0；P3 = 0；P8 = 0；</li>
+<li>新配置的汉明码为1000 1000 101</li>
+</ol>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>海明码通常用于一位纠错、两位检错，实际使用时需要再加一位检测码。</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/" data-id="cjkflr3wx002vk8vj6maoetia" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
     <article id="post-存储器（七）之主存结构" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
     <a href="/codeleven.github.io/2018/07/17/存储器（七）之主存结构/" class="article-date">
@@ -140,7 +255,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjke4f7fd002i2wvj8bfiry35" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjkflr3wl0029k8vj4gxc68c9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -217,78 +332,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjke4f7fe002k2wvjlw27rhis" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-存储器 (二）之主存与CPU的联系" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/" class="article-date">
-  <time datetime="2018-07-13T06:03:34.000Z" itemprop="datePublished">2018-07-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/">存储器之主存与CPU的联系</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="主存储器"><a href="#主存储器" class="headerlink" title="主存储器"></a>主存储器</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90.png" alt="主存的基本构成"></p>
-<p>主存储器需要根据MAR中的地址访问某个存储单元，还需要经过地址译码、驱动等电路，才能找到所需要访问的单元。</p>
-<p>当主存储器写入时，会从MDR中取出数据经过写入电路，才会被写入到选中的单元中。</p>
-<p>当主存储器被读时，会从 <strong>被选中单元</strong>中取出数据，经过读取放大器，最后送入到MDR。</p>
-<h1 id="主存和CPU的联系"><a href="#主存和CPU的联系" class="headerlink" title="主存和CPU的联系"></a>主存和CPU的联系</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E5%92%8CCPU%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB.png" alt=""></p>
-<p>现代主存通常将 <strong>译码器</strong>、 <strong>驱动器</strong>、 <strong>读/写电路</strong>做在主存储器中；将 <strong>MDR</strong>、 <strong>MAR</strong> 集成在CPU中。两者通过总线相连接。</p>
-<p>当CPU要读取数据时：</p>
-<ol>
-<li>CPU会将待读取地址发送到MAR，地址经MAR发送到主存</li>
-<li>CPU发出读命令。</li>
-<li>主存接到命令后，读取指定地址单元上的内容</li>
-<li>将单元的内容读至数据总线上</li>
-</ol>
-<p>当CPU要写入数据时：</p>
-<ol>
-<li>CPU会将待写地址发送到MAR，地址经MAR发送到主存</li>
-<li>CPU将要写入的数据发送到MDR，数据经MDR发送到主存</li>
-<li>CPU发出写入命令</li>
-<li>主存街道命令，将数据线上的信息写入到对应地址单元。</li>
-</ol>
-<h2 id="主存中存储单元地址分配"><a href="#主存中存储单元地址分配" class="headerlink" title="主存中存储单元地址分配"></a>主存中存储单元地址分配</h2><p>不同的机器，存储字长不同，通常存储字长是8的倍数。CPU可按字地址查找，也可以通过字节查找。如果存储字长为8位，机器字长32位（每一个字有32位），每个字都包含4个可独立寻址的字节，字地址是用该字的高位字节来表示的。</p>
-<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IBM370%E5%92%8CPDP-11.png" alt="不同机器的字地址和字节地址"></p>
-<p>如图a所示，对24位地址线的主存而言，按字节寻址的范围是 2^24 bit，按字寻址的范围是 2^22 bit（先算出按字节算的个数，然后再除以一个字占用的字节）。<br>如图b所示，对24位地址线的主存而言，按字节寻址的范围是，2^24 bit，按字寻址的范围是 2^23 bit。</p>
-<h2 id="主存的技术指标"><a href="#主存的技术指标" class="headerlink" title="主存的技术指标"></a>主存的技术指标</h2><h3 id="存储容量"><a href="#存储容量" class="headerlink" title="存储容量"></a>存储容量</h3><p>存储容量是指 <strong>主存能存放二进制代码的总位数</strong>，即<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">    存储容量 = 存储单元个数 X 存储字长         </span><br><span class="line">或</span><br><span class="line">    存储容量 = 存储单元个数 X 存储字长 / 8</span><br></pre></td></tr></table></figure></p>
-<h3 id="存储速度"><a href="#存储速度" class="headerlink" title="存储速度"></a>存储速度</h3><p>存储速度是由存取时间和存取周期来表示的。<br>存取时间又称为 <strong>存储器的访问时间(Memory Access Time)</strong> ， 是指启动一次存储器操作(读或写)到完成该操作所需的全部时间。</p>
-<p>存取时间分为 <strong>读出时间</strong> 和 <strong>写入时间</strong>：</p>
-<ul>
-<li>读出时间：存储器接收到有戏地址开始，到产生有效输出所需的全部时间。</li>
-<li>写入时间：存储器接受到有效地址开始，到数据写入被选中单元为止所需的全部时间。</li>
-</ul>
-<p>存取周期是指存储器进行连续 <strong>开始</strong> 两次独立的存储操作所需的最小间隔时间（开始读取操作到下一次开始读取操作这段时间称为存取周期）。</p>
-<h2 id="译码驱动方式"><a href="#译码驱动方式" class="headerlink" title="译码驱动方式"></a>译码驱动方式</h2><h3 id="线选法"><a href="#线选法" class="headerlink" title="线选法"></a>线选法</h3><p>一根字选择先，直接选中一个存储单元（比如一个字节）。这种方式适用于容量不大的存储芯片，因为容量大了之后所需要的字线根数就会很大。如图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BA%BF%E9%80%89%E6%B3%95.png" alt=""></p>
-<h3 id="重合法"><a href="#重合法" class="headerlink" title="重合法"></a>重合法</h3><p>对于1K X 1位存储芯片，采用重合法就只需要32 + 32根选择线，重合法就和x、y轴确定一个点一样，所以当地址线输入全为0时，x<sub>0</sub>和y<sub>0</sub>就有效了，矩阵中第0行、第0列共同选中的那行就被选中了。所以当x、y线都被选中时才能决定地址，所以称为重合法。<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%87%8D%E5%90%88%E6%B3%95.png" alt="重合法"></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjke4f7fg002o2wvj6dq00h7q" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjkflr3wu002pk8vj2gzr6rxo" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -450,7 +494,117 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjke4f7ff002m2wvjm68yiu2y" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjkflr3wj0026k8vjez5t3wt1" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-存储器 (二）之主存与CPU的联系" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/" class="article-date">
+  <time datetime="2018-07-13T06:03:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/存储器 (二）之主存与CPU的联系/">存储器之主存与CPU的联系</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="主存储器"><a href="#主存储器" class="headerlink" title="主存储器"></a>主存储器</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%9E%84%E6%88%90.png" alt="主存的基本构成"></p>
+<p>主存储器需要根据MAR中的地址访问某个存储单元，还需要经过地址译码、驱动等电路，才能找到所需要访问的单元。</p>
+<p>当主存储器写入时，会从MDR中取出数据经过写入电路，才会被写入到选中的单元中。</p>
+<p>当主存储器被读时，会从 <strong>被选中单元</strong>中取出数据，经过读取放大器，最后送入到MDR。</p>
+<h1 id="主存和CPU的联系"><a href="#主存和CPU的联系" class="headerlink" title="主存和CPU的联系"></a>主存和CPU的联系</h1><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E4%B8%BB%E5%AD%98%E5%92%8CCPU%E4%B9%8B%E9%97%B4%E7%9A%84%E8%81%94%E7%B3%BB.png" alt=""></p>
+<p>现代主存通常将 <strong>译码器</strong>、 <strong>驱动器</strong>、 <strong>读/写电路</strong>做在主存储器中；将 <strong>MDR</strong>、 <strong>MAR</strong> 集成在CPU中。两者通过总线相连接。</p>
+<p>当CPU要读取数据时：</p>
+<ol>
+<li>CPU会将待读取地址发送到MAR，地址经MAR发送到主存</li>
+<li>CPU发出读命令。</li>
+<li>主存接到命令后，读取指定地址单元上的内容</li>
+<li>将单元的内容读至数据总线上</li>
+</ol>
+<p>当CPU要写入数据时：</p>
+<ol>
+<li>CPU会将待写地址发送到MAR，地址经MAR发送到主存</li>
+<li>CPU将要写入的数据发送到MDR，数据经MDR发送到主存</li>
+<li>CPU发出写入命令</li>
+<li>主存街道命令，将数据线上的信息写入到对应地址单元。</li>
+</ol>
+<h2 id="主存中存储单元地址分配"><a href="#主存中存储单元地址分配" class="headerlink" title="主存中存储单元地址分配"></a>主存中存储单元地址分配</h2><p>不同的机器，存储字长不同，通常存储字长是8的倍数。CPU可按字地址查找，也可以通过字节查找。如果存储字长为8位，机器字长32位（每一个字有32位），每个字都包含4个可独立寻址的字节，字地址是用该字的高位字节来表示的。</p>
+<p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/IBM370%E5%92%8CPDP-11.png" alt="不同机器的字地址和字节地址"></p>
+<p>如图a所示，对24位地址线的主存而言，按字节寻址的范围是 2^24 bit，按字寻址的范围是 2^22 bit（先算出按字节算的个数，然后再除以一个字占用的字节）。<br>如图b所示，对24位地址线的主存而言，按字节寻址的范围是，2^24 bit，按字寻址的范围是 2^23 bit。</p>
+<h2 id="主存的技术指标"><a href="#主存的技术指标" class="headerlink" title="主存的技术指标"></a>主存的技术指标</h2><h3 id="存储容量"><a href="#存储容量" class="headerlink" title="存储容量"></a>存储容量</h3><p>存储容量是指 <strong>主存能存放二进制代码的总位数</strong>，即<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">    存储容量 = 存储单元个数 X 存储字长         </span><br><span class="line">或</span><br><span class="line">    存储容量 = 存储单元个数 X 存储字长 / 8</span><br></pre></td></tr></table></figure></p>
+<h3 id="存储速度"><a href="#存储速度" class="headerlink" title="存储速度"></a>存储速度</h3><p>存储速度是由存取时间和存取周期来表示的。<br>存取时间又称为 <strong>存储器的访问时间(Memory Access Time)</strong> ， 是指启动一次存储器操作(读或写)到完成该操作所需的全部时间。</p>
+<p>存取时间分为 <strong>读出时间</strong> 和 <strong>写入时间</strong>：</p>
+<ul>
+<li>读出时间：存储器接收到有戏地址开始，到产生有效输出所需的全部时间。</li>
+<li>写入时间：存储器接受到有效地址开始，到数据写入被选中单元为止所需的全部时间。</li>
+</ul>
+<p>存取周期是指存储器进行连续 <strong>开始</strong> 两次独立的存储操作所需的最小间隔时间（开始读取操作到下一次开始读取操作这段时间称为存取周期）。</p>
+<h2 id="译码驱动方式"><a href="#译码驱动方式" class="headerlink" title="译码驱动方式"></a>译码驱动方式</h2><h3 id="线选法"><a href="#线选法" class="headerlink" title="线选法"></a>线选法</h3><p>一根字选择先，直接选中一个存储单元（比如一个字节）。这种方式适用于容量不大的存储芯片，因为容量大了之后所需要的字线根数就会很大。如图所示<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E7%BA%BF%E9%80%89%E6%B3%95.png" alt=""></p>
+<h3 id="重合法"><a href="#重合法" class="headerlink" title="重合法"></a>重合法</h3><p>对于1K X 1位存储芯片，采用重合法就只需要32 + 32根选择线，重合法就和x、y轴确定一个点一样，所以当地址线输入全为0时，x<sub>0</sub>和y<sub>0</sub>就有效了，矩阵中第0行、第0列共同选中的那行就被选中了。所以当x、y线都被选中时才能决定地址，所以称为重合法。<br><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E9%87%8D%E5%90%88%E6%B3%95.png" alt="重合法"></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjkflr3wp002hk8vjj9kvvr2c" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-（未埋）存储器（四）之CPU和存储器的链接" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" class="article-date">
+  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/">存储器之CPU和存储器的链接</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>未埋</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjkflr3x8003ek8vjh0vvc7vm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -495,46 +649,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjke4f7f9002b2wvjivzzk5g5" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-（未埋）存储器（四）之CPU和存储器的链接" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" class="article-date">
-  <time datetime="2018-07-13T05:49:34.000Z" itemprop="datePublished">2018-07-13</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/">存储器之CPU和存储器的链接</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>未埋</p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjke4f7fw003f2wvjlvua5xi4" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjkflr3wo002fk8vjc5a9k0or" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -582,7 +697,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjke4f7fx003h2wvj0d64pc3m" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjkflr3x30036k8vj3uaj5ynj" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
@@ -677,7 +792,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjke4f7fv003d2wvji5vua1gt" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjkflr3wv002rk8vj8q0k8dsc" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -762,93 +877,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjke4f7fm002y2wvjmizli4ij" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-系统总线（一）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/07/系统总线（一）/" class="article-date">
-  <time datetime="2018-07-07T15:38:05.000Z" itemprop="datePublished">2018-07-07</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/07/系统总线（一）/">系统总线（一）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <h1 id="心情"><a href="#心情" class="headerlink" title="心情"></a>心情</h1><p>有个小家伙吃了我做的酸奶，上吐下泻，担心晚上她会需要我帮忙，所以在至凌晨一点前写一下今天学的系统总线。</p>
-<hr>
-<h1 id="概要"><a href="#概要" class="headerlink" title="概要"></a>概要</h1><p>计算机系统的五大不见之间的互连方式通常有 <strong>分散链接</strong>、 <strong>总线连接</strong>两种。</p>
-<h2 id="分散连接"><a href="#分散连接" class="headerlink" title="分散连接"></a>分散连接</h2><p><img src="https://blog-1252749790.file.myqcloud.com/ComputerOrganization/%E5%88%86%E6%95%A3%E8%BF%9E%E6%8E%A5.png" alt="分散连接"></p>
-<p>由图可以看到它是以运算器为中心的结构，  <strong>连线十分复杂</strong>，尤其是当I/O与存储器交换信息，都需要经过运算器，致使运算器停止运算，严重影响运行效率。后来虽然改进为以存储器为中心的结构，I/O与主存交换信息也可以不经过运算器，但是仍 <strong>无法解决I/O设备与主机之间的灵活性</strong>，<strong>不能随时添减设备</strong>。所以出现了总线连接方式</p>
-<h2 id="总线连接方式"><a href="#总线连接方式" class="headerlink" title="总线连接方式"></a>总线连接方式</h2><p>总线是连接多个部件的信息传输线，是各个部件共享的传输介质（所以总线又称bus）。当多个部件与总线相连时，<strong>如果出现两个及以上的部件同时向总线发送请求就会产生冲突，传输无效</strong>。因此，<strong>在某一时刻，只允许一个部件向总线发送消息</strong>，而 <strong>多个部件可以同时从总线上接收消息</strong>。</p>
-<p>总线由许多传输线或通路组成，每条线可一位一位的串行传输。若干条传输线可以同时传输若干位二进制代码，例如16条传输线组成的总线可在一个时刻传输16位二进制代码。</p>
-<h1 id="总线分类"><a href="#总线分类" class="headerlink" title="总线分类"></a>总线分类</h1><p><strong>按连接部件不同</strong>，分为三种总线。（当然也可以根据其他方面进行分类，比如使用范围）</p>
-<h2 id="片内总线"><a href="#片内总线" class="headerlink" title="片内总线"></a>片内总线</h2><p>片内总线是指芯片内的总线，如在CPU种，寄存器与运算逻辑单元ALU之间、寄存器与寄存器之间。</p>
-<h2 id="系统总线"><a href="#系统总线" class="headerlink" title="系统总线"></a>系统总线</h2><p>系统总线是指CPU、主存、I/O设备等各大部件之间的信息传输线。由于各个部件通常安放在主板或各个插板上，故又称板级总线（在一块电路板上各芯片间的连线）或板间总线。<br>系统总线按传输的信息分为三类：数据总线、地址总线和控制总线</p>
-<h3 id="数据总线"><a href="#数据总线" class="headerlink" title="数据总线"></a>数据总线</h3><p>传输各功能部件之间的数据信息，它是双向传输总线（CPU传出数据，CPU接收数据），其位数与机器字长、存储字长有关。数据总线的位数称为数据总线宽度。如果数据总线的宽度为8位，指令字长为16位，那么CPU在取指阶段必须两次访问主存。</p>
-<p>数据的含义是广义的，它可以是真正的数据，也可以是指令代码或状态信息，有时甚至是一个控制信息。</p>
-<h3 id="地址总线"><a href="#地址总线" class="headerlink" title="地址总线"></a>地址总线</h3><p>地址总线只要用来指出数据总线上的源数据或目的数据在主存单元的地址或I/O设备的地址。例如向从存储器中读取一个数据，需要将该数据所在存储单元的地址送到地址线上；如果想将数据经I/O设备输出，则CPU除了需将数据送到数据总线外，还需将该输出设备的地址送到地址总线上。可见，地址总线上的代码是指明CPU欲访问的存储单元或I/O端口的地址，由CPU输出，单项传输。</p>
-<h3 id="控制总线"><a href="#控制总线" class="headerlink" title="控制总线"></a>控制总线</h3><p>由于数据总线、地址总线都是被挂在总线上被所有部件共享的，所以若想要控制各个部件对总线的使用，就需要依靠控制总线来完成，因此控制总线是用来发出各种控制信号的传输线。一条控制总线是单向的，但控制总线这个集合可以是双向的，比如CPU向寄存器发出读取命令；某个设备准备就绪时，向CPU发出中断请求。</p>
-<p>常见的控制信号如下：</p>
-<ul>
-<li>时钟：用来同步各种操作</li>
-<li>复位：初始化所有部件</li>
-<li>总线请求：表示某部件需要获得总线的使用权</li>
-<li>总线允许：表示需要获得总线使用权的部件已获得了控制权</li>
-<li>中断请求：表示某部件提出中断请求</li>
-<li>中断响应：表示中断请求已被接收</li>
-<li>存储器写：将数据总线上得数据写到存储器指定得地址单元中</li>
-<li>存储器读：将指定存储单元中的数据读到数据总线上</li>
-<li>I/O读：从指定的I/O端口将数据读到数据总线上</li>
-<li>I/O写：将数据总线上的数据传输到指定的I/O端口内</li>
-<li>传输响应：表示数据已经被接收，或已将数据送至数据总线上</li>
-</ul>
-<h2 id="通信总线"><a href="#通信总线" class="headerlink" title="通信总线"></a>通信总线</h2><p>这类总线用于计算机系统之间或计算系统与其他系统之间的通信。传输方式可以分为两种：串行通信和并行通信。</p>
-<h3 id="串行通信"><a href="#串行通信" class="headerlink" title="串行通信"></a>串行通信</h3><p>指数据在单条1位宽的传输线上，一位一位地按顺序分时传输。<br>该通信方式相比并行通信适合长距离传输，因为通信线路费用趋高，采用串行通信费用远比并行通信费用低。</p>
-<h3 id="并行通信"><a href="#并行通信" class="headerlink" title="并行通信"></a>并行通信</h3><p>指在多条并行1位宽地传输线上，同时由源送到目的地址，如一字节地数据，在并行传输过程中，要通过8条并行传输线同时由源传送到目的地。<br>该通信方式适宜短距离传输，通常小于30m。</p>
-<h1 id="总线特性"><a href="#总线特性" class="headerlink" title="总线特性"></a>总线特性</h1><h2 id="机械特性"><a href="#机械特性" class="headerlink" title="机械特性"></a>机械特性</h2><p>总线在机械连接方式上的一些性能，如插头与插座的标准，它们的几何尺寸、形状、引脚的个数以及排列的顺序等。</p>
-<h2 id="电气特性"><a href="#电气特性" class="headerlink" title="电气特性"></a>电气特性</h2><p>指总线的每一个传输线上信号的传递方向和有效的电平范围。通常规定由CPU发出的信号为输出信号，送入CPU的为输入信号。高电平为“1”， 低电平为“0”。</p>
-<h2 id="功能特性"><a href="#功能特性" class="headerlink" title="功能特性"></a>功能特性</h2><p>指总线中每根传输线的功能，例如：地址总线用来指出地址；数据总线用来传输数据；控制总线用来发出控制信号。</p>
-<h2 id="时间特性"><a href="#时间特性" class="headerlink" title="时间特性"></a>时间特性</h2><p>指总线中的任一根线在什么时间内有效</p>
-<h1 id="总线性能指标"><a href="#总线性能指标" class="headerlink" title="总线性能指标"></a>总线性能指标</h1><h2 id="总线宽度"><a href="#总线宽度" class="headerlink" title="总线宽度"></a>总线宽度</h2><p>指数据总线的根数，用bit表示，如8位、16位</p>
-<h2 id="总线带宽"><a href="#总线带宽" class="headerlink" title="总线带宽"></a>总线带宽</h2><p>可以理解为总线的传输速率，即单位时间内总线上传输数据的位数。</p>
-<h2 id="时钟同步-异步"><a href="#时钟同步-异步" class="headerlink" title="时钟同步/异步"></a>时钟同步/异步</h2><p>总线上的数据与时钟同步工作的总线称为同步总线，与时钟不同步工作的总线称为异步总线。</p>
-<h2 id="总线复用"><a href="#总线复用" class="headerlink" title="总线复用"></a>总线复用</h2><p>一条信号线上分时传送两种信号。例如，通常地址总线与数据总线在物理上是分开的两种总线，为了提高总线利用率，地址总线可以和数据总线共用一组物理线路。在这组物理线路上分时传输地址信号和数据信号，即为总线的多路复用。</p>
-<h2 id="信号线数"><a href="#信号线数" class="headerlink" title="信号线数"></a>信号线数</h2><p>地址总线、数据总线和控制总线三种总线数的总和</p>
-<h2 id="总线控制方式"><a href="#总线控制方式" class="headerlink" title="总线控制方式"></a>总线控制方式</h2><ul>
-<li>突发工作</li>
-<li>自动配置</li>
-<li>仲裁方式</li>
-<li>逻辑方式</li>
-<li>计数方式</li>
-<li>…<h2 id="其他指标"><a href="#其他指标" class="headerlink" title="其他指标"></a>其他指标</h2>负载能力、电源电压、总线宽度是否可扩展等</li>
-</ul>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/07/系统总线（一）/" data-id="cjke4f7fo00302wvji618atd8" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjkflr3x40038k8vjtnfp8qdm" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -908,11 +937,15 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/03/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/03/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/04/无符号数和有符号数/">处理器（一）</a>
           </li>
         
           <li>
@@ -921,10 +954,6 @@
         
           <li>
             <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
-          </li>
-        
-          <li>
-            <a href="/codeleven.github.io/2018/07/27/程序查询方式/">程序查询方式</a>
           </li>
         
       </ul>

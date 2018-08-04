@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  
+  <title>处理器（一） | CoDeleven的个人博客</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="description" content="术语科普 机器数：在计算机里表示的方法，即正负不再是用 -，+来表示，而是采用0表示正数，1表示负数 真数：相对机器数，用-，+来表示正负的数就叫真数  原码原码即最原始的二进制表示法，这种方法简单直观。比如 +11，通常表示为 0000 1011比如 -11，通常表示为 1000 1011 不知道小伙伴会不会有疑问，那8位可以表示的范围不久小了吗？答：是的，小了一半。而且 [+0]原 != [-">
+<meta name="keywords" content="计算机组成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="处理器（一）">
+<meta property="og:url" content="http://yoursite.com/GithubPages/2018/08/04/无符号数和有符号数/index.html">
+<meta property="og:site_name" content="CoDeleven的个人博客">
+<meta property="og:description" content="术语科普 机器数：在计算机里表示的方法，即正负不再是用 -，+来表示，而是采用0表示正数，1表示负数 真数：相对机器数，用-，+来表示正负的数就叫真数  原码原码即最原始的二进制表示法，这种方法简单直观。比如 +11，通常表示为 0000 1011比如 -11，通常表示为 1000 1011 不知道小伙伴会不会有疑问，那8位可以表示的范围不久小了吗？答：是的，小了一半。而且 [+0]原 != [-">
+<meta property="og:locale" content="zh">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E5%8E%9F%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E5%8E%9F%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png">
+<meta property="og:updated_time" content="2018-08-04T15:57:22.579Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="处理器（一）">
+<meta name="twitter:description" content="术语科普 机器数：在计算机里表示的方法，即正负不再是用 -，+来表示，而是采用0表示正数，1表示负数 真数：相对机器数，用-，+来表示正负的数就叫真数  原码原码即最原始的二进制表示法，这种方法简单直观。比如 +11，通常表示为 0000 1011比如 -11，通常表示为 1000 1011 不知道小伙伴会不会有疑问，那8位可以表示的范围不久小了吗？答：是的，小了一半。而且 [+0]原 != [-">
+<meta name="twitter:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E5%8E%9F%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+  
+    <link rel="alternate" href="/atom.xml" title="CoDeleven的个人博客" type="application/atom+xml">
+  
+  
+    <link rel="icon" href="/favicon.png">
+  
+  
+    <link href="//fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+  
+  <link rel="stylesheet" href="/codeleven.github.io/css/style.css">
+  
+
+</head>
+
+<body>
+  <div id="container">
+    <div id="wrap">
+      <header id="header">
+  <div id="banner"></div>
+  <div id="header-outer" class="outer">
+    <div id="header-title" class="inner">
+      <h1 id="logo-wrap">
+        <a href="/codeleven.github.io/" id="logo">CoDeleven的个人博客</a>
+      </h1>
+      
+    </div>
+    <div id="header-inner" class="inner">
+      <nav id="main-nav">
+        <a id="main-nav-toggle" class="nav-icon"></a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/">Home</a>
+        
+          <a class="main-nav-link" href="/codeleven.github.io/archives">Archives</a>
+        
+      </nav>
+      <nav id="sub-nav">
+        
+          <a id="nav-rss-link" class="nav-icon" href="/atom.xml" title="RSS Feed"></a>
+        
+        <a id="nav-search-btn" class="nav-icon" title="Search"></a>
+      </nav>
+      <div id="search-form-wrap">
+        <form action="//google.com/search" method="get" accept-charset="UTF-8" class="search-form"><input type="search" name="q" class="search-form-input" placeholder="Search"><button type="submit" class="search-form-submit">&#xF002;</button><input type="hidden" name="sitesearch" value="http://yoursite.com/GithubPages"></form>
+      </div>
+    </div>
+  </div>
+</header>
+      <div class="outer">
+        <section id="main"><article id="post-无符号数和有符号数" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/08/04/无符号数和有符号数/" class="article-date">
+  <time datetime="2018-08-04T05:12:12.000Z" itemprop="datePublished">2018-08-04</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 class="article-title" itemprop="name">
+      处理器（一）
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h1 id="术语科普"><a href="#术语科普" class="headerlink" title="术语科普"></a>术语科普</h1><ul>
+<li>机器数：在计算机里表示的方法，即正负不再是用 <code>-</code>，<code>+</code>来表示，而是采用<code>0</code>表示正数，<code>1</code>表示负数</li>
+<li>真数：相对机器数，用<code>-</code>，<code>+</code>来表示正负的数就叫真数</li>
+</ul>
+<h1 id="原码"><a href="#原码" class="headerlink" title="原码"></a>原码</h1><p>原码即最原始的二进制表示法，这种方法简单直观。<br>比如 <code>+11</code>，通常表示为 <code>0000 1011</code><br>比如 <code>-11</code>，通常表示为 <code>1000 1011</code></p>
+<p>不知道小伙伴会不会有疑问，那8位可以表示的范围不久小了吗？<br>答：是的，小了一半。而且 [+0]<sub>原</sub> != [-0]<sub>原</sub></p>
+<h2 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h2><h3 id="整数"><a href="#整数" class="headerlink" title="整数"></a>整数</h3><p>计算机规定，任何正数的原码都是其本身。而对于负数来说，需要把最高位变为“1”，所以需要 2<sup>n</sup> - x，由于负负得正，其实是 2<sup>n</sup> + |x|，其示意图如下所示</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E5%8E%9F%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="整数的原码定义"></p>
+<p>其中x为真值，n为整数的位数</p>
+<p>比如：<br>当x = -1011 时，[x]<sub>原</sub> = 2<sup>4</sup>（即1 0000） - (-1011) = 1 1011，即1, 1011</p>
+<blockquote>
+<p>2<sup>4</sup>是指16，16即10000，如果是2<sup>3</sup>，那么就是8，即1000</p>
+</blockquote>
+<p><strong>注意，这里记得用逗号分隔 符号位和数值位</strong></p>
+<h3 id="小数"><a href="#小数" class="headerlink" title="小数"></a>小数</h3><p>正的小数都是其本身。而对于负数来说，需要把最高位变成“1”，所以需要1 - x，由于负负得正，其实是 1 + |x|，其示意图如下所示</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E5%8E%9F%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="小数的原码定义"></p>
+<p>其中x为真值，n为整数的位数</p>
+<p>比如：<br>当x = -0.1011 时，[x]<sub>原</sub> = 1 - (-0.1011) = 1.1011</p>
+<p><strong>注意，这里记得用点号分隔 符号位和数值位</strong></p>
+<h2 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h2><p>简单直观</p>
+<h2 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h2><p>进行加减运算会带来许多麻烦，比如一个正数和负数相加（注意，这里进行运算时都要采用机器数，不能使用真数）</p>
+<h1 id="补码"><a href="#补码" class="headerlink" title="补码"></a>补码</h1><p>由于原码在进行四则运算时，总需要判断正负号，所以科学家想到了一种用正数代替负数的方法，即补码</p>
+<p>补码的原理类似于 <code>mod(即取余)</code>。比如有一个时钟，现在指向6点，如果想拨到8点钟，我们可以顺时针拨2个小时（可以理解为<code>(6 + 2) mod 12 = 8</code>），也可以逆时针拨10个小时（可以理解为 <code>(12 + (6 - 10)) mod 12 = 8</code>）。这说明了可以用加法代替减法，只要限定最大值，然后不断循环即可。</p>
+<p>##定义</p>
+<h3 id="整数-1"><a href="#整数-1" class="headerlink" title="整数"></a>整数</h3><p>计算机规定，正数的补码是其本身；负数的补码要取<code>模 + 真值（为负数）</code>。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="整数补码"></p>
+<p>其中x为真值，n为整数的位数</p>
+<p>比如：<br>当 x = -1010 时，[x]<sub>补</sub> = 2<sup>4</sup> + (-1010) = 10000 + (-1010) = 0110</p>
+<h3 id="小数-1"><a href="#小数-1" class="headerlink" title="小数"></a>小数</h3><p>计算机规定，正数的补码是其本身；负数的补码要取<code>2 + 真值（为负数）</code>。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="小数补码定义"></p>
+<p>比如：<br>当 x = -0.1010 时，[x]<sub>补</sub> = 2 + (-0.1010) = 10.0000 + (-0.1010) = 1.0110</p>
+<p>对于补码来说，由于经常会出现进位的算法，计算时很麻烦，所以这里给出一个简单的算法：</p>
+<h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>除原码符号位，将其他数值为取反（相当于减），最后加一即可。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png" alt="整数补码过程"></p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png" alt="小数补码过程"></p>
+<h1 id="反码"><a href="#反码" class="headerlink" title="反码"></a>反码</h1><p>反码其实是补码的一个过度表示法</p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/08/04/无符号数和有符号数/" data-id="cjkflr3ws002lk8vjrdyrjaz9" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+    
+<nav id="article-nav">
+  
+    <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Newer</strong>
+      <div class="article-nav-title">
+        
+          《七周七并发模型》第一章第一天
+        
+      </div>
+    </a>
+  
+  
+    <a href="/codeleven.github.io/2018/08/02/DMA方式/" id="article-nav-older" class="article-nav-link-wrap">
+      <strong class="article-nav-caption">Older</strong>
+      <div class="article-nav-title">DMA方式</div>
+    </a>
+  
+</nav>
+
+  
+</article>
+
+</section>
+        
+          <aside id="sidebar">
+  
+    
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tags</h3>
+    <div class="widget">
+      <ul class="tag-list"><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/JVM/">JVM</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/Java集合/">Java集合</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构与算法/">数据结构与算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li><li class="tag-list-item"><a class="tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Tag Cloud</h3>
+    <div class="widget tagcloud">
+      <a href="/codeleven.github.io/tags/JMM/" style="font-size: 16.67px;">JMM</a> <a href="/codeleven.github.io/tags/JVM/" style="font-size: 16.67px;">JVM</a> <a href="/codeleven.github.io/tags/Java并发/" style="font-size: 20px;">Java并发</a> <a href="/codeleven.github.io/tags/Java集合/" style="font-size: 15px;">Java集合</a> <a href="/codeleven.github.io/tags/数据结构与算法/" style="font-size: 10px;">数据结构与算法</a> <a href="/codeleven.github.io/tags/数据结构和算法/" style="font-size: 13.33px;">数据结构和算法</a> <a href="/codeleven.github.io/tags/计算机组成/" style="font-size: 18.33px;">计算机组成</a> <a href="/codeleven.github.io/tags/设计模式/" style="font-size: 11.67px;">设计模式</a>
+    </div>
+  </div>
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Archives</h3>
+    <div class="widget">
+      <ul class="archive-list"><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/08/">August 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/07/">July 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/06/">June 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/05/">May 2018</a></li><li class="archive-list-item"><a class="archive-list-link" href="/codeleven.github.io/archives/2018/04/">April 2018</a></li></ul>
+    </div>
+  </div>
+
+
+  
+    
+  <div class="widget-wrap">
+    <h3 class="widget-title">Recent Posts</h3>
+    <div class="widget">
+      <ul>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/04/无符号数和有符号数/">处理器（一）</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/08/02/DMA方式/">DMA方式</a>
+          </li>
+        
+          <li>
+            <a href="/codeleven.github.io/2018/07/27/程序中断方式/">程序中断方式</a>
+          </li>
+        
+      </ul>
+    </div>
+  </div>
+
+  
+</aside>
+        
+      </div>
+      <footer id="footer">
+  
+  <div class="outer">
+    <div id="footer-info" class="inner">
+      &copy; 2018 CoDeleven<br>
+      Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>
+    </div>
+  </div>
+</footer>
+    </div>
+    <nav id="mobile-nav">
+  
+    <a href="/codeleven.github.io/" class="mobile-nav-link">Home</a>
+  
+    <a href="/codeleven.github.io/archives" class="mobile-nav-link">Archives</a>
+  
+</nav>
+    
+
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+
+
+  <link rel="stylesheet" href="/codeleven.github.io/fancybox/jquery.fancybox.css">
+  <script src="/codeleven.github.io/fancybox/jquery.fancybox.pack.js"></script>
+
+
+<script src="/codeleven.github.io/js/script.js"></script>
+
+  </div>
+</body>
+</html>
