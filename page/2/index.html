@@ -168,7 +168,84 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/" data-id="cjkflr3wx002vk8vj6maoetia" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（六）之校验码（下）/" data-id="cjkgaepnh002xlcvjks0c0rxc" class="article-share-link">Share</a>
+      
+      
+  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
+
+    </footer>
+  </div>
+  
+</article>
+
+
+  
+    <article id="post-存储器（五）之校验码（上）" class="article article-type-post" itemscope itemprop="blogPost">
+  <div class="article-meta">
+    <a href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/" class="article-date">
+  <time datetime="2018-07-17T00:28:13.000Z" itemprop="datePublished">2018-07-17</time>
+</a>
+    
+  </div>
+  <div class="article-inner">
+    
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/">存储器之校验码（上）</a>
+    </h1>
+  
+
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <p>在数据传输过程中，难免会有数据出现问题，所以需要及时发现错误和纠错。</p>
+<h1 id="校验码的相关术语"><a href="#校验码的相关术语" class="headerlink" title="校验码的相关术语"></a>校验码的相关术语</h1><ul>
+<li>编码的距离：一串代码A 和 另一串代码B 相比较，两串代码相同位置上的不同位的个数称为码组的距离。</li>
+<li><p>编码的最小距离（码距）：任意两组代码之间的最小二进制位数的差异。</p>
+   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">根据纠错理论得出如下得公式：</span><br><span class="line">L - 1 = D + C</span><br></pre></td></tr></table></figure>
+<p>编码最小距离（L）越大，能检测的位数（D） 和 能纠错的位数（C）就越大，且纠错能力恒小于等于检错能力。</p>
+</li>
+</ul>
+<h2 id="什么是检测和纠错"><a href="#什么是检测和纠错" class="headerlink" title="什么是检测和纠错"></a>什么是检测和纠错</h2><ul>
+<li>检测：当收到的信息按一定规则推导时，发现一个以上的错误位置，而通过已知信息无法推导孰对孰错，只能是知道有错误而已。</li>
+<li>纠错：当收到的信息按一定规则推导时，发现错误位置且能纠正错误位置。<br>这两方面的内容基本都是通过 <strong>添加相关冗余位</strong> 来实现的。</li>
+</ul>
+<p>以下是<a href="http://www.voidcn.com/article/p-kskihivf-gu.html" target="_blank" rel="noopener">详解差错控制之码距、检错与纠错</a>一文看到的例子，觉得讲的很透彻。</p>
+<blockquote>
+<p>有很多网友和学员不明白，为什么有些编码能检查出错误，而不能纠正错误?下面来举一个生活当中简单的例子来说明这一点。若希赛公司发出一个通知：“明天14:00~16:00开会”，但在通知过程中由于行政部工作人员疏忽，变成了“明天10:00~16:00开会”。员工收到这个错误通知后由于无法判断其正确与否，就会按这个错误时间去安排与组织。</p>
+</blockquote>
+<blockquote>
+<p>为了使接收者能判断正误，可以在通知内容中增加“下午”两个字，即改为：“明天下午14:00~16:00开会”。这时，如果仍错为：“明天下午10:00~16:00开会，则收到此通知后，根据“下午”与“10:00”信息即可判断出通知发生了错误。但仍不能纠正其错误，因为无法判断是“下午”与“10:00”哪一信息出错，即无法判断公司原来制定开会的具体时间。这时，接收者可以告诉发送方再发一次通知(员工向行政部人员询问，行政部再次确认会议时间)，这就是检错重发(这也就是我们所说的能检错，但无法纠错)。</p>
+</blockquote>
+<blockquote>
+<p>为了实现不但能判断通知准确性(检错)，同时还能正确判断会议开始的具体时间(纠错)，行政部可以把通知内容再增加“两个小时”四个字，即改为：“明天下午14:00~16:00开会两个小时”。这样，如果其中“14:00”错为“10:00”，不但能判断出错误，同时还能纠正错误，因为其中增加的“两个小时”这个标识可以判断出正确的时间为“14:00~16:00”。当然，这显然也增加了信息的冗余，降低了数据处理的效率。但随着带宽的不断提高，数据执行与处理的能力日益增强，可靠性与效率的均衡，这是值得的。</p>
+</blockquote>
+<h2 id="码距和纠错检错有什么关系？"><a href="#码距和纠错检错有什么关系？" class="headerlink" title="码距和纠错检错有什么关系？"></a>码距和纠错检错有什么关系？</h2><p>规则1. “A”字母代表1，“B”字母代表0。</p>
+<p>1) 当发送端发送“1” 和 “0”，接收端收到“1” 和 “1”时。接收端无法通过规则推导判断孰对孰错。<br>2) 现在在规则1的基础上增加规则2：每次发送的第0位都是和第1位相同的代码。</p>
+<pre><code>* 当发送端发送“11” 和 “00”时，接收端收到“10” 和 “00”时。接收端能通过已有规则得知第一串代码有误，但是无法得知第一串代码哪里有错（此规则下，通常会让客户端重发）。
+</code></pre><p>3) 现在在规则1、规则2的基础上增加规则3：每次发送的第0位和第1位、第2位均相同。</p>
+<pre><code>* 当发送端发送“111” 和 “000”时，接收端收到“101” 和 “000”时。接收端能通过已有规则得知第一串代码有误，而根据 **误码少的概率大于误码多的概率的规律**，判断第一串代码应该是“111”。
+</code></pre><p>上面的规则不是很严谨，但是确实说明了接收端和发送端的最小码距越大，检错和纠错能力越强。</p>
+<p><em>笔者个人认为最小码距是指 <strong>编码后</strong> 和 <strong>编码前</strong> 的最小长度差异（这句是笔者的观点）。</em></p>
+<p>比如发送“1”代表A，如果按规则1和规则2编码，客户端会发送“11”。“11” 和 “1”相比多了一位，即最小长度为1，检测位数为2，纠错位数为0；如果按规则1、2、3编码，客户端会发送“111”。“111” 和 “1” 相比多了两位，检测位数为2（问题Q1），纠错位数为1（问题Q2）</p>
+<ul>
+<li><p>问题Q1<br>为什么检测位数不是3，换句话说不可能是3个全错？<br>答：三个同时发生的几率很低，不考虑</p>
+</li>
+<li><p>问题Q2<br>为什么纠错位数不是2？<br>答：因为规则3后面是根据“少数服从多数”判断的，必然有两个数是一样的，另外一个被校正为和其他。被校正位只会有一个，所以纠错位为1</p>
+</li>
+</ul>
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>处理前的数据（又称原数据） –“规则”–&gt; 处理后的数据</p>
+<p><em>处理后的数据长度 - 处理前的数据长度 = 最小码距 （这句是笔者的观点）</em></p>
+<p>根据检测和纠错的例子，我们可以看出来“规则”就是如何处理 原数据，即 <strong>如何添加检测位</strong> 以及 <strong>检测位如何倒推</strong></p>
+
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjkgaepn9002plcvjzwgatmtn" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -255,84 +332,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjkflr3wl0029k8vj4gxc68c9" class="article-share-link">Share</a>
-      
-      
-  <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
-
-    </footer>
-  </div>
-  
-</article>
-
-
-  
-    <article id="post-存储器（五）之校验码（上）" class="article article-type-post" itemscope itemprop="blogPost">
-  <div class="article-meta">
-    <a href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/" class="article-date">
-  <time datetime="2018-07-17T00:28:13.000Z" itemprop="datePublished">2018-07-17</time>
-</a>
-    
-  </div>
-  <div class="article-inner">
-    
-    
-      <header class="article-header">
-        
-  
-    <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/07/17/存储器（五）之校验码（上）/">存储器之校验码（上）</a>
-    </h1>
-  
-
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>在数据传输过程中，难免会有数据出现问题，所以需要及时发现错误和纠错。</p>
-<h1 id="校验码的相关术语"><a href="#校验码的相关术语" class="headerlink" title="校验码的相关术语"></a>校验码的相关术语</h1><ul>
-<li>编码的距离：一串代码A 和 另一串代码B 相比较，两串代码相同位置上的不同位的个数称为码组的距离。</li>
-<li><p>编码的最小距离（码距）：任意两组代码之间的最小二进制位数的差异。</p>
-   <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">根据纠错理论得出如下得公式：</span><br><span class="line">L - 1 = D + C</span><br></pre></td></tr></table></figure>
-<p>编码最小距离（L）越大，能检测的位数（D） 和 能纠错的位数（C）就越大，且纠错能力恒小于等于检错能力。</p>
-</li>
-</ul>
-<h2 id="什么是检测和纠错"><a href="#什么是检测和纠错" class="headerlink" title="什么是检测和纠错"></a>什么是检测和纠错</h2><ul>
-<li>检测：当收到的信息按一定规则推导时，发现一个以上的错误位置，而通过已知信息无法推导孰对孰错，只能是知道有错误而已。</li>
-<li>纠错：当收到的信息按一定规则推导时，发现错误位置且能纠正错误位置。<br>这两方面的内容基本都是通过 <strong>添加相关冗余位</strong> 来实现的。</li>
-</ul>
-<p>以下是<a href="http://www.voidcn.com/article/p-kskihivf-gu.html" target="_blank" rel="noopener">详解差错控制之码距、检错与纠错</a>一文看到的例子，觉得讲的很透彻。</p>
-<blockquote>
-<p>有很多网友和学员不明白，为什么有些编码能检查出错误，而不能纠正错误?下面来举一个生活当中简单的例子来说明这一点。若希赛公司发出一个通知：“明天14:00~16:00开会”，但在通知过程中由于行政部工作人员疏忽，变成了“明天10:00~16:00开会”。员工收到这个错误通知后由于无法判断其正确与否，就会按这个错误时间去安排与组织。</p>
-</blockquote>
-<blockquote>
-<p>为了使接收者能判断正误，可以在通知内容中增加“下午”两个字，即改为：“明天下午14:00~16:00开会”。这时，如果仍错为：“明天下午10:00~16:00开会，则收到此通知后，根据“下午”与“10:00”信息即可判断出通知发生了错误。但仍不能纠正其错误，因为无法判断是“下午”与“10:00”哪一信息出错，即无法判断公司原来制定开会的具体时间。这时，接收者可以告诉发送方再发一次通知(员工向行政部人员询问，行政部再次确认会议时间)，这就是检错重发(这也就是我们所说的能检错，但无法纠错)。</p>
-</blockquote>
-<blockquote>
-<p>为了实现不但能判断通知准确性(检错)，同时还能正确判断会议开始的具体时间(纠错)，行政部可以把通知内容再增加“两个小时”四个字，即改为：“明天下午14:00~16:00开会两个小时”。这样，如果其中“14:00”错为“10:00”，不但能判断出错误，同时还能纠正错误，因为其中增加的“两个小时”这个标识可以判断出正确的时间为“14:00~16:00”。当然，这显然也增加了信息的冗余，降低了数据处理的效率。但随着带宽的不断提高，数据执行与处理的能力日益增强，可靠性与效率的均衡，这是值得的。</p>
-</blockquote>
-<h2 id="码距和纠错检错有什么关系？"><a href="#码距和纠错检错有什么关系？" class="headerlink" title="码距和纠错检错有什么关系？"></a>码距和纠错检错有什么关系？</h2><p>规则1. “A”字母代表1，“B”字母代表0。</p>
-<p>1) 当发送端发送“1” 和 “0”，接收端收到“1” 和 “1”时。接收端无法通过规则推导判断孰对孰错。<br>2) 现在在规则1的基础上增加规则2：每次发送的第0位都是和第1位相同的代码。</p>
-<pre><code>* 当发送端发送“11” 和 “00”时，接收端收到“10” 和 “00”时。接收端能通过已有规则得知第一串代码有误，但是无法得知第一串代码哪里有错（此规则下，通常会让客户端重发）。
-</code></pre><p>3) 现在在规则1、规则2的基础上增加规则3：每次发送的第0位和第1位、第2位均相同。</p>
-<pre><code>* 当发送端发送“111” 和 “000”时，接收端收到“101” 和 “000”时。接收端能通过已有规则得知第一串代码有误，而根据 **误码少的概率大于误码多的概率的规律**，判断第一串代码应该是“111”。
-</code></pre><p>上面的规则不是很严谨，但是确实说明了接收端和发送端的最小码距越大，检错和纠错能力越强。</p>
-<p><em>笔者个人认为最小码距是指 <strong>编码后</strong> 和 <strong>编码前</strong> 的最小长度差异（这句是笔者的观点）。</em></p>
-<p>比如发送“1”代表A，如果按规则1和规则2编码，客户端会发送“11”。“11” 和 “1”相比多了一位，即最小长度为1，检测位数为2，纠错位数为0；如果按规则1、2、3编码，客户端会发送“111”。“111” 和 “1” 相比多了两位，检测位数为2（问题Q1），纠错位数为1（问题Q2）</p>
-<ul>
-<li><p>问题Q1<br>为什么检测位数不是3，换句话说不可能是3个全错？<br>答：三个同时发生的几率很低，不考虑</p>
-</li>
-<li><p>问题Q2<br>为什么纠错位数不是2？<br>答：因为规则3后面是根据“少数服从多数”判断的，必然有两个数是一样的，另外一个被校正为和其他。被校正位只会有一个，所以纠错位为1</p>
-</li>
-</ul>
-<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>处理前的数据（又称原数据） –“规则”–&gt; 处理后的数据</p>
-<p><em>处理后的数据长度 - 处理前的数据长度 = 最小码距 （这句是笔者的观点）</em></p>
-<p>根据检测和纠错的例子，我们可以看出来“规则”就是如何处理 原数据，即 <strong>如何添加检测位</strong> 以及 <strong>检测位如何倒推</strong></p>
-
-      
-    </div>
-    <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（五）之校验码（上）/" data-id="cjkflr3wu002pk8vj2gzr6rxo" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/17/存储器（七）之主存结构/" data-id="cjkgaepnk002zlcvjsaxjwlgw" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -494,7 +494,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjkflr3wj0026k8vjez5t3wt1" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (三）之随机存储器/" data-id="cjkgaepn4002jlcvjnnzfcwwp" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -565,7 +565,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjkflr3wp002hk8vjj9kvvr2c" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器 (二）之主存与CPU的联系/" data-id="cjkgaepnd002tlcvjohao3sh1" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -604,7 +604,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjkflr3x8003ek8vjh0vvc7vm" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/（未埋）存储器（四）之CPU和存储器的链接/" data-id="cjkgaepo8003ulcvj66kr90w5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -649,7 +649,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjkflr3wo002fk8vjc5a9k0or" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/13/存储器（一）之概述/" data-id="cjkgaepnf002vlcvjtnpxmjbt" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -697,7 +697,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjkflr3x30036k8vj3uaj5ynj" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/12/观察者模式/" data-id="cjkgaepo2003mlcvjo767mzn8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/设计模式/">设计模式</a></li></ul>
@@ -792,7 +792,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjkflr3wv002rk8vj8q0k8dsc" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/10/系统总线（三）/" data-id="cjkgaepo3003olcvjf7eibclh" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -877,7 +877,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjkflr3x40038k8vjtnfp8qdm" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/09/系统总线（二）/" data-id="cjkgaepnx003flcvj18bmr5ph" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -937,11 +937,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/08/05/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/08/05/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>

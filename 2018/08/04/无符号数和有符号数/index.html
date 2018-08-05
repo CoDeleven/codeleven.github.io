@@ -19,7 +19,9 @@
 <meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E5%AE%9A%E4%B9%89.png">
 <meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png">
 <meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png">
-<meta property="og:updated_time" content="2018-08-04T15:57:22.579Z">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E5%8F%8D%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+<meta property="og:image" content="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E5%8F%8D%E7%A0%81%E5%AE%9A%E4%B9%89.png">
+<meta property="og:updated_time" content="2018-08-05T01:35:58.710Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="处理器（一）">
 <meta name="twitter:description" content="术语科普 机器数：在计算机里表示的方法，即正负不再是用 -，+来表示，而是采用0表示正数，1表示负数 真数：相对机器数，用-，+来表示正负的数就叫真数  原码原码即最原始的二进制表示法，这种方法简单直观。比如 +11，通常表示为 0000 1011比如 -11，通常表示为 1000 1011 不知道小伙伴会不会有疑问，那8位可以表示的范围不久小了吗？答：是的，小了一半。而且 [+0]原 != [-">
@@ -129,12 +131,20 @@
 <h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>除原码符号位，将其他数值为取反（相当于减），最后加一即可。</p>
 <p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png" alt="整数补码过程"></p>
 <p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png" alt="小数补码过程"></p>
-<h1 id="反码"><a href="#反码" class="headerlink" title="反码"></a>反码</h1><p>反码其实是补码的一个过度表示法</p>
+<h1 id="反码"><a href="#反码" class="headerlink" title="反码"></a>反码</h1><p>反码其实是补码的一个过渡表示法。将除符号位以外的数值位取反，就可以得到反码（这是我们最直观的做法，但是计算机没那么聪明，需要通过数学公式得到）。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E5%8F%8D%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="整数反码定义"></p>
+<p>可以很明显发现反码其实就是在补码的基础上减去了一个“1”，就得到了反码。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E5%8F%8D%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="小数反码定义"></p>
+<blockquote>
+<p>2<sup>-n</sup> 代表前面有n个0，比如 2 <sup>-4</sup>，即为0.0001</p>
+</blockquote>
+<p>同理，也是在求补码的基础上减去了一个“1”（这里的“1”对于小数来说是最小的n位）</p>
+<h1 id="移码"><a href="#移码" class="headerlink" title="移码"></a>移码</h1><p>待我学习一波定点和浮点。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/08/04/无符号数和有符号数/" data-id="cjkflr3ws002lk8vjrdyrjaz9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/08/04/无符号数和有符号数/" data-id="cjkgaepnp0035lcvjm32wb667" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -145,7 +155,7 @@
     
 <nav id="article-nav">
   
-    <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
+    <a href="/codeleven.github.io/2018/08/05/《七周七并发模型》第一章第一天/" id="article-nav-newer" class="article-nav-link-wrap">
       <strong class="article-nav-caption">Newer</strong>
       <div class="article-nav-title">
         
@@ -208,11 +218,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/08/05/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/08/05/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>

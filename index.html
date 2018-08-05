@@ -67,8 +67,8 @@
   
     <article id="post-(未埋)了解阻塞队列之PriorityBlockingQueue" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/" class="article-date">
-  <time datetime="2018-08-04T15:58:04.915Z" itemprop="datePublished">2018-08-04</time>
+    <a href="/codeleven.github.io/2018/08/05/(未埋)了解阻塞队列之PriorityBlockingQueue/" class="article-date">
+  <time datetime="2018-08-05T03:28:15.683Z" itemprop="datePublished">2018-08-05</time>
 </a>
     
   </div>
@@ -79,7 +79,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+      <a class="article-title" href="/codeleven.github.io/2018/08/05/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
     </h1>
   
 
@@ -92,7 +92,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjkflr3v00000k8vj4sya5jbg" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/08/05/(未埋)了解阻塞队列之PriorityBlockingQueue/" data-id="cjkgaepk50005lcvjfg2f92av" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/数据结构和算法/">数据结构和算法</a></li></ul>
@@ -106,8 +106,8 @@
   
     <article id="post-《七周七并发模型》第一章第一天" class="article article-type-post" itemscope itemprop="blogPost">
   <div class="article-meta">
-    <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/" class="article-date">
-  <time datetime="2018-08-04T15:58:04.775Z" itemprop="datePublished">2018-08-04</time>
+    <a href="/codeleven.github.io/2018/08/05/《七周七并发模型》第一章第一天/" class="article-date">
+  <time datetime="2018-08-05T03:28:15.478Z" itemprop="datePublished">2018-08-05</time>
 </a>
     
   </div>
@@ -118,7 +118,7 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+      <a class="article-title" href="/codeleven.github.io/2018/08/05/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
     </h1>
   
 
@@ -202,7 +202,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/08/04/《七周七并发模型》第一章第一天/" data-id="cjkflr3w2001ek8vj6ufopbr6" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/08/05/《七周七并发模型》第一章第一天/" data-id="cjkgaepm8001mlcvjuy188kxb" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/JMM/">JMM</a></li><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/Java并发/">Java并发</a></li></ul>
@@ -271,12 +271,20 @@
 <h2 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h2><p>除原码符号位，将其他数值为取反（相当于减），最后加一即可。</p>
 <p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png" alt="整数补码过程"></p>
 <p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E8%A1%A5%E7%A0%81%E8%BF%87%E7%A8%8B.png" alt="小数补码过程"></p>
-<h1 id="反码"><a href="#反码" class="headerlink" title="反码"></a>反码</h1><p>反码其实是补码的一个过度表示法</p>
+<h1 id="反码"><a href="#反码" class="headerlink" title="反码"></a>反码</h1><p>反码其实是补码的一个过渡表示法。将除符号位以外的数值位取反，就可以得到反码（这是我们最直观的做法，但是计算机没那么聪明，需要通过数学公式得到）。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E6%95%B4%E6%95%B0%E5%8F%8D%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="整数反码定义"></p>
+<p>可以很明显发现反码其实就是在补码的基础上减去了一个“1”，就得到了反码。</p>
+<p><img src="https://blog-1252749790.cos.ap-shanghai.myqcloud.com/ComputerOrganization%2FCPU%2FArithmeticMethod%2F%E5%B0%8F%E6%95%B0%E5%8F%8D%E7%A0%81%E5%AE%9A%E4%B9%89.png" alt="小数反码定义"></p>
+<blockquote>
+<p>2<sup>-n</sup> 代表前面有n个0，比如 2 <sup>-4</sup>，即为0.0001</p>
+</blockquote>
+<p>同理，也是在求补码的基础上减去了一个“1”（这里的“1”对于小数来说是最小的n位）</p>
+<h1 id="移码"><a href="#移码" class="headerlink" title="移码"></a>移码</h1><p>待我学习一波定点和浮点。</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/08/04/无符号数和有符号数/" data-id="cjkflr3ws002lk8vjrdyrjaz9" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/08/04/无符号数和有符号数/" data-id="cjkgaepnp0035lcvjm32wb667" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -385,7 +393,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/08/02/DMA方式/" data-id="cjkflr3v90003k8vjlo52pf7q" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/08/02/DMA方式/" data-id="cjkgaepk70008lcvjs4cui2py" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -478,7 +486,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序中断方式/" data-id="cjkflr3wz002zk8vjwjxb3e1b" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序中断方式/" data-id="cjkgaepnu003blcvj9yeu8j8c" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -532,7 +540,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序查询方式/" data-id="cjkflr3wt002nk8vj9yrvgh3l" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/27/程序查询方式/" data-id="cjkgaepnv003dlcvjxf4bz1r5" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -645,7 +653,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjkflr3x9003gk8vja4n33qc3" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/输入输出系统概述/" data-id="cjkgaepo6003slcvjrz43fq1i" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -713,7 +721,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/25/IO接口/" data-id="cjkflr3vi000fk8vjzh2cmr0n" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/25/IO接口/" data-id="cjkgaepk9000alcvjwp33cyz8" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -802,7 +810,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjkflr3wn002dk8vjjtucou4l" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/22/存储器（九）之高速缓冲器（下）/" data-id="cjkgaepnb002rlcvj63cr1859" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -909,7 +917,7 @@
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://yoursite.com/GithubPages/2018/07/20/存储器（八）之高速缓冲器（上）/" data-id="cjkflr3ww002tk8vjccu9e89h" class="article-share-link">Share</a>
+      <a data-url="http://yoursite.com/GithubPages/2018/07/20/存储器（八）之高速缓冲器（上）/" data-id="cjkgaepno0033lcvj6fdoijz9" class="article-share-link">Share</a>
       
       
   <ul class="article-tag-list"><li class="article-tag-list-item"><a class="article-tag-list-link" href="/codeleven.github.io/tags/计算机组成/">计算机组成</a></li></ul>
@@ -969,11 +977,11 @@
       <ul>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/04/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
+            <a href="/codeleven.github.io/2018/08/05/(未埋)了解阻塞队列之PriorityBlockingQueue/">了解阻塞队列之PriorityBlockingQueue</a>
           </li>
         
           <li>
-            <a href="/codeleven.github.io/2018/08/04/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
+            <a href="/codeleven.github.io/2018/08/05/《七周七并发模型》第一章第一天/">《七周七并发模型》第一章第一天</a>
           </li>
         
           <li>
