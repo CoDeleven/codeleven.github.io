@@ -16,7 +16,7 @@ JVM用的不是引用计数法，证明方法就是 **循环引用** （注意�
 ## 可达性分析算法
 主流的商用程序语言的主流实现中，都是通过可达性分析来判定对象是否存活的。这个算法的基本思想就是通过一系列的称为 **GC Roots** 的对象作为起始点，从这些结点开始向下搜索，搜索所走过的路径称为 **引用链**，当一个对象到GC Roots没有任何引用链相连时，则证明此对象是不可用的。
 
-![](https://blog-1252749790.file.myqcloud.com/jvm/reachabiliy_analysis.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/jvm/reachabiliy_analysis.png)
 
 红色区域的对象就会被视为 **可回收对象**
 
