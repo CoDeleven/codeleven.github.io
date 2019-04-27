@@ -1,8 +1,7 @@
-【查漏补缺】File的path、absolutePath和canonicalPath的区别
+#【查漏补缺】File的path、absolutePath和canonicalPath的区别
 
 ## 背景
 在学习Idea的插件开发时，用到了相关的`VirtualFileSystem`这个东西，里面的`VirtualFile`有一个`getCanonicalPath()`方法引起了我的注意，我发现我不知道——
-
 
 
 ## 科普
@@ -59,6 +58,36 @@ file.getAbsolutePath()  -> E:\commonWorkspace\IdeaPluginDevGuide\DevGuide-Virtua
 file.getCanonicalPath() -> E:\Test.txt
 file.getPath()          -> ..\..\..\Test.txt
 ```
+
+## 区别与联系
+```
+Returns the canonical pathname string of this abstract pathname.
+<p> A canonical pathname is both absolute and unique.  The precise
+definition of canonical form is system-dependent.  This method first
+converts this pathname to absolute form if necessary, as if by invoking the
+{@link #getAbsolutePath} method, and then maps it to its unique form in a
+system-dependent way.  This typically involves removing redundant names
+such as <tt>"."</tt> and <tt>".."</tt> from the pathname, resolving
+symbolic links (on UNIX platforms), and converting drive letters to a
+standard case (on Microsoft Windows platforms).
+<p> Every pathname that denotes an existing file or directory has a
+unique canonical form.  Every pathname that denotes a nonexistent file
+or directory also has a unique canonical form.  The canonical form of
+the pathname of a nonexistent file or directory may be different from
+the canonical form of the same pathname after the file or directory is
+created.  Similarly, the canonical form of the pathname of an existing
+file or directory may be different from the canonical form of the same
+pathname after the file or directory is deleted.
+```
+大概就是说`getCanonicalPath()`获得的格式是和系统相关的（Linux和Windows下不一样），在执行过程中会将当前的`path`转换成`absolute path`，然后去掉`absolute path` 内重复的 **.**和 **..**等等。
+
+最后一段有点不理解，就是说
+
+     * 表示现有文件或目录的每个路径名都有一个惟一的规范形式。
+     * 表示非存在文件或目录的每个路径名也有一个惟一的规范形式。
+     * 非存在文件或目录路径名的规范形式可能不同于创建文件或目录之后同一路径名的规范形式。
+     * 同样，现有文件或目录路径名的规范形式可能不同于删除文件或目录之后同一路径名的规范形式。 
+
 
 ## 结论
 1. 路径包含**绝对路径**和**相对路径**，**绝对路径**又包含了规范路径。

@@ -20,14 +20,14 @@ foo2.add(1);
 System.out.println(foo1.size());
 ```
 
-读者感觉是否挺正常的，没有**迭代**，没有在**多线程**下，单纯的给*foo1*列表添加一个值好像没什么问题。但是在运行后会抛出“ConcurrentModificationException”，这就很气了。博主因为这个问题思来想去，从**迭代**到**多线程**，每个角度都思考过，后来进入源码一看
+读者是否感觉挺正常的，没有**迭代**，没有在**多线程**下，单纯的给*foo1*列表添加一个值好像没什么问题。但是在运行后会抛出“ConcurrentModificationException”，这就很气了。博主因为这个问题思来想去，从**迭代**到**多线程**，每个角度都思考过，后来进入源码一看
 ```java
 // SubList是ArrayList的内部类
 /* parent = ArrayList.this
  * offset = 0
  * 剩下两个就不用解释了
  */
-SubList(AbstractList<E> parent,
+subList(AbstractList<E> parent,
         int offset, int fromIndex, int toIndex) {
     this.parent = parent;
     this.parentOffset = fromIndex;
