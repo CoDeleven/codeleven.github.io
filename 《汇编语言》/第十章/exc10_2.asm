@@ -8,7 +8,7 @@ codesg segment
 
 start:
     mov ax, 4240H
-    mov bx, 000FH
+    mov dx, 000FH
     mov cx, 0AH
     ; X/n = int(H/n)×65536+[rem(H/n)*65536+L]/n
     call divdw
@@ -17,13 +17,11 @@ start:
     int 21h
 
 divdw:
-    push ax
     push bx
-    push cx
     ; 由于先要计算高位，所以先把低位存起来
     push ax
     ; 把高位放在ax里，因为int(H / n) * 65535，这里的65535代表结果要乘以10000H，表示放在高位上
-    mov ax, bx
+    mov ax, dx
     mov dx, 0
     ; 除完后，ax保存商，dx保存余数
     div cx
@@ -38,9 +36,7 @@ divdw:
     mov cx, dx
     mov dx, bx
 
-    pop cx
     pop bx
-    pop ax
 
     ret
 codesg ends
