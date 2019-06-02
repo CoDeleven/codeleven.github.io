@@ -7,8 +7,8 @@ tags: [Java并发]
 HashMap只是相对线程安全，如果出现数据竞争就抛出fail-fast；HashTable则将每个操作都上锁，如果有耗时的操作，那么后续的操作均会被阻塞，大大降低程序的吞吐率。而ConcurrentHashMap正是为了解决这样一个问题而出现的。
 ConcurrentHashMap和HashMap的数据结构如下所示：
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/HashMapDT.png)
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ConcurrentHashmapDT.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/HashMapDT.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/ConcurrentHashmapDT.png)
 
 HashMap会持有一个Entry数组，每个Entry都是链表的结点，每次进行修改时，先查找key对应的hash值，找到BucktIndex，在遍历链表查看key是否相等。
 

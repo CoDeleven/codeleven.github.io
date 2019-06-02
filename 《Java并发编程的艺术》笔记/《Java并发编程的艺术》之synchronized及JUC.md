@@ -33,7 +33,7 @@ public synchronized void doTask(){ // ⑤
      - ⑤ hb ⑧
 
 根据传递规则，保证init()方法所有的修改对doTask()方法可见，happens-before关系如下所示
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_happens_before.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/synchronized_happens_before.png)
 
 1、2间的表示程序次序性规则，4、5间的表示监视器规则，由于3、4有happens-before关系，4、5有happens-before关系，所以根据传递性规则，2、6间有happens-before关系。
 
@@ -43,12 +43,12 @@ public synchronized void doTask(){ // ⑤
 
 ### synchrnoized获取锁内存语义
 当释放锁时，JMM会把线程对应的本地内存中的共享变量刷新到主内存。以上面的例子为例，共享数据的状态示意图如下所示
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/synchronized_release_semantic.png)
 
 ### synchrnoized释放锁内存语义
 当A线程获取到锁时，JMM会把该线程对应的本地内存置为无效。从而使得被监视器保护的临界区代码必须从主内存中读取共享变量。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/synchronized_lock_semantic.png)
 
 ### 语义总结
 对比锁释放-获取的内存语义和volatile的写-读内存语义可以看出：锁释放与volatile写有相同的内存语义；锁获取和volatile读有相同的内存语义。
@@ -84,5 +84,5 @@ JUC包的通用化的实现模式：
 
 AQS，非阻塞数据结构和原子变量类，这些JUC包中的基础都是使用上面的模式来实现的，而JUC包的高层类又是依赖这些基础类来实现的。从整体看，JUC包的实现示意图如下所示。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JUCStructure.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/JUCStructure.png)
 

@@ -35,7 +35,7 @@ public void doTask(){
 3. ② happens-before ③
 
 这个过程的happens-before关系图如下所示：
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_happens-before.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_happens-before.png)
 
 分别遵守程序次序规则、volatile变量规则和传递规则：
 
@@ -45,7 +45,7 @@ public void doTask(){
 
 ## volatile的内存语义
 **JMM针对编译器制定**的volatile的重排序规则
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_reorder_rule.png)
 
 * 第二个操作是volatile写时，不管第一个操作是什么，都不能重排序。这个规则确保volatile写之前的操作不会被**编译器重排序**到volatile写之后。
 * 当第一个操作时volatile读时，不管第二个是什么，都不能重排序。这个规则确保volatile读之后的操作不会被**编译器重排序**到volatile读之前。
@@ -54,18 +54,18 @@ public void doTask(){
 ### volatile的写内存语义
 当volatile写发生时，本地内存将刷新主内存。就拿上面happens-before的例子来说，当A线程执行init()写入volatile变量后，B线程执行doTask()读取volatile变量。内存状态变化图如下所示
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_concept.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_memory_concept.png)
 
 线程A写入flag变量后，本地内存将**更新的共享变量**（更新了几个就刷新几个）刷新至主内存，此时A线程的本地内存和主内存的共享变量相同。
 
 ### volatile的读内存语义
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_memory_concept.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_read_memory_concept.png)
 
 当B线程要读取flag变量时，本地内存B 中包含的共享变量已经被置为无效，B线程不得不去主内存读取共享变量。线程B的读取将导致本地内存B与主内存的共享变量的值变成一致。
 
 将两张图综合起来看，在读线程B读取一个volatile变量后，写线程A在写这个volatile变量之前所有可见的共享变量都将立即变得对读线程B可见。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_memory_summary.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_memory_summary.png)
 
 ### 语义总结
 * 当写线程写了一个volatile变量，实质是写线程向接下来要读取这个变量的线程发出了消息（对其共享变量所做的修改）
@@ -86,7 +86,7 @@ volatile关键字实现原理主要还是通过内存屏障进行控制的。编
 ### volatile写的内存语义实现
 下面是保守策略下，volatile写插入内存屏障的指令序列示意图。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_write_semantic.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_write_semantic.png)
 
 
 StoreStore保证在执行volatile写前，所有写操作的处理已经刷新至内存，保证对其他线程可见了。而StoreLoad的作用是避免后面还有其他的volatile读/写操作发生重排序。由于JMM无法准确判断StoreLoad所处的环境（比如结尾是return），所以有两种选择：
@@ -101,7 +101,7 @@ StoreStore保证在执行volatile写前，所有写操作的处理已经刷新�
 ### volatile读的内存语义实现
 下面是保守策略下，volatile读插入内存屏障的指令序列示意图。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_semantic.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_read_semantic.png)
 
 LoadLoad保证先执行volatile读再执行后续的读操作（禁止volatile读和后续的读发生重排序），而后的LoadStore保证先执行volatile读再执行写操作（禁止volatile读和后续的写发生重排序）。两者联合起来就是无论如何volatile读必须和程序顺序保持一致。
 
@@ -120,7 +120,7 @@ void readAndWrite(){
 }
 ```
 针对readAndWrite()方法，编译器在生成字节码时会做如下优化。
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/volatile_read_write_semantic.png)
 
 按顺序下来，第一个volatile读先于第二个volatile，第二个volatile先于所有后续的写，故第一个volatile读一定不会被重排序；StoreStore保证普通写先于第一个volatile写，StoreStore又保证第一个volatile写先于第二个volatile写，最后安全起见插入StoreLoad。
 

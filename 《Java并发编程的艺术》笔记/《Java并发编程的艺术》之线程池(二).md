@@ -12,7 +12,7 @@ Java的线程既是工作单元，也是执行机制。从JDK5开始，把工作
 * 任务的执行：Executor，以及继承Executor的ExecutorService
 * 异步计算的结果：Future接口、实现Future接口的FutureTask类
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_member_flow.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/executor_member_flow.png)
 
 各个部分的执行流程：
 
@@ -21,7 +21,7 @@ Java的线程既是工作单元，也是执行机制。从JDK5开始，把工作
 * submit()会返回一个实现Future接口的对象。主线程可以执行FutureTask.get()方法来等待任务执行完成。主线程也可以通过FutureTask.cancel()方法取消任务执行。
 
 ## Executor框架成员
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/executor_uml.jpg)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/executor_uml.jpg)
 
 Executors可以创建以下四个ThreadPoolExecutor特殊应用的类：
 * ThreadPoolExecutor
@@ -108,7 +108,7 @@ DelayQueue封装了一个PriorityQueue，这个PriorityQueue会对队列中的Sc
 
 #### 获取任务的方式
 线程池总从DelayQueue中获取流程：
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/ScheduledThreadPool_flow.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/ScheduledThreadPool_flow.png)
 
 1. 线程1从DelayQueue中获取已到期的ScheduledFutureTask
 2. 线程1执行该task
@@ -123,11 +123,11 @@ FutureTask可以处于以下三种状态：
 * 已启动。在run()方法执行过程中，FutureTask处于已启动状态
 * 已完成。在run()方法执行完后正常结束、被取消、抛出异常。
 
-![状态迁移示例图](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/FutureTask_state_change.png)
+![状态迁移示例图](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/FutureTask_state_change.png)
 当FutureTask处于未启动或已启动状态，调用get()方法，会让调用线程进入阻塞状态；当FutureTask处于已完成状态，阻塞的get()方法会立即返回
 
 
-![执行示意图](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/FutureTask_perform_flow.png)
+![执行示意图](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/FutureTask_perform_flow.png)
 不同状态下调用get/cancel方法，会有不同的影响
 
 

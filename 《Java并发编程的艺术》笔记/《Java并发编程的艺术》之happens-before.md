@@ -51,11 +51,11 @@ as-if-serial语义保证单线程内执行结果不被改变，happens-before保
 
 
 ### 规则举例一
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/happensbefore_start.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/happensbefore_start.png)
 
 按照程序顺序规则，操作1 happens-before 2、3 happens-before 4，其中因为start规则，2 happens-bfore 3。最后根据传递性规则，1 happens-before 4。这意味着操作1 保证对 操作2 可见。
 
 ### 规则举例二
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/happensbefore_join.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/happensbefore_join.png)
 
 按照程序顺序规则，1 happens-before3、 4 happens-before 5，而join规则要求3 happens-before 4，所以最后根据传递性规则，1 happens-before 5。这意味着操作 1 保证对操作5 可见

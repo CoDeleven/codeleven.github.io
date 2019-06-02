@@ -4,7 +4,7 @@ date: 2018-05-13 09:53:39
 tags: [Java并发]
 ---
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/atomic_family.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/atomic_family.png)
 
 其中主要是了解下```AtomicReference```以及```AtomicXUpdater```
 

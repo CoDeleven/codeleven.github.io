@@ -4,7 +4,7 @@ date: 2018-04-29 11:13:43
 tags: JMM
 ---
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMMind.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/JMMMind.png)
 
 整体层次思路：Java采用的是内存共享模型，该模型会遇到内存可见性的问题，而内存可见性通常都是由 **重排序** 和 **写缓冲区** 引发的，重排序又分为 **处理器重排序** 和 **编译器重排序**。面对 **写缓冲区**的问题，像Java这样的高级语言一般无能为力，所以从**重排序** 入手，在重排序里，JVM通过内存屏障提供了一层最低限度的保障（比如初始化保证默认值，静态类第一次加载等等）。但是需要更高的保障（比如顺序一致性）还是需要更高的性能就由程序员自行定夺，我将面向程序员的那部分划分为了三块，一块是happens-before规则，一块是同步原语（volatile、synchrnoized等等），最后则是Doug Lea 大大写的JUC包。我想这些规则及工具在多线程开发中会起到至关重要的作用。也是我们学习的重中之重。
 
@@ -18,7 +18,7 @@ tags: JMM
     
     线程间的共享变量存储在主内存中，每个线程拥有自己的本地内存，每个本地内存上都有该线程读/写变量的副本。
 
-![JMM概念图](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/JMMConcept.png)
+![JMM概念图](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/JMMConcept.png)
 
 然而了解这个模型还不够，我们还要知道在Java编译、运行阶段都会有一种优化手段——**重排序**。重排序分为以下三种类型：
 
@@ -53,11 +53,11 @@ tags: JMM
 
 这里CPU0 和 CPU1 均往自己的缓冲区写入数据，然后从内存中读取共享变量，最后才把写缓冲区中的数据刷新至主内存。当以这种时许执行时，就会出现a = y = 0的情况。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow2.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/CPUCacheFlow2.png)
 
 从内存理想执行角度看，下面的图例可能更符合直观感受：先写入缓冲区，缓冲区刷新到主内存，最后CPU从主内存中读取。对处理器来说，它认为执行顺序是①、②、③，但是实际操作情况却是①、③、②。此时CPU0的内存操作顺序被重排序了。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CPUCacheFlow.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/CPUCacheFlow.png)
 
 为了解决一些重要操作被重排序导致的问题，处理器提供了一种被称作**内存屏障（Memory Fence）** 的CPU指令，该指令可以处理重排序和可见性问题。Java编译器在生成指令序列时，会在适当位置中插入内存屏障来禁止特定类型的处理器重排序（所以那些同步原语本质都是**内存屏障**在其作用）。JVM把内存屏障分为4类，如下所示：
 
@@ -95,11 +95,11 @@ as-if-serial语义使单线程程序员无需担心重排序会干扰他们，�
 2. （不管程序是否同步）所有线程都只能看到一个单一的操作执行顺序。在顺序一致内存模型中，每个操作都必须原子执行且立刻对所有线程可见
 
 在顺序一致性内存模型中，假设现有A、B两个线程，A线程先获取锁再执行A1、A2、A3，B线程同上。它的执行顺序图如下所示
-![SequenceModelInSynchronized](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInSynchronized.png)
+![SequenceModelInSynchronized](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/SequenceModelInSynchronized.png)
 当线程A获取锁时，按顺序依次执行A1到A3；在A释放锁，B获取时，按顺序依次执行B1到B3。
 
 假设现在不用锁这些同步工具，它的执行顺序如下所示
-![SequenceModelInNormal](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png)
+![SequenceModelInNormal](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/SequenceModelInNormal.png)
 虽然整体执行顺序发生了改变，但是再每个线程依然能看到一个一致的执行顺序，之所以能保证它一致就是因为上述的两个特点：必须按程序顺序执行、每个操作立即对所有线程可见。
 但是在JMM上却没有这个保证，首先JMM不是顺序一致性模型，而且未同步程序的执行顺序是无需的，而且所有线程看到的执行顺序也可能不一样。就比如A线程先写入了一个数值，缓存在本地内存，A线程以为写进去了，但是本地内存只对A线程可见。其他线程仍然是原来的数值，只有等本地内存将数据刷新到主内存，其他线程才可见。这种情况下，当前线程看到的执行顺序和其他线程顺序将不一致。
 
@@ -123,7 +123,7 @@ public synchronized void doTask(){
 在这个代码里，假设A线程执行init()方法，B线程执行doTask()方法。根据JMM规范，只要正确同步的程序，结果都会和顺序一致性内存模型的结果一致。下面是该程序在两个内存模型的时序图。
 对于JMM来说，在临界区内的代码可任意重排序（但不允许临界区内的代码溢出到临界区外，那样会破坏监视器语言），JMM会在进入临界区和退出临界区时做一些特别的处理，使程序在这两个时间点具有和顺序一致性相同的内存视图。虽然线程A在临界区内进行了重排序，但是在监视器互斥执行的特性下，线程B根本不知道过程，只能观测到结果。这种重排序既提高了效率，又没改变程序的执行结果。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/compareJMMAndSequence.png)
 
 从这里我们可以看到JMM在不改变（正确同步）程序执行结果的前提下，尽可能地为编译器和处理器地优化打开了方便之门。
 
@@ -168,4 +168,4 @@ private static String toBinary(long l) {
 ```
 
 代码如上所示，假设处理器A写一个了long型变量，同时B处理器要读取这个long型变量。处理器A中的64位操作被拆分为两个32位的写操作，且这两个32位的写操作被分配到不同的事务中执行。同时处理器B 64位的读操作被分配到单个读事务中处理，执行顺序如下图所示时就会发生处理器A写到一半的数据被处理器B看见。
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/64bitOperatorFlow.png)

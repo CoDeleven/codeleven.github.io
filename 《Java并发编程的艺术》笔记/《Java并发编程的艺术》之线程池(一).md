@@ -17,7 +17,7 @@ tags: [Java并发]
 * workQueue: 任务阻塞队列。当提交新任务且核心线程数已经被使用完时，新任务会先加入任务队列
 
 线程池中线程创建流程：
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/threadpool_create_flow.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/threadpool_create_flow.png)
 
 1. 提交任务时，先判断核心线程数**是否已经创建完毕**，如果没有，则**先将核心线程数创建满**；反之则进入下个阶段
 2. 判断核心线程数是否已经全部被占用，如果没有则交给核心线程执行；反之进入下个阶段

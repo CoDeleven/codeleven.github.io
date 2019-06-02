@@ -66,7 +66,7 @@ public class DoubleCheckLocking{
 
 不违反happens-before的原则，所以JMM允许重排序，该代码在单线程可以运行的很高校，但是在多线程下会引发问题，即B线程会读取一个尚未完全初始化的对象。执行顺序流程图如下所示：
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/problem_doublechecklocking.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/problem_doublechecklocking.png)
 
 
 为了解决这个问题可以从两个方面下手：
@@ -102,30 +102,30 @@ public class InstanceFactory{
 }
 ```
 假设线程A初次调用getInstance，线程B也初次调用，下面是执行的示意图。
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/init_conflict.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/init_conflict.png)
 
 这里的语义和获取互斥锁一样，虽然允许初始化时的重排序，但是不会被其他线程所观测到。Java语言规范规定，对于每一个类或接口C，都有一个唯一的初始化锁LC与之对应。从C到LC的映射，由JVM的具体实现去自由实现。JVM在类初始化期间会获取这个初始化锁，并且每个线程至少获取一次锁来确保这个类已经被初始化过了。
 
 第一个阶段：
 线程A和线程B同时去获取Class的锁，线程A抢占成功并设置Class状态，随后就释放了锁；而线程B因此进入阻塞状态，示意图如下。
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/init_phase1.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/init_phase1.png)
 
 第二个阶段：
 线程A在释放了锁后就要开始初始化，而线程B获取到了锁，看到Class状态还是initializing，就放弃锁并进入等待状态。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/init_phase2.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/init_phase2.png)
 
 第三个阶段
 线程A执行完初始化，获取Class锁，将state设置为initialized，然后唤醒其他等待中的线程。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/init_phase3.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/init_phase3.png)
 
 第四个阶段
 线程B被唤醒，线程B尝试获取Class锁，读取到state为initialized，释放锁并访问这个类。
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/init_phase4.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/init_phase4.png)
 
 第五个阶段
 当初始化完毕后，线程C来访问该Class，线程C获取初始化锁，读取状态，如果为initialized就释放锁，直接访问类
 
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/init_phase5.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/init_phase5.png)

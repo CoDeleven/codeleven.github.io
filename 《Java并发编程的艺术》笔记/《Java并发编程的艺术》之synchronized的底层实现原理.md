@@ -23,7 +23,7 @@ tags: [Java并发, JMM]
 
 而根据JVM的设置<sup>[^1]</sup>，具体分配时又会有不同的情况，如下所示
 
-![偏向锁到重量锁的过程](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LockOptimization.jpg)
+![偏向锁到重量锁的过程](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/LockOptimization.jpg)
 
 当关闭了偏向锁的设置，那么就会走左边的流程；反之则走右边的流程。
 
@@ -52,12 +52,12 @@ tags: [Java并发, JMM]
 ## 轻量锁
 ### 加锁过程
 注意：轻量锁会一直保持，唤醒总是发生在轻量锁解锁的时候，因为加锁的时候已经成功CAS操作；而CAS失败的线程，会立即锁膨胀，并阻塞等待唤醒。
-![引用Java并发编程艺术的图片](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/LightLockFlowChart.png)
+![引用Java并发编程艺术的图片](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/LightLockFlowChart.png)
 
 1. 第一次进入同步块，开辟一个叫做*Lock Record* 的空间用于存储锁记录
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/InitLockRecord.png)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/InitLockRecord.png)
 2. 将对象头中的Mark Word 复制到 当前线程栈中
-3. 尝试用CAS将*Mark Word* **替换**为 *指向Lock Record的指针* ![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/CopyMW2LockRecord.png)
+3. 尝试用CAS将*Mark Word* **替换**为 *指向Lock Record的指针* ![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/CopyMW2LockRecord.png)
 4. 第三步操作成功，则将*Mark Word* 设置为*00*状态，标识**轻量锁**
 5. 然后执行同步体
 6. 第三部操作失败，进入自旋获取锁
@@ -89,7 +89,7 @@ tags: [Java并发, JMM]
 - 适用场景： 追求吞吐量，同步块执行速度较慢
 
 这个是网上找到的关于锁撤销、膨胀等操作的总流程
-![](https://blog-1252749790.file.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg)
+![](https://blog-1252749790.cos.ap-shanghai.myqcloud.com/JavaConcurrent/%E5%81%8F%E5%90%91%E9%94%81%E5%88%B0%E9%87%8D%E9%87%8F%E9%94%81%E7%9A%84%E5%8D%87%E7%BA%A7.jpg)
 
 
 [^ObjectHead]: https://www.zhihu.com/question/63340239
