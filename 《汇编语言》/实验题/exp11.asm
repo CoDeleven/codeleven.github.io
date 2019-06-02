@@ -18,6 +18,7 @@ letterc:
 s0:    
     mov ax, [bx]
     mov ah, 0
+    mov cx, ax
     cmp ax, 97
     jb s
     cmp ax, 122
@@ -27,9 +28,10 @@ s0:
     mov byte ptr [bx], al
 s:
     add bx, 1
+    jcxz letterc_end
     loop s0
-
 letterc_end:
+    ret
 
 codesg ends
 
