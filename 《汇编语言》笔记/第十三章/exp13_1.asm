@@ -28,6 +28,7 @@ start:
     ; 设置cs
     mov byte ptr es:[1F2H], 0
 
+    ; 想试试中断是不是就永远留在了系统中，所以先安装7CH中断例程，再运行程序看看
     ; mov dh, 10
     ; mov dl, 10
     ; mov cl, 2
